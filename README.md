@@ -11,29 +11,14 @@ A production-ready, sanitised, and highly extensible rich text editor for React 
 
 ## 🎥 Demo Video
 
-Watch the React Advanced Richtext Editor in action on YouTube:
+**Watch the React Advanced Richtext Editor in action on YouTube:**
 
 <div align="center">
-  <a href="https://www.youtube.com/watch?v=ejRuLu6furw" target="_blank" rel="noopener noreferrer" style="position:relative;display:inline-block;">
-    <img src="https://img.youtube.com/vi/ejRuLu6furw/maxresdefault.jpg" alt="React Advanced Richtext Editor Demo" style="width:100%;max-width:640px;border-radius:8px;display:block;">
-    <!-- Play Button Overlay -->
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);background-color:#FF0000;border-radius:20%;width:80px;height:50px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,0,0,0.3);cursor:pointer;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" style="margin-left:3px;">
-        <path d="M8 5v14l11-7z"/>
-      </svg>
-    </div>
-    <!-- YouTube Badge -->
-    <div style="position:absolute;bottom:15px;right:15px;background-color:#FF0000;padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
-      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/youtube.svg" alt="YouTube" width="20" height="20" style="filter:brightness(0) invert(1);">
-      <span style="color:white;font-weight:bold;font-size:14px;">YouTube</span>
-    </div>
-  </a>
-  <p style="margin-top:15px;">
-    <a href="https://www.youtube.com/watch?v=ejRuLu6furw" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
-      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/youtube.svg" alt="YouTube" width="24" height="24" style="vertical-align:middle;">
-      <strong style="font-size:16px;">Watch on YouTube: React Advanced Richtext Editor Demo</strong>
-    </a>
-  </p>
+
+[![React Advanced Richtext Editor Demo](https://img.youtube.com/vi/ejRuLu6furw/maxresdefault.jpg)](https://www.youtube.com/watch?v=ejRuLu6furw)
+
+**▶️ [Watch on YouTube](https://www.youtube.com/watch?v=ejRuLu6furw)**
+
 </div>
 
 
