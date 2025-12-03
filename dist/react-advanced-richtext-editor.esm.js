@@ -195,1380 +195,6 @@ function _unsupportedIterableToArray$1(r, a) {
   }
 }
 
-/*! @license DOMPurify 3.3.0 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.3.0/LICENSE */
-
-var entries = Object.entries,
-  setPrototypeOf = Object.setPrototypeOf,
-  isFrozen = Object.isFrozen,
-  getPrototypeOf = Object.getPrototypeOf,
-  getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var freeze = Object.freeze,
-  seal = Object.seal,
-  create = Object.create; // eslint-disable-line import/no-mutable-exports
-var _ref = typeof Reflect !== 'undefined' && Reflect,
-  apply = _ref.apply,
-  construct = _ref.construct;
-if (!freeze) {
-  freeze = function freeze(x) {
-    return x;
-  };
-}
-if (!seal) {
-  seal = function seal(x) {
-    return x;
-  };
-}
-if (!apply) {
-  apply = function apply(func, thisArg) {
-    for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-      args[_key - 2] = arguments[_key];
-    }
-    return func.apply(thisArg, args);
-  };
-}
-if (!construct) {
-  construct = function construct(Func) {
-    for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      args[_key2 - 1] = arguments[_key2];
-    }
-    return _construct(Func, args);
-  };
-}
-var arrayForEach = unapply(Array.prototype.forEach);
-var arrayLastIndexOf = unapply(Array.prototype.lastIndexOf);
-var arrayPop = unapply(Array.prototype.pop);
-var arrayPush = unapply(Array.prototype.push);
-var arraySplice = unapply(Array.prototype.splice);
-var stringToLowerCase = unapply(String.prototype.toLowerCase);
-var stringToString = unapply(String.prototype.toString);
-var stringMatch = unapply(String.prototype.match);
-var stringReplace = unapply(String.prototype.replace);
-var stringIndexOf = unapply(String.prototype.indexOf);
-var stringTrim = unapply(String.prototype.trim);
-var objectHasOwnProperty = unapply(Object.prototype.hasOwnProperty);
-var regExpTest = unapply(RegExp.prototype.test);
-var typeErrorCreate = unconstruct(TypeError);
-/**
- * Creates a new function that calls the given function with a specified thisArg and arguments.
- *
- * @param func - The function to be wrapped and called.
- * @returns A new function that calls the given function with a specified thisArg and arguments.
- */
-function unapply(func) {
-  return function (thisArg) {
-    if (thisArg instanceof RegExp) {
-      thisArg.lastIndex = 0;
-    }
-    for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-      args[_key3 - 1] = arguments[_key3];
-    }
-    return apply(func, thisArg, args);
-  };
-}
-/**
- * Creates a new function that constructs an instance of the given constructor function with the provided arguments.
- *
- * @param func - The constructor function to be wrapped and called.
- * @returns A new function that constructs an instance of the given constructor function with the provided arguments.
- */
-function unconstruct(Func) {
-  return function () {
-    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      args[_key4] = arguments[_key4];
-    }
-    return construct(Func, args);
-  };
-}
-/**
- * Add properties to a lookup table
- *
- * @param set - The set to which elements will be added.
- * @param array - The array containing elements to be added to the set.
- * @param transformCaseFunc - An optional function to transform the case of each element before adding to the set.
- * @returns The modified set with added elements.
- */
-function addToSet(set, array) {
-  var transformCaseFunc = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : stringToLowerCase;
-  if (setPrototypeOf) {
-    // Make 'in' and truthy checks like Boolean(set.constructor)
-    // independent of any properties defined on Object.prototype.
-    // Prevent prototype setters from intercepting set as a this value.
-    setPrototypeOf(set, null);
-  }
-  var l = array.length;
-  while (l--) {
-    var element = array[l];
-    if (typeof element === 'string') {
-      var lcElement = transformCaseFunc(element);
-      if (lcElement !== element) {
-        // Config presets (e.g. tags.js, attrs.js) are immutable.
-        if (!isFrozen(array)) {
-          array[l] = lcElement;
-        }
-        element = lcElement;
-      }
-    }
-    set[element] = true;
-  }
-  return set;
-}
-/**
- * Clean up an array to harden against CSPP
- *
- * @param array - The array to be cleaned.
- * @returns The cleaned version of the array
- */
-function cleanArray(array) {
-  for (var index = 0; index < array.length; index++) {
-    var isPropertyExist = objectHasOwnProperty(array, index);
-    if (!isPropertyExist) {
-      array[index] = null;
-    }
-  }
-  return array;
-}
-/**
- * Shallow clone an object
- *
- * @param object - The object to be cloned.
- * @returns A new object that copies the original.
- */
-function clone(object) {
-  var newObject = create(null);
-  var _iterator = _createForOfIteratorHelper(entries(object)),
-    _step;
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var _step$value = _slicedToArray(_step.value, 2),
-        property = _step$value[0],
-        value = _step$value[1];
-      var isPropertyExist = objectHasOwnProperty(object, property);
-      if (isPropertyExist) {
-        if (Array.isArray(value)) {
-          newObject[property] = cleanArray(value);
-        } else if (value && _typeof(value) === 'object' && value.constructor === Object) {
-          newObject[property] = clone(value);
-        } else {
-          newObject[property] = value;
-        }
-      }
-    }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
-  }
-  return newObject;
-}
-/**
- * This method automatically checks if the prop is function or getter and behaves accordingly.
- *
- * @param object - The object to look up the getter function in its prototype chain.
- * @param prop - The property name for which to find the getter function.
- * @returns The getter function found in the prototype chain or a fallback function.
- */
-function lookupGetter(object, prop) {
-  while (object !== null) {
-    var desc = getOwnPropertyDescriptor(object, prop);
-    if (desc) {
-      if (desc.get) {
-        return unapply(desc.get);
-      }
-      if (typeof desc.value === 'function') {
-        return unapply(desc.value);
-      }
-    }
-    object = getPrototypeOf(object);
-  }
-  function fallbackValue() {
-    return null;
-  }
-  return fallbackValue;
-}
-var html$1 = freeze(['a', 'abbr', 'acronym', 'address', 'area', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo', 'big', 'blink', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'content', 'data', 'datalist', 'dd', 'decorator', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'element', 'em', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'main', 'map', 'mark', 'marquee', 'menu', 'menuitem', 'meter', 'nav', 'nobr', 'ol', 'optgroup', 'option', 'output', 'p', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'search', 'section', 'select', 'shadow', 'slot', 'small', 'source', 'spacer', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr']);
-var svg$1 = freeze(['svg', 'a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 'defs', 'desc', 'ellipse', 'enterkeyhint', 'exportparts', 'filter', 'font', 'g', 'glyph', 'glyphref', 'hkern', 'image', 'inputmode', 'line', 'lineargradient', 'marker', 'mask', 'metadata', 'mpath', 'part', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 'stop', 'style', 'switch', 'symbol', 'text', 'textpath', 'title', 'tref', 'tspan', 'view', 'vkern']);
-var svgFilters = freeze(['feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', 'feDistantLight', 'feDropShadow', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence']);
-// List of SVG elements that are disallowed by default.
-// We still need to know them so that we can do namespace
-// checks properly in case one wants to add them to
-// allow-list.
-var svgDisallowed = freeze(['animate', 'color-profile', 'cursor', 'discard', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri', 'foreignobject', 'hatch', 'hatchpath', 'mesh', 'meshgradient', 'meshpatch', 'meshrow', 'missing-glyph', 'script', 'set', 'solidcolor', 'unknown', 'use']);
-var mathMl$1 = freeze(['math', 'menclose', 'merror', 'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mspace', 'msqrt', 'mstyle', 'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder', 'munderover', 'mprescripts']);
-// Similarly to SVG, we want to know all MathML elements,
-// even those that we disallow by default.
-var mathMlDisallowed = freeze(['maction', 'maligngroup', 'malignmark', 'mlongdiv', 'mscarries', 'mscarry', 'msgroup', 'mstack', 'msline', 'msrow', 'semantics', 'annotation', 'annotation-xml', 'mprescripts', 'none']);
-var text = freeze(['#text']);
-var html = freeze(['accept', 'action', 'align', 'alt', 'autocapitalize', 'autocomplete', 'autopictureinpicture', 'autoplay', 'background', 'bgcolor', 'border', 'capture', 'cellpadding', 'cellspacing', 'checked', 'cite', 'class', 'clear', 'color', 'cols', 'colspan', 'controls', 'controlslist', 'coords', 'crossorigin', 'datetime', 'decoding', 'default', 'dir', 'disabled', 'disablepictureinpicture', 'disableremoteplayback', 'download', 'draggable', 'enctype', 'enterkeyhint', 'exportparts', 'face', 'for', 'headers', 'height', 'hidden', 'high', 'href', 'hreflang', 'id', 'inert', 'inputmode', 'integrity', 'ismap', 'kind', 'label', 'lang', 'list', 'loading', 'loop', 'low', 'max', 'maxlength', 'media', 'method', 'min', 'minlength', 'multiple', 'muted', 'name', 'nonce', 'noshade', 'novalidate', 'nowrap', 'open', 'optimum', 'part', 'pattern', 'placeholder', 'playsinline', 'popover', 'popovertarget', 'popovertargetaction', 'poster', 'preload', 'pubdate', 'radiogroup', 'readonly', 'rel', 'required', 'rev', 'reversed', 'role', 'rows', 'rowspan', 'spellcheck', 'scope', 'selected', 'shape', 'size', 'sizes', 'slot', 'span', 'srclang', 'start', 'src', 'srcset', 'step', 'style', 'summary', 'tabindex', 'title', 'translate', 'type', 'usemap', 'valign', 'value', 'width', 'wrap', 'xmlns', 'slot']);
-var svg = freeze(['accent-height', 'accumulate', 'additive', 'alignment-baseline', 'amplitude', 'ascent', 'attributename', 'attributetype', 'azimuth', 'basefrequency', 'baseline-shift', 'begin', 'bias', 'by', 'class', 'clip', 'clippathunits', 'clip-path', 'clip-rule', 'color', 'color-interpolation', 'color-interpolation-filters', 'color-profile', 'color-rendering', 'cx', 'cy', 'd', 'dx', 'dy', 'diffuseconstant', 'direction', 'display', 'divisor', 'dur', 'edgemode', 'elevation', 'end', 'exponent', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'filterunits', 'flood-color', 'flood-opacity', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'fx', 'fy', 'g1', 'g2', 'glyph-name', 'glyphref', 'gradientunits', 'gradienttransform', 'height', 'href', 'id', 'image-rendering', 'in', 'in2', 'intercept', 'k', 'k1', 'k2', 'k3', 'k4', 'kerning', 'keypoints', 'keysplines', 'keytimes', 'lang', 'lengthadjust', 'letter-spacing', 'kernelmatrix', 'kernelunitlength', 'lighting-color', 'local', 'marker-end', 'marker-mid', 'marker-start', 'markerheight', 'markerunits', 'markerwidth', 'maskcontentunits', 'maskunits', 'max', 'mask', 'mask-type', 'media', 'method', 'mode', 'min', 'name', 'numoctaves', 'offset', 'operator', 'opacity', 'order', 'orient', 'orientation', 'origin', 'overflow', 'paint-order', 'path', 'pathlength', 'patterncontentunits', 'patterntransform', 'patternunits', 'points', 'preservealpha', 'preserveaspectratio', 'primitiveunits', 'r', 'rx', 'ry', 'radius', 'refx', 'refy', 'repeatcount', 'repeatdur', 'restart', 'result', 'rotate', 'scale', 'seed', 'shape-rendering', 'slope', 'specularconstant', 'specularexponent', 'spreadmethod', 'startoffset', 'stddeviation', 'stitchtiles', 'stop-color', 'stop-opacity', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke', 'stroke-width', 'style', 'surfacescale', 'systemlanguage', 'tabindex', 'tablevalues', 'targetx', 'targety', 'transform', 'transform-origin', 'text-anchor', 'text-decoration', 'text-rendering', 'textlength', 'type', 'u1', 'u2', 'unicode', 'values', 'viewbox', 'visibility', 'version', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'width', 'word-spacing', 'wrap', 'writing-mode', 'xchannelselector', 'ychannelselector', 'x', 'x1', 'x2', 'xmlns', 'y', 'y1', 'y2', 'z', 'zoomandpan']);
-var mathMl = freeze(['accent', 'accentunder', 'align', 'bevelled', 'close', 'columnsalign', 'columnlines', 'columnspan', 'denomalign', 'depth', 'dir', 'display', 'displaystyle', 'encoding', 'fence', 'frame', 'height', 'href', 'id', 'largeop', 'length', 'linethickness', 'lspace', 'lquote', 'mathbackground', 'mathcolor', 'mathsize', 'mathvariant', 'maxsize', 'minsize', 'movablelimits', 'notation', 'numalign', 'open', 'rowalign', 'rowlines', 'rowspacing', 'rowspan', 'rspace', 'rquote', 'scriptlevel', 'scriptminsize', 'scriptsizemultiplier', 'selection', 'separator', 'separators', 'stretchy', 'subscriptshift', 'supscriptshift', 'symmetric', 'voffset', 'width', 'xmlns']);
-var xml = freeze(['xlink:href', 'xml:id', 'xlink:title', 'xml:space', 'xmlns:xlink']);
-
-// eslint-disable-next-line unicorn/better-regex
-var MUSTACHE_EXPR = seal(/\{\{[\w\W]*|[\w\W]*\}\}/gm); // Specify template detection regex for SAFE_FOR_TEMPLATES mode
-var ERB_EXPR = seal(/<%[\w\W]*|[\w\W]*%>/gm);
-var TMPLIT_EXPR = seal(/\$\{[\w\W]*/gm); // eslint-disable-line unicorn/better-regex
-var DATA_ATTR = seal(/^data-[\-\w.\u00B7-\uFFFF]+$/); // eslint-disable-line no-useless-escape
-var ARIA_ATTR = seal(/^aria-[\-\w]+$/); // eslint-disable-line no-useless-escape
-var IS_ALLOWED_URI = seal(/^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i // eslint-disable-line no-useless-escape
-);
-var IS_SCRIPT_OR_DATA = seal(/^(?:\w+script|data):/i);
-var ATTR_WHITESPACE = seal(/[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g // eslint-disable-line no-control-regex
-);
-var DOCTYPE_NAME = seal(/^html$/i);
-var CUSTOM_ELEMENT = seal(/^[a-z][.\w]*(-[.\w]+)+$/i);
-var EXPRESSIONS = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  ARIA_ATTR: ARIA_ATTR,
-  ATTR_WHITESPACE: ATTR_WHITESPACE,
-  CUSTOM_ELEMENT: CUSTOM_ELEMENT,
-  DATA_ATTR: DATA_ATTR,
-  DOCTYPE_NAME: DOCTYPE_NAME,
-  ERB_EXPR: ERB_EXPR,
-  IS_ALLOWED_URI: IS_ALLOWED_URI,
-  IS_SCRIPT_OR_DATA: IS_SCRIPT_OR_DATA,
-  MUSTACHE_EXPR: MUSTACHE_EXPR,
-  TMPLIT_EXPR: TMPLIT_EXPR
-});
-
-/* eslint-disable @typescript-eslint/indent */
-// https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
-var NODE_TYPE = {
-  element: 1,
-  attribute: 2,
-  text: 3,
-  cdataSection: 4,
-  entityReference: 5,
-  // Deprecated
-  entityNode: 6,
-  // Deprecated
-  progressingInstruction: 7,
-  comment: 8,
-  document: 9,
-  documentType: 10,
-  documentFragment: 11,
-  notation: 12 // Deprecated
-};
-var getGlobal = function getGlobal() {
-  return typeof window === 'undefined' ? null : window;
-};
-/**
- * Creates a no-op policy for internal use only.
- * Don't export this function outside this module!
- * @param trustedTypes The policy factory.
- * @param purifyHostElement The Script element used to load DOMPurify (to determine policy name suffix).
- * @return The policy created (or null, if Trusted Types
- * are not supported or creating the policy failed).
- */
-var _createTrustedTypesPolicy = function _createTrustedTypesPolicy(trustedTypes, purifyHostElement) {
-  if (_typeof(trustedTypes) !== 'object' || typeof trustedTypes.createPolicy !== 'function') {
-    return null;
-  }
-  // Allow the callers to control the unique policy name
-  // by adding a data-tt-policy-suffix to the script element with the DOMPurify.
-  // Policy creation with duplicate names throws in Trusted Types.
-  var suffix = null;
-  var ATTR_NAME = 'data-tt-policy-suffix';
-  if (purifyHostElement && purifyHostElement.hasAttribute(ATTR_NAME)) {
-    suffix = purifyHostElement.getAttribute(ATTR_NAME);
-  }
-  var policyName = 'dompurify' + (suffix ? '#' + suffix : '');
-  try {
-    return trustedTypes.createPolicy(policyName, {
-      createHTML: function createHTML(html) {
-        return html;
-      },
-      createScriptURL: function createScriptURL(scriptUrl) {
-        return scriptUrl;
-      }
-    });
-  } catch (_) {
-    // Policy creation failed (most likely another DOMPurify script has
-    // already run). Skip creating the policy, as this will only cause errors
-    // if TT are enforced.
-    console.warn('TrustedTypes policy ' + policyName + ' could not be created.');
-    return null;
-  }
-};
-var _createHooksMap = function _createHooksMap() {
-  return {
-    afterSanitizeAttributes: [],
-    afterSanitizeElements: [],
-    afterSanitizeShadowDOM: [],
-    beforeSanitizeAttributes: [],
-    beforeSanitizeElements: [],
-    beforeSanitizeShadowDOM: [],
-    uponSanitizeAttribute: [],
-    uponSanitizeElement: [],
-    uponSanitizeShadowNode: []
-  };
-};
-function createDOMPurify() {
-  var window = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : getGlobal();
-  var DOMPurify = function DOMPurify(root) {
-    return createDOMPurify(root);
-  };
-  DOMPurify.version = '3.3.0';
-  DOMPurify.removed = [];
-  if (!window || !window.document || window.document.nodeType !== NODE_TYPE.document || !window.Element) {
-    // Not running in a browser, provide a factory function
-    // so that you can pass your own Window
-    DOMPurify.isSupported = false;
-    return DOMPurify;
-  }
-  var document = window.document;
-  var originalDocument = document;
-  var currentScript = originalDocument.currentScript;
-  var DocumentFragment = window.DocumentFragment,
-    HTMLTemplateElement = window.HTMLTemplateElement,
-    Node = window.Node,
-    Element = window.Element,
-    NodeFilter = window.NodeFilter,
-    _window$NamedNodeMap = window.NamedNodeMap,
-    NamedNodeMap = _window$NamedNodeMap === void 0 ? window.NamedNodeMap || window.MozNamedAttrMap : _window$NamedNodeMap,
-    HTMLFormElement = window.HTMLFormElement,
-    DOMParser = window.DOMParser,
-    trustedTypes = window.trustedTypes;
-  var ElementPrototype = Element.prototype;
-  var cloneNode = lookupGetter(ElementPrototype, 'cloneNode');
-  var remove = lookupGetter(ElementPrototype, 'remove');
-  var getNextSibling = lookupGetter(ElementPrototype, 'nextSibling');
-  var getChildNodes = lookupGetter(ElementPrototype, 'childNodes');
-  var getParentNode = lookupGetter(ElementPrototype, 'parentNode');
-  // As per issue #47, the web-components registry is inherited by a
-  // new document created via createHTMLDocument. As per the spec
-  // (http://w3c.github.io/webcomponents/spec/custom/#creating-and-passing-registries)
-  // a new empty registry is used when creating a template contents owner
-  // document, so we use that as our parent document to ensure nothing
-  // is inherited.
-  if (typeof HTMLTemplateElement === 'function') {
-    var template = document.createElement('template');
-    if (template.content && template.content.ownerDocument) {
-      document = template.content.ownerDocument;
-    }
-  }
-  var trustedTypesPolicy;
-  var emptyHTML = '';
-  var _document = document,
-    implementation = _document.implementation,
-    createNodeIterator = _document.createNodeIterator,
-    createDocumentFragment = _document.createDocumentFragment,
-    getElementsByTagName = _document.getElementsByTagName;
-  var importNode = originalDocument.importNode;
-  var hooks = _createHooksMap();
-  /**
-   * Expose whether this browser supports running the full DOMPurify.
-   */
-  DOMPurify.isSupported = typeof entries === 'function' && typeof getParentNode === 'function' && implementation && implementation.createHTMLDocument !== undefined;
-  var MUSTACHE_EXPR = EXPRESSIONS.MUSTACHE_EXPR,
-    ERB_EXPR = EXPRESSIONS.ERB_EXPR,
-    TMPLIT_EXPR = EXPRESSIONS.TMPLIT_EXPR,
-    DATA_ATTR = EXPRESSIONS.DATA_ATTR,
-    ARIA_ATTR = EXPRESSIONS.ARIA_ATTR,
-    IS_SCRIPT_OR_DATA = EXPRESSIONS.IS_SCRIPT_OR_DATA,
-    ATTR_WHITESPACE = EXPRESSIONS.ATTR_WHITESPACE,
-    CUSTOM_ELEMENT = EXPRESSIONS.CUSTOM_ELEMENT;
-  var IS_ALLOWED_URI$1 = EXPRESSIONS.IS_ALLOWED_URI;
-  /**
-   * We consider the elements and attributes below to be safe. Ideally
-   * don't add any new ones but feel free to remove unwanted ones.
-   */
-  /* allowed element names */
-  var ALLOWED_TAGS = null;
-  var DEFAULT_ALLOWED_TAGS = addToSet({}, [].concat(_toConsumableArray(html$1), _toConsumableArray(svg$1), _toConsumableArray(svgFilters), _toConsumableArray(mathMl$1), _toConsumableArray(text)));
-  /* Allowed attribute names */
-  var ALLOWED_ATTR = null;
-  var DEFAULT_ALLOWED_ATTR = addToSet({}, [].concat(_toConsumableArray(html), _toConsumableArray(svg), _toConsumableArray(mathMl), _toConsumableArray(xml)));
-  /*
-   * Configure how DOMPurify should handle custom elements and their attributes as well as customized built-in elements.
-   * @property {RegExp|Function|null} tagNameCheck one of [null, regexPattern, predicate]. Default: `null` (disallow any custom elements)
-   * @property {RegExp|Function|null} attributeNameCheck one of [null, regexPattern, predicate]. Default: `null` (disallow any attributes not on the allow list)
-   * @property {boolean} allowCustomizedBuiltInElements allow custom elements derived from built-ins if they pass CUSTOM_ELEMENT_HANDLING.tagNameCheck. Default: `false`.
-   */
-  var CUSTOM_ELEMENT_HANDLING = Object.seal(create(null, {
-    tagNameCheck: {
-      writable: true,
-      configurable: false,
-      enumerable: true,
-      value: null
-    },
-    attributeNameCheck: {
-      writable: true,
-      configurable: false,
-      enumerable: true,
-      value: null
-    },
-    allowCustomizedBuiltInElements: {
-      writable: true,
-      configurable: false,
-      enumerable: true,
-      value: false
-    }
-  }));
-  /* Explicitly forbidden tags (overrides ALLOWED_TAGS/ADD_TAGS) */
-  var FORBID_TAGS = null;
-  /* Explicitly forbidden attributes (overrides ALLOWED_ATTR/ADD_ATTR) */
-  var FORBID_ATTR = null;
-  /* Config object to store ADD_TAGS/ADD_ATTR functions (when used as functions) */
-  var EXTRA_ELEMENT_HANDLING = Object.seal(create(null, {
-    tagCheck: {
-      writable: true,
-      configurable: false,
-      enumerable: true,
-      value: null
-    },
-    attributeCheck: {
-      writable: true,
-      configurable: false,
-      enumerable: true,
-      value: null
-    }
-  }));
-  /* Decide if ARIA attributes are okay */
-  var ALLOW_ARIA_ATTR = true;
-  /* Decide if custom data attributes are okay */
-  var ALLOW_DATA_ATTR = true;
-  /* Decide if unknown protocols are okay */
-  var ALLOW_UNKNOWN_PROTOCOLS = false;
-  /* Decide if self-closing tags in attributes are allowed.
-   * Usually removed due to a mXSS issue in jQuery 3.0 */
-  var ALLOW_SELF_CLOSE_IN_ATTR = true;
-  /* Output should be safe for common template engines.
-   * This means, DOMPurify removes data attributes, mustaches and ERB
-   */
-  var SAFE_FOR_TEMPLATES = false;
-  /* Output should be safe even for XML used within HTML and alike.
-   * This means, DOMPurify removes comments when containing risky content.
-   */
-  var SAFE_FOR_XML = true;
-  /* Decide if document with <html>... should be returned */
-  var WHOLE_DOCUMENT = false;
-  /* Track whether config is already set on this instance of DOMPurify. */
-  var SET_CONFIG = false;
-  /* Decide if all elements (e.g. style, script) must be children of
-   * document.body. By default, browsers might move them to document.head */
-  var FORCE_BODY = false;
-  /* Decide if a DOM `HTMLBodyElement` should be returned, instead of a html
-   * string (or a TrustedHTML object if Trusted Types are supported).
-   * If `WHOLE_DOCUMENT` is enabled a `HTMLHtmlElement` will be returned instead
-   */
-  var RETURN_DOM = false;
-  /* Decide if a DOM `DocumentFragment` should be returned, instead of a html
-   * string  (or a TrustedHTML object if Trusted Types are supported) */
-  var RETURN_DOM_FRAGMENT = false;
-  /* Try to return a Trusted Type object instead of a string, return a string in
-   * case Trusted Types are not supported  */
-  var RETURN_TRUSTED_TYPE = false;
-  /* Output should be free from DOM clobbering attacks?
-   * This sanitizes markups named with colliding, clobberable built-in DOM APIs.
-   */
-  var SANITIZE_DOM = true;
-  /* Achieve full DOM Clobbering protection by isolating the namespace of named
-   * properties and JS variables, mitigating attacks that abuse the HTML/DOM spec rules.
-   *
-   * HTML/DOM spec rules that enable DOM Clobbering:
-   *   - Named Access on Window (§7.3.3)
-   *   - DOM Tree Accessors (§3.1.5)
-   *   - Form Element Parent-Child Relations (§4.10.3)
-   *   - Iframe srcdoc / Nested WindowProxies (§4.8.5)
-   *   - HTMLCollection (§4.2.10.2)
-   *
-   * Namespace isolation is implemented by prefixing `id` and `name` attributes
-   * with a constant string, i.e., `user-content-`
-   */
-  var SANITIZE_NAMED_PROPS = false;
-  var SANITIZE_NAMED_PROPS_PREFIX = 'user-content-';
-  /* Keep element content when removing element? */
-  var KEEP_CONTENT = true;
-  /* If a `Node` is passed to sanitize(), then performs sanitization in-place instead
-   * of importing it into a new Document and returning a sanitized copy */
-  var IN_PLACE = false;
-  /* Allow usage of profiles like html, svg and mathMl */
-  var USE_PROFILES = {};
-  /* Tags to ignore content of when KEEP_CONTENT is true */
-  var FORBID_CONTENTS = null;
-  var DEFAULT_FORBID_CONTENTS = addToSet({}, ['annotation-xml', 'audio', 'colgroup', 'desc', 'foreignobject', 'head', 'iframe', 'math', 'mi', 'mn', 'mo', 'ms', 'mtext', 'noembed', 'noframes', 'noscript', 'plaintext', 'script', 'style', 'svg', 'template', 'thead', 'title', 'video', 'xmp']);
-  /* Tags that are safe for data: URIs */
-  var DATA_URI_TAGS = null;
-  var DEFAULT_DATA_URI_TAGS = addToSet({}, ['audio', 'video', 'img', 'source', 'image', 'track']);
-  /* Attributes safe for values like "javascript:" */
-  var URI_SAFE_ATTRIBUTES = null;
-  var DEFAULT_URI_SAFE_ATTRIBUTES = addToSet({}, ['alt', 'class', 'for', 'id', 'label', 'name', 'pattern', 'placeholder', 'role', 'summary', 'title', 'value', 'style', 'xmlns']);
-  var MATHML_NAMESPACE = 'http://www.w3.org/1998/Math/MathML';
-  var SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
-  var HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
-  /* Document namespace */
-  var NAMESPACE = HTML_NAMESPACE;
-  var IS_EMPTY_INPUT = false;
-  /* Allowed XHTML+XML namespaces */
-  var ALLOWED_NAMESPACES = null;
-  var DEFAULT_ALLOWED_NAMESPACES = addToSet({}, [MATHML_NAMESPACE, SVG_NAMESPACE, HTML_NAMESPACE], stringToString);
-  var MATHML_TEXT_INTEGRATION_POINTS = addToSet({}, ['mi', 'mo', 'mn', 'ms', 'mtext']);
-  var HTML_INTEGRATION_POINTS = addToSet({}, ['annotation-xml']);
-  // Certain elements are allowed in both SVG and HTML
-  // namespace. We need to specify them explicitly
-  // so that they don't get erroneously deleted from
-  // HTML namespace.
-  var COMMON_SVG_AND_HTML_ELEMENTS = addToSet({}, ['title', 'style', 'font', 'a', 'script']);
-  /* Parsing of strict XHTML documents */
-  var PARSER_MEDIA_TYPE = null;
-  var SUPPORTED_PARSER_MEDIA_TYPES = ['application/xhtml+xml', 'text/html'];
-  var DEFAULT_PARSER_MEDIA_TYPE = 'text/html';
-  var transformCaseFunc = null;
-  /* Keep a reference to config to pass to hooks */
-  var CONFIG = null;
-  /* Ideally, do not touch anything below this line */
-  /* ______________________________________________ */
-  var formElement = document.createElement('form');
-  var isRegexOrFunction = function isRegexOrFunction(testValue) {
-    return testValue instanceof RegExp || testValue instanceof Function;
-  };
-  /**
-   * _parseConfig
-   *
-   * @param cfg optional config literal
-   */
-  // eslint-disable-next-line complexity
-  var _parseConfig = function _parseConfig() {
-    var cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    if (CONFIG && CONFIG === cfg) {
-      return;
-    }
-    /* Shield configuration object from tampering */
-    if (!cfg || _typeof(cfg) !== 'object') {
-      cfg = {};
-    }
-    /* Shield configuration object from prototype pollution */
-    cfg = clone(cfg);
-    PARSER_MEDIA_TYPE =
-    // eslint-disable-next-line unicorn/prefer-includes
-    SUPPORTED_PARSER_MEDIA_TYPES.indexOf(cfg.PARSER_MEDIA_TYPE) === -1 ? DEFAULT_PARSER_MEDIA_TYPE : cfg.PARSER_MEDIA_TYPE;
-    // HTML tags and attributes are not case-sensitive, converting to lowercase. Keeping XHTML as is.
-    transformCaseFunc = PARSER_MEDIA_TYPE === 'application/xhtml+xml' ? stringToString : stringToLowerCase;
-    /* Set configuration parameters */
-    ALLOWED_TAGS = objectHasOwnProperty(cfg, 'ALLOWED_TAGS') ? addToSet({}, cfg.ALLOWED_TAGS, transformCaseFunc) : DEFAULT_ALLOWED_TAGS;
-    ALLOWED_ATTR = objectHasOwnProperty(cfg, 'ALLOWED_ATTR') ? addToSet({}, cfg.ALLOWED_ATTR, transformCaseFunc) : DEFAULT_ALLOWED_ATTR;
-    ALLOWED_NAMESPACES = objectHasOwnProperty(cfg, 'ALLOWED_NAMESPACES') ? addToSet({}, cfg.ALLOWED_NAMESPACES, stringToString) : DEFAULT_ALLOWED_NAMESPACES;
-    URI_SAFE_ATTRIBUTES = objectHasOwnProperty(cfg, 'ADD_URI_SAFE_ATTR') ? addToSet(clone(DEFAULT_URI_SAFE_ATTRIBUTES), cfg.ADD_URI_SAFE_ATTR, transformCaseFunc) : DEFAULT_URI_SAFE_ATTRIBUTES;
-    DATA_URI_TAGS = objectHasOwnProperty(cfg, 'ADD_DATA_URI_TAGS') ? addToSet(clone(DEFAULT_DATA_URI_TAGS), cfg.ADD_DATA_URI_TAGS, transformCaseFunc) : DEFAULT_DATA_URI_TAGS;
-    FORBID_CONTENTS = objectHasOwnProperty(cfg, 'FORBID_CONTENTS') ? addToSet({}, cfg.FORBID_CONTENTS, transformCaseFunc) : DEFAULT_FORBID_CONTENTS;
-    FORBID_TAGS = objectHasOwnProperty(cfg, 'FORBID_TAGS') ? addToSet({}, cfg.FORBID_TAGS, transformCaseFunc) : clone({});
-    FORBID_ATTR = objectHasOwnProperty(cfg, 'FORBID_ATTR') ? addToSet({}, cfg.FORBID_ATTR, transformCaseFunc) : clone({});
-    USE_PROFILES = objectHasOwnProperty(cfg, 'USE_PROFILES') ? cfg.USE_PROFILES : false;
-    ALLOW_ARIA_ATTR = cfg.ALLOW_ARIA_ATTR !== false; // Default true
-    ALLOW_DATA_ATTR = cfg.ALLOW_DATA_ATTR !== false; // Default true
-    ALLOW_UNKNOWN_PROTOCOLS = cfg.ALLOW_UNKNOWN_PROTOCOLS || false; // Default false
-    ALLOW_SELF_CLOSE_IN_ATTR = cfg.ALLOW_SELF_CLOSE_IN_ATTR !== false; // Default true
-    SAFE_FOR_TEMPLATES = cfg.SAFE_FOR_TEMPLATES || false; // Default false
-    SAFE_FOR_XML = cfg.SAFE_FOR_XML !== false; // Default true
-    WHOLE_DOCUMENT = cfg.WHOLE_DOCUMENT || false; // Default false
-    RETURN_DOM = cfg.RETURN_DOM || false; // Default false
-    RETURN_DOM_FRAGMENT = cfg.RETURN_DOM_FRAGMENT || false; // Default false
-    RETURN_TRUSTED_TYPE = cfg.RETURN_TRUSTED_TYPE || false; // Default false
-    FORCE_BODY = cfg.FORCE_BODY || false; // Default false
-    SANITIZE_DOM = cfg.SANITIZE_DOM !== false; // Default true
-    SANITIZE_NAMED_PROPS = cfg.SANITIZE_NAMED_PROPS || false; // Default false
-    KEEP_CONTENT = cfg.KEEP_CONTENT !== false; // Default true
-    IN_PLACE = cfg.IN_PLACE || false; // Default false
-    IS_ALLOWED_URI$1 = cfg.ALLOWED_URI_REGEXP || IS_ALLOWED_URI;
-    NAMESPACE = cfg.NAMESPACE || HTML_NAMESPACE;
-    MATHML_TEXT_INTEGRATION_POINTS = cfg.MATHML_TEXT_INTEGRATION_POINTS || MATHML_TEXT_INTEGRATION_POINTS;
-    HTML_INTEGRATION_POINTS = cfg.HTML_INTEGRATION_POINTS || HTML_INTEGRATION_POINTS;
-    CUSTOM_ELEMENT_HANDLING = cfg.CUSTOM_ELEMENT_HANDLING || {};
-    if (cfg.CUSTOM_ELEMENT_HANDLING && isRegexOrFunction(cfg.CUSTOM_ELEMENT_HANDLING.tagNameCheck)) {
-      CUSTOM_ELEMENT_HANDLING.tagNameCheck = cfg.CUSTOM_ELEMENT_HANDLING.tagNameCheck;
-    }
-    if (cfg.CUSTOM_ELEMENT_HANDLING && isRegexOrFunction(cfg.CUSTOM_ELEMENT_HANDLING.attributeNameCheck)) {
-      CUSTOM_ELEMENT_HANDLING.attributeNameCheck = cfg.CUSTOM_ELEMENT_HANDLING.attributeNameCheck;
-    }
-    if (cfg.CUSTOM_ELEMENT_HANDLING && typeof cfg.CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements === 'boolean') {
-      CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements = cfg.CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements;
-    }
-    if (SAFE_FOR_TEMPLATES) {
-      ALLOW_DATA_ATTR = false;
-    }
-    if (RETURN_DOM_FRAGMENT) {
-      RETURN_DOM = true;
-    }
-    /* Parse profile info */
-    if (USE_PROFILES) {
-      ALLOWED_TAGS = addToSet({}, text);
-      ALLOWED_ATTR = [];
-      if (USE_PROFILES.html === true) {
-        addToSet(ALLOWED_TAGS, html$1);
-        addToSet(ALLOWED_ATTR, html);
-      }
-      if (USE_PROFILES.svg === true) {
-        addToSet(ALLOWED_TAGS, svg$1);
-        addToSet(ALLOWED_ATTR, svg);
-        addToSet(ALLOWED_ATTR, xml);
-      }
-      if (USE_PROFILES.svgFilters === true) {
-        addToSet(ALLOWED_TAGS, svgFilters);
-        addToSet(ALLOWED_ATTR, svg);
-        addToSet(ALLOWED_ATTR, xml);
-      }
-      if (USE_PROFILES.mathMl === true) {
-        addToSet(ALLOWED_TAGS, mathMl$1);
-        addToSet(ALLOWED_ATTR, mathMl);
-        addToSet(ALLOWED_ATTR, xml);
-      }
-    }
-    /* Merge configuration parameters */
-    if (cfg.ADD_TAGS) {
-      if (typeof cfg.ADD_TAGS === 'function') {
-        EXTRA_ELEMENT_HANDLING.tagCheck = cfg.ADD_TAGS;
-      } else {
-        if (ALLOWED_TAGS === DEFAULT_ALLOWED_TAGS) {
-          ALLOWED_TAGS = clone(ALLOWED_TAGS);
-        }
-        addToSet(ALLOWED_TAGS, cfg.ADD_TAGS, transformCaseFunc);
-      }
-    }
-    if (cfg.ADD_ATTR) {
-      if (typeof cfg.ADD_ATTR === 'function') {
-        EXTRA_ELEMENT_HANDLING.attributeCheck = cfg.ADD_ATTR;
-      } else {
-        if (ALLOWED_ATTR === DEFAULT_ALLOWED_ATTR) {
-          ALLOWED_ATTR = clone(ALLOWED_ATTR);
-        }
-        addToSet(ALLOWED_ATTR, cfg.ADD_ATTR, transformCaseFunc);
-      }
-    }
-    if (cfg.ADD_URI_SAFE_ATTR) {
-      addToSet(URI_SAFE_ATTRIBUTES, cfg.ADD_URI_SAFE_ATTR, transformCaseFunc);
-    }
-    if (cfg.FORBID_CONTENTS) {
-      if (FORBID_CONTENTS === DEFAULT_FORBID_CONTENTS) {
-        FORBID_CONTENTS = clone(FORBID_CONTENTS);
-      }
-      addToSet(FORBID_CONTENTS, cfg.FORBID_CONTENTS, transformCaseFunc);
-    }
-    /* Add #text in case KEEP_CONTENT is set to true */
-    if (KEEP_CONTENT) {
-      ALLOWED_TAGS['#text'] = true;
-    }
-    /* Add html, head and body to ALLOWED_TAGS in case WHOLE_DOCUMENT is true */
-    if (WHOLE_DOCUMENT) {
-      addToSet(ALLOWED_TAGS, ['html', 'head', 'body']);
-    }
-    /* Add tbody to ALLOWED_TAGS in case tables are permitted, see #286, #365 */
-    if (ALLOWED_TAGS.table) {
-      addToSet(ALLOWED_TAGS, ['tbody']);
-      delete FORBID_TAGS.tbody;
-    }
-    if (cfg.TRUSTED_TYPES_POLICY) {
-      if (typeof cfg.TRUSTED_TYPES_POLICY.createHTML !== 'function') {
-        throw typeErrorCreate('TRUSTED_TYPES_POLICY configuration option must provide a "createHTML" hook.');
-      }
-      if (typeof cfg.TRUSTED_TYPES_POLICY.createScriptURL !== 'function') {
-        throw typeErrorCreate('TRUSTED_TYPES_POLICY configuration option must provide a "createScriptURL" hook.');
-      }
-      // Overwrite existing TrustedTypes policy.
-      trustedTypesPolicy = cfg.TRUSTED_TYPES_POLICY;
-      // Sign local variables required by `sanitize`.
-      emptyHTML = trustedTypesPolicy.createHTML('');
-    } else {
-      // Uninitialized policy, attempt to initialize the internal dompurify policy.
-      if (trustedTypesPolicy === undefined) {
-        trustedTypesPolicy = _createTrustedTypesPolicy(trustedTypes, currentScript);
-      }
-      // If creating the internal policy succeeded sign internal variables.
-      if (trustedTypesPolicy !== null && typeof emptyHTML === 'string') {
-        emptyHTML = trustedTypesPolicy.createHTML('');
-      }
-    }
-    // Prevent further manipulation of configuration.
-    // Not available in IE8, Safari 5, etc.
-    if (freeze) {
-      freeze(cfg);
-    }
-    CONFIG = cfg;
-  };
-  /* Keep track of all possible SVG and MathML tags
-   * so that we can perform the namespace checks
-   * correctly. */
-  var ALL_SVG_TAGS = addToSet({}, [].concat(_toConsumableArray(svg$1), _toConsumableArray(svgFilters), _toConsumableArray(svgDisallowed)));
-  var ALL_MATHML_TAGS = addToSet({}, [].concat(_toConsumableArray(mathMl$1), _toConsumableArray(mathMlDisallowed)));
-  /**
-   * @param element a DOM element whose namespace is being checked
-   * @returns Return false if the element has a
-   *  namespace that a spec-compliant parser would never
-   *  return. Return true otherwise.
-   */
-  var _checkValidNamespace = function _checkValidNamespace(element) {
-    var parent = getParentNode(element);
-    // In JSDOM, if we're inside shadow DOM, then parentNode
-    // can be null. We just simulate parent in this case.
-    if (!parent || !parent.tagName) {
-      parent = {
-        namespaceURI: NAMESPACE,
-        tagName: 'template'
-      };
-    }
-    var tagName = stringToLowerCase(element.tagName);
-    var parentTagName = stringToLowerCase(parent.tagName);
-    if (!ALLOWED_NAMESPACES[element.namespaceURI]) {
-      return false;
-    }
-    if (element.namespaceURI === SVG_NAMESPACE) {
-      // The only way to switch from HTML namespace to SVG
-      // is via <svg>. If it happens via any other tag, then
-      // it should be killed.
-      if (parent.namespaceURI === HTML_NAMESPACE) {
-        return tagName === 'svg';
-      }
-      // The only way to switch from MathML to SVG is via`
-      // svg if parent is either <annotation-xml> or MathML
-      // text integration points.
-      if (parent.namespaceURI === MATHML_NAMESPACE) {
-        return tagName === 'svg' && (parentTagName === 'annotation-xml' || MATHML_TEXT_INTEGRATION_POINTS[parentTagName]);
-      }
-      // We only allow elements that are defined in SVG
-      // spec. All others are disallowed in SVG namespace.
-      return Boolean(ALL_SVG_TAGS[tagName]);
-    }
-    if (element.namespaceURI === MATHML_NAMESPACE) {
-      // The only way to switch from HTML namespace to MathML
-      // is via <math>. If it happens via any other tag, then
-      // it should be killed.
-      if (parent.namespaceURI === HTML_NAMESPACE) {
-        return tagName === 'math';
-      }
-      // The only way to switch from SVG to MathML is via
-      // <math> and HTML integration points
-      if (parent.namespaceURI === SVG_NAMESPACE) {
-        return tagName === 'math' && HTML_INTEGRATION_POINTS[parentTagName];
-      }
-      // We only allow elements that are defined in MathML
-      // spec. All others are disallowed in MathML namespace.
-      return Boolean(ALL_MATHML_TAGS[tagName]);
-    }
-    if (element.namespaceURI === HTML_NAMESPACE) {
-      // The only way to switch from SVG to HTML is via
-      // HTML integration points, and from MathML to HTML
-      // is via MathML text integration points
-      if (parent.namespaceURI === SVG_NAMESPACE && !HTML_INTEGRATION_POINTS[parentTagName]) {
-        return false;
-      }
-      if (parent.namespaceURI === MATHML_NAMESPACE && !MATHML_TEXT_INTEGRATION_POINTS[parentTagName]) {
-        return false;
-      }
-      // We disallow tags that are specific for MathML
-      // or SVG and should never appear in HTML namespace
-      return !ALL_MATHML_TAGS[tagName] && (COMMON_SVG_AND_HTML_ELEMENTS[tagName] || !ALL_SVG_TAGS[tagName]);
-    }
-    // For XHTML and XML documents that support custom namespaces
-    if (PARSER_MEDIA_TYPE === 'application/xhtml+xml' && ALLOWED_NAMESPACES[element.namespaceURI]) {
-      return true;
-    }
-    // The code should never reach this place (this means
-    // that the element somehow got namespace that is not
-    // HTML, SVG, MathML or allowed via ALLOWED_NAMESPACES).
-    // Return false just in case.
-    return false;
-  };
-  /**
-   * _forceRemove
-   *
-   * @param node a DOM node
-   */
-  var _forceRemove = function _forceRemove(node) {
-    arrayPush(DOMPurify.removed, {
-      element: node
-    });
-    try {
-      // eslint-disable-next-line unicorn/prefer-dom-node-remove
-      getParentNode(node).removeChild(node);
-    } catch (_) {
-      remove(node);
-    }
-  };
-  /**
-   * _removeAttribute
-   *
-   * @param name an Attribute name
-   * @param element a DOM node
-   */
-  var _removeAttribute = function _removeAttribute(name, element) {
-    try {
-      arrayPush(DOMPurify.removed, {
-        attribute: element.getAttributeNode(name),
-        from: element
-      });
-    } catch (_) {
-      arrayPush(DOMPurify.removed, {
-        attribute: null,
-        from: element
-      });
-    }
-    element.removeAttribute(name);
-    // We void attribute values for unremovable "is" attributes
-    if (name === 'is') {
-      if (RETURN_DOM || RETURN_DOM_FRAGMENT) {
-        try {
-          _forceRemove(element);
-        } catch (_) {}
-      } else {
-        try {
-          element.setAttribute(name, '');
-        } catch (_) {}
-      }
-    }
-  };
-  /**
-   * _initDocument
-   *
-   * @param dirty - a string of dirty markup
-   * @return a DOM, filled with the dirty markup
-   */
-  var _initDocument = function _initDocument(dirty) {
-    /* Create a HTML document */
-    var doc = null;
-    var leadingWhitespace = null;
-    if (FORCE_BODY) {
-      dirty = '<remove></remove>' + dirty;
-    } else {
-      /* If FORCE_BODY isn't used, leading whitespace needs to be preserved manually */
-      var matches = stringMatch(dirty, /^[\r\n\t ]+/);
-      leadingWhitespace = matches && matches[0];
-    }
-    if (PARSER_MEDIA_TYPE === 'application/xhtml+xml' && NAMESPACE === HTML_NAMESPACE) {
-      // Root of XHTML doc must contain xmlns declaration (see https://www.w3.org/TR/xhtml1/normative.html#strict)
-      dirty = '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>' + dirty + '</body></html>';
-    }
-    var dirtyPayload = trustedTypesPolicy ? trustedTypesPolicy.createHTML(dirty) : dirty;
-    /*
-     * Use the DOMParser API by default, fallback later if needs be
-     * DOMParser not work for svg when has multiple root element.
-     */
-    if (NAMESPACE === HTML_NAMESPACE) {
-      try {
-        doc = new DOMParser().parseFromString(dirtyPayload, PARSER_MEDIA_TYPE);
-      } catch (_) {}
-    }
-    /* Use createHTMLDocument in case DOMParser is not available */
-    if (!doc || !doc.documentElement) {
-      doc = implementation.createDocument(NAMESPACE, 'template', null);
-      try {
-        doc.documentElement.innerHTML = IS_EMPTY_INPUT ? emptyHTML : dirtyPayload;
-      } catch (_) {
-        // Syntax error if dirtyPayload is invalid xml
-      }
-    }
-    var body = doc.body || doc.documentElement;
-    if (dirty && leadingWhitespace) {
-      body.insertBefore(document.createTextNode(leadingWhitespace), body.childNodes[0] || null);
-    }
-    /* Work on whole document or just its body */
-    if (NAMESPACE === HTML_NAMESPACE) {
-      return getElementsByTagName.call(doc, WHOLE_DOCUMENT ? 'html' : 'body')[0];
-    }
-    return WHOLE_DOCUMENT ? doc.documentElement : body;
-  };
-  /**
-   * Creates a NodeIterator object that you can use to traverse filtered lists of nodes or elements in a document.
-   *
-   * @param root The root element or node to start traversing on.
-   * @return The created NodeIterator
-   */
-  var _createNodeIterator = function _createNodeIterator(root) {
-    return createNodeIterator.call(root.ownerDocument || root, root,
-    // eslint-disable-next-line no-bitwise
-    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_PROCESSING_INSTRUCTION | NodeFilter.SHOW_CDATA_SECTION, null);
-  };
-  /**
-   * _isClobbered
-   *
-   * @param element element to check for clobbering attacks
-   * @return true if clobbered, false if safe
-   */
-  var _isClobbered = function _isClobbered(element) {
-    return element instanceof HTMLFormElement && (typeof element.nodeName !== 'string' || typeof element.textContent !== 'string' || typeof element.removeChild !== 'function' || !(element.attributes instanceof NamedNodeMap) || typeof element.removeAttribute !== 'function' || typeof element.setAttribute !== 'function' || typeof element.namespaceURI !== 'string' || typeof element.insertBefore !== 'function' || typeof element.hasChildNodes !== 'function');
-  };
-  /**
-   * Checks whether the given object is a DOM node.
-   *
-   * @param value object to check whether it's a DOM node
-   * @return true is object is a DOM node
-   */
-  var _isNode = function _isNode(value) {
-    return typeof Node === 'function' && value instanceof Node;
-  };
-  function _executeHooks(hooks, currentNode, data) {
-    arrayForEach(hooks, function (hook) {
-      hook.call(DOMPurify, currentNode, data, CONFIG);
-    });
-  }
-  /**
-   * _sanitizeElements
-   *
-   * @protect nodeName
-   * @protect textContent
-   * @protect removeChild
-   * @param currentNode to check for permission to exist
-   * @return true if node was killed, false if left alive
-   */
-  var _sanitizeElements = function _sanitizeElements(currentNode) {
-    var content = null;
-    /* Execute a hook if present */
-    _executeHooks(hooks.beforeSanitizeElements, currentNode, null);
-    /* Check if element is clobbered or can clobber */
-    if (_isClobbered(currentNode)) {
-      _forceRemove(currentNode);
-      return true;
-    }
-    /* Now let's check the element's type and name */
-    var tagName = transformCaseFunc(currentNode.nodeName);
-    /* Execute a hook if present */
-    _executeHooks(hooks.uponSanitizeElement, currentNode, {
-      tagName: tagName,
-      allowedTags: ALLOWED_TAGS
-    });
-    /* Detect mXSS attempts abusing namespace confusion */
-    if (SAFE_FOR_XML && currentNode.hasChildNodes() && !_isNode(currentNode.firstElementChild) && regExpTest(/<[/\w!]/g, currentNode.innerHTML) && regExpTest(/<[/\w!]/g, currentNode.textContent)) {
-      _forceRemove(currentNode);
-      return true;
-    }
-    /* Remove any occurrence of processing instructions */
-    if (currentNode.nodeType === NODE_TYPE.progressingInstruction) {
-      _forceRemove(currentNode);
-      return true;
-    }
-    /* Remove any kind of possibly harmful comments */
-    if (SAFE_FOR_XML && currentNode.nodeType === NODE_TYPE.comment && regExpTest(/<[/\w]/g, currentNode.data)) {
-      _forceRemove(currentNode);
-      return true;
-    }
-    /* Remove element if anything forbids its presence */
-    if (!(EXTRA_ELEMENT_HANDLING.tagCheck instanceof Function && EXTRA_ELEMENT_HANDLING.tagCheck(tagName)) && (!ALLOWED_TAGS[tagName] || FORBID_TAGS[tagName])) {
-      /* Check if we have a custom element to handle */
-      if (!FORBID_TAGS[tagName] && _isBasicCustomElement(tagName)) {
-        if (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, tagName)) {
-          return false;
-        }
-        if (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(tagName)) {
-          return false;
-        }
-      }
-      /* Keep content except for bad-listed elements */
-      if (KEEP_CONTENT && !FORBID_CONTENTS[tagName]) {
-        var parentNode = getParentNode(currentNode) || currentNode.parentNode;
-        var childNodes = getChildNodes(currentNode) || currentNode.childNodes;
-        if (childNodes && parentNode) {
-          var childCount = childNodes.length;
-          for (var i = childCount - 1; i >= 0; --i) {
-            var childClone = cloneNode(childNodes[i], true);
-            childClone.__removalCount = (currentNode.__removalCount || 0) + 1;
-            parentNode.insertBefore(childClone, getNextSibling(currentNode));
-          }
-        }
-      }
-      _forceRemove(currentNode);
-      return true;
-    }
-    /* Check whether element has a valid namespace */
-    if (currentNode instanceof Element && !_checkValidNamespace(currentNode)) {
-      _forceRemove(currentNode);
-      return true;
-    }
-    /* Make sure that older browsers don't get fallback-tag mXSS */
-    if ((tagName === 'noscript' || tagName === 'noembed' || tagName === 'noframes') && regExpTest(/<\/no(script|embed|frames)/i, currentNode.innerHTML)) {
-      _forceRemove(currentNode);
-      return true;
-    }
-    /* Sanitize element content to be template-safe */
-    if (SAFE_FOR_TEMPLATES && currentNode.nodeType === NODE_TYPE.text) {
-      /* Get the element's text content */
-      content = currentNode.textContent;
-      arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], function (expr) {
-        content = stringReplace(content, expr, ' ');
-      });
-      if (currentNode.textContent !== content) {
-        arrayPush(DOMPurify.removed, {
-          element: currentNode.cloneNode()
-        });
-        currentNode.textContent = content;
-      }
-    }
-    /* Execute a hook if present */
-    _executeHooks(hooks.afterSanitizeElements, currentNode, null);
-    return false;
-  };
-  /**
-   * _isValidAttribute
-   *
-   * @param lcTag Lowercase tag name of containing element.
-   * @param lcName Lowercase attribute name.
-   * @param value Attribute value.
-   * @return Returns true if `value` is valid, otherwise false.
-   */
-  // eslint-disable-next-line complexity
-  var _isValidAttribute = function _isValidAttribute(lcTag, lcName, value) {
-    /* Make sure attribute cannot clobber */
-    if (SANITIZE_DOM && (lcName === 'id' || lcName === 'name') && (value in document || value in formElement)) {
-      return false;
-    }
-    /* Allow valid data-* attributes: At least one character after "-"
-        (https://html.spec.whatwg.org/multipage/dom.html#embedding-custom-non-visible-data-with-the-data-*-attributes)
-        XML-compatible (https://html.spec.whatwg.org/multipage/infrastructure.html#xml-compatible and http://www.w3.org/TR/xml/#d0e804)
-        We don't need to check the value; it's always URI safe. */
-    if (ALLOW_DATA_ATTR && !FORBID_ATTR[lcName] && regExpTest(DATA_ATTR, lcName)) ;else if (ALLOW_ARIA_ATTR && regExpTest(ARIA_ATTR, lcName)) ;else if (EXTRA_ELEMENT_HANDLING.attributeCheck instanceof Function && EXTRA_ELEMENT_HANDLING.attributeCheck(lcName, lcTag)) ;else if (!ALLOWED_ATTR[lcName] || FORBID_ATTR[lcName]) {
-      if (
-      // First condition does a very basic check if a) it's basically a valid custom element tagname AND
-      // b) if the tagName passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.tagNameCheck
-      // and c) if the attribute name passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.attributeNameCheck
-      _isBasicCustomElement(lcTag) && (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, lcTag) || CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(lcTag)) && (CUSTOM_ELEMENT_HANDLING.attributeNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.attributeNameCheck, lcName) || CUSTOM_ELEMENT_HANDLING.attributeNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.attributeNameCheck(lcName, lcTag)) ||
-      // Alternative, second condition checks if it's an `is`-attribute, AND
-      // the value passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.tagNameCheck
-      lcName === 'is' && CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements && (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, value) || CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(value))) ;else {
-        return false;
-      }
-      /* Check value is safe. First, is attr inert? If so, is safe */
-    } else if (URI_SAFE_ATTRIBUTES[lcName]) ;else if (regExpTest(IS_ALLOWED_URI$1, stringReplace(value, ATTR_WHITESPACE, ''))) ;else if ((lcName === 'src' || lcName === 'xlink:href' || lcName === 'href') && lcTag !== 'script' && stringIndexOf(value, 'data:') === 0 && DATA_URI_TAGS[lcTag]) ;else if (ALLOW_UNKNOWN_PROTOCOLS && !regExpTest(IS_SCRIPT_OR_DATA, stringReplace(value, ATTR_WHITESPACE, ''))) ;else if (value) {
-      return false;
-    } else ;
-    return true;
-  };
-  /**
-   * _isBasicCustomElement
-   * checks if at least one dash is included in tagName, and it's not the first char
-   * for more sophisticated checking see https://github.com/sindresorhus/validate-element-name
-   *
-   * @param tagName name of the tag of the node to sanitize
-   * @returns Returns true if the tag name meets the basic criteria for a custom element, otherwise false.
-   */
-  var _isBasicCustomElement = function _isBasicCustomElement(tagName) {
-    return tagName !== 'annotation-xml' && stringMatch(tagName, CUSTOM_ELEMENT);
-  };
-  /**
-   * _sanitizeAttributes
-   *
-   * @protect attributes
-   * @protect nodeName
-   * @protect removeAttribute
-   * @protect setAttribute
-   *
-   * @param currentNode to sanitize
-   */
-  var _sanitizeAttributes = function _sanitizeAttributes(currentNode) {
-    /* Execute a hook if present */
-    _executeHooks(hooks.beforeSanitizeAttributes, currentNode, null);
-    var attributes = currentNode.attributes;
-    /* Check if we have attributes; if not we might have a text node */
-    if (!attributes || _isClobbered(currentNode)) {
-      return;
-    }
-    var hookEvent = {
-      attrName: '',
-      attrValue: '',
-      keepAttr: true,
-      allowedAttributes: ALLOWED_ATTR,
-      forceKeepAttr: undefined
-    };
-    var l = attributes.length;
-    /* Go backwards over all attributes; safely remove bad ones */
-    var _loop = function _loop() {
-        var attr = attributes[l];
-        var name = attr.name,
-          namespaceURI = attr.namespaceURI,
-          attrValue = attr.value;
-        var lcName = transformCaseFunc(name);
-        var initValue = attrValue;
-        var value = name === 'value' ? initValue : stringTrim(initValue);
-        /* Execute a hook if present */
-        hookEvent.attrName = lcName;
-        hookEvent.attrValue = value;
-        hookEvent.keepAttr = true;
-        hookEvent.forceKeepAttr = undefined; // Allows developers to see this is a property they can set
-        _executeHooks(hooks.uponSanitizeAttribute, currentNode, hookEvent);
-        value = hookEvent.attrValue;
-        /* Full DOM Clobbering protection via namespace isolation,
-         * Prefix id and name attributes with `user-content-`
-         */
-        if (SANITIZE_NAMED_PROPS && (lcName === 'id' || lcName === 'name')) {
-          // Remove the attribute with this value
-          _removeAttribute(name, currentNode);
-          // Prefix the value and later re-create the attribute with the sanitized value
-          value = SANITIZE_NAMED_PROPS_PREFIX + value;
-        }
-        /* Work around a security issue with comments inside attributes */
-        if (SAFE_FOR_XML && regExpTest(/((--!?|])>)|<\/(style|title|textarea)/i, value)) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Make sure we cannot easily use animated hrefs, even if animations are allowed */
-        if (lcName === 'attributename' && stringMatch(value, 'href')) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Did the hooks approve of the attribute? */
-        if (hookEvent.forceKeepAttr) {
-          return 0; // continue
-        }
-        /* Did the hooks approve of the attribute? */
-        if (!hookEvent.keepAttr) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Work around a security issue in jQuery 3.0 */
-        if (!ALLOW_SELF_CLOSE_IN_ATTR && regExpTest(/\/>/i, value)) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Sanitize attribute content to be template-safe */
-        if (SAFE_FOR_TEMPLATES) {
-          arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], function (expr) {
-            value = stringReplace(value, expr, ' ');
-          });
-        }
-        /* Is `value` valid for this attribute? */
-        var lcTag = transformCaseFunc(currentNode.nodeName);
-        if (!_isValidAttribute(lcTag, lcName, value)) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Handle attributes that require Trusted Types */
-        if (trustedTypesPolicy && _typeof(trustedTypes) === 'object' && typeof trustedTypes.getAttributeType === 'function') {
-          if (namespaceURI) ;else {
-            switch (trustedTypes.getAttributeType(lcTag, lcName)) {
-              case 'TrustedHTML':
-                {
-                  value = trustedTypesPolicy.createHTML(value);
-                  break;
-                }
-              case 'TrustedScriptURL':
-                {
-                  value = trustedTypesPolicy.createScriptURL(value);
-                  break;
-                }
-            }
-          }
-        }
-        /* Handle invalid data-* attribute set by try-catching it */
-        if (value !== initValue) {
-          try {
-            if (namespaceURI) {
-              currentNode.setAttributeNS(namespaceURI, name, value);
-            } else {
-              /* Fallback to setAttribute() for browser-unrecognized namespaces e.g. "x-schema". */
-              currentNode.setAttribute(name, value);
-            }
-            if (_isClobbered(currentNode)) {
-              _forceRemove(currentNode);
-            } else {
-              arrayPop(DOMPurify.removed);
-            }
-          } catch (_) {
-            _removeAttribute(name, currentNode);
-          }
-        }
-      },
-      _ret;
-    while (l--) {
-      _ret = _loop();
-      if (_ret === 0) continue;
-    }
-    /* Execute a hook if present */
-    _executeHooks(hooks.afterSanitizeAttributes, currentNode, null);
-  };
-  /**
-   * _sanitizeShadowDOM
-   *
-   * @param fragment to iterate over recursively
-   */
-  var _sanitizeShadowDOM = function _sanitizeShadowDOM(fragment) {
-    var shadowNode = null;
-    var shadowIterator = _createNodeIterator(fragment);
-    /* Execute a hook if present */
-    _executeHooks(hooks.beforeSanitizeShadowDOM, fragment, null);
-    while (shadowNode = shadowIterator.nextNode()) {
-      /* Execute a hook if present */
-      _executeHooks(hooks.uponSanitizeShadowNode, shadowNode, null);
-      /* Sanitize tags and elements */
-      _sanitizeElements(shadowNode);
-      /* Check attributes next */
-      _sanitizeAttributes(shadowNode);
-      /* Deep shadow DOM detected */
-      if (shadowNode.content instanceof DocumentFragment) {
-        _sanitizeShadowDOM(shadowNode.content);
-      }
-    }
-    /* Execute a hook if present */
-    _executeHooks(hooks.afterSanitizeShadowDOM, fragment, null);
-  };
-  // eslint-disable-next-line complexity
-  DOMPurify.sanitize = function (dirty) {
-    var cfg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    var body = null;
-    var importedNode = null;
-    var currentNode = null;
-    var returnNode = null;
-    /* Make sure we have a string to sanitize.
-      DO NOT return early, as this will return the wrong type if
-      the user has requested a DOM object rather than a string */
-    IS_EMPTY_INPUT = !dirty;
-    if (IS_EMPTY_INPUT) {
-      dirty = '<!-->';
-    }
-    /* Stringify, in case dirty is an object */
-    if (typeof dirty !== 'string' && !_isNode(dirty)) {
-      if (typeof dirty.toString === 'function') {
-        dirty = dirty.toString();
-        if (typeof dirty !== 'string') {
-          throw typeErrorCreate('dirty is not a string, aborting');
-        }
-      } else {
-        throw typeErrorCreate('toString is not a function');
-      }
-    }
-    /* Return dirty HTML if DOMPurify cannot run */
-    if (!DOMPurify.isSupported) {
-      return dirty;
-    }
-    /* Assign config vars */
-    if (!SET_CONFIG) {
-      _parseConfig(cfg);
-    }
-    /* Clean up removed elements */
-    DOMPurify.removed = [];
-    /* Check if dirty is correctly typed for IN_PLACE */
-    if (typeof dirty === 'string') {
-      IN_PLACE = false;
-    }
-    if (IN_PLACE) {
-      /* Do some early pre-sanitization to avoid unsafe root nodes */
-      if (dirty.nodeName) {
-        var tagName = transformCaseFunc(dirty.nodeName);
-        if (!ALLOWED_TAGS[tagName] || FORBID_TAGS[tagName]) {
-          throw typeErrorCreate('root node is forbidden and cannot be sanitized in-place');
-        }
-      }
-    } else if (dirty instanceof Node) {
-      /* If dirty is a DOM element, append to an empty document to avoid
-         elements being stripped by the parser */
-      body = _initDocument('<!---->');
-      importedNode = body.ownerDocument.importNode(dirty, true);
-      if (importedNode.nodeType === NODE_TYPE.element && importedNode.nodeName === 'BODY') {
-        /* Node is already a body, use as is */
-        body = importedNode;
-      } else if (importedNode.nodeName === 'HTML') {
-        body = importedNode;
-      } else {
-        // eslint-disable-next-line unicorn/prefer-dom-node-append
-        body.appendChild(importedNode);
-      }
-    } else {
-      /* Exit directly if we have nothing to do */
-      if (!RETURN_DOM && !SAFE_FOR_TEMPLATES && !WHOLE_DOCUMENT &&
-      // eslint-disable-next-line unicorn/prefer-includes
-      dirty.indexOf('<') === -1) {
-        return trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML(dirty) : dirty;
-      }
-      /* Initialize the document to work on */
-      body = _initDocument(dirty);
-      /* Check we have a DOM node from the data */
-      if (!body) {
-        return RETURN_DOM ? null : RETURN_TRUSTED_TYPE ? emptyHTML : '';
-      }
-    }
-    /* Remove first element node (ours) if FORCE_BODY is set */
-    if (body && FORCE_BODY) {
-      _forceRemove(body.firstChild);
-    }
-    /* Get node iterator */
-    var nodeIterator = _createNodeIterator(IN_PLACE ? dirty : body);
-    /* Now start iterating over the created document */
-    while (currentNode = nodeIterator.nextNode()) {
-      /* Sanitize tags and elements */
-      _sanitizeElements(currentNode);
-      /* Check attributes next */
-      _sanitizeAttributes(currentNode);
-      /* Shadow DOM detected, sanitize it */
-      if (currentNode.content instanceof DocumentFragment) {
-        _sanitizeShadowDOM(currentNode.content);
-      }
-    }
-    /* If we sanitized `dirty` in-place, return it. */
-    if (IN_PLACE) {
-      return dirty;
-    }
-    /* Return sanitized string or DOM */
-    if (RETURN_DOM) {
-      if (RETURN_DOM_FRAGMENT) {
-        returnNode = createDocumentFragment.call(body.ownerDocument);
-        while (body.firstChild) {
-          // eslint-disable-next-line unicorn/prefer-dom-node-append
-          returnNode.appendChild(body.firstChild);
-        }
-      } else {
-        returnNode = body;
-      }
-      if (ALLOWED_ATTR.shadowroot || ALLOWED_ATTR.shadowrootmode) {
-        /*
-          AdoptNode() is not used because internal state is not reset
-          (e.g. the past names map of a HTMLFormElement), this is safe
-          in theory but we would rather not risk another attack vector.
-          The state that is cloned by importNode() is explicitly defined
-          by the specs.
-        */
-        returnNode = importNode.call(originalDocument, returnNode, true);
-      }
-      return returnNode;
-    }
-    var serializedHTML = WHOLE_DOCUMENT ? body.outerHTML : body.innerHTML;
-    /* Serialize doctype if allowed */
-    if (WHOLE_DOCUMENT && ALLOWED_TAGS['!doctype'] && body.ownerDocument && body.ownerDocument.doctype && body.ownerDocument.doctype.name && regExpTest(DOCTYPE_NAME, body.ownerDocument.doctype.name)) {
-      serializedHTML = '<!DOCTYPE ' + body.ownerDocument.doctype.name + '>\n' + serializedHTML;
-    }
-    /* Sanitize final string template-safe */
-    if (SAFE_FOR_TEMPLATES) {
-      arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], function (expr) {
-        serializedHTML = stringReplace(serializedHTML, expr, ' ');
-      });
-    }
-    return trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML(serializedHTML) : serializedHTML;
-  };
-  DOMPurify.setConfig = function () {
-    var cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    _parseConfig(cfg);
-    SET_CONFIG = true;
-  };
-  DOMPurify.clearConfig = function () {
-    CONFIG = null;
-    SET_CONFIG = false;
-  };
-  DOMPurify.isValidAttribute = function (tag, attr, value) {
-    /* Initialize shared config vars if necessary. */
-    if (!CONFIG) {
-      _parseConfig({});
-    }
-    var lcTag = transformCaseFunc(tag);
-    var lcName = transformCaseFunc(attr);
-    return _isValidAttribute(lcTag, lcName, value);
-  };
-  DOMPurify.addHook = function (entryPoint, hookFunction) {
-    if (typeof hookFunction !== 'function') {
-      return;
-    }
-    arrayPush(hooks[entryPoint], hookFunction);
-  };
-  DOMPurify.removeHook = function (entryPoint, hookFunction) {
-    if (hookFunction !== undefined) {
-      var index = arrayLastIndexOf(hooks[entryPoint], hookFunction);
-      return index === -1 ? undefined : arraySplice(hooks[entryPoint], index, 1)[0];
-    }
-    return arrayPop(hooks[entryPoint]);
-  };
-  DOMPurify.removeHooks = function (entryPoint) {
-    hooks[entryPoint] = [];
-  };
-  DOMPurify.removeAllHooks = function () {
-    hooks = _createHooksMap();
-  };
-  return DOMPurify;
-}
-var purify = createDOMPurify();
-
 // src/utils/asArray.ts
 function asArray(v) {
   return [].concat(v);
@@ -14312,46 +12938,84 @@ function IconBase(props) {
 // THIS FILE IS AUTO GENERATED
 function FaAlignCenter(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M432 160H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0 256H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM108.1 96h231.81A12.09 12.09 0 0 0 352 83.9V44.09A12.09 12.09 0 0 0 339.91 32H108.1A12.09 12.09 0 0 0 96 44.09V83.9A12.1 12.1 0 0 0 108.1 96zm231.81 256A12.09 12.09 0 0 0 352 339.9v-39.81A12.09 12.09 0 0 0 339.91 288H108.1A12.09 12.09 0 0 0 96 300.09v39.81a12.1 12.1 0 0 0 12.1 12.1z"},"child":[]}]})(props);}function FaAlignLeft(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M12.83 352h262.34A12.82 12.82 0 0 0 288 339.17v-38.34A12.82 12.82 0 0 0 275.17 288H12.83A12.82 12.82 0 0 0 0 300.83v38.34A12.82 12.82 0 0 0 12.83 352zm0-256h262.34A12.82 12.82 0 0 0 288 83.17V44.83A12.82 12.82 0 0 0 275.17 32H12.83A12.82 12.82 0 0 0 0 44.83v38.34A12.82 12.82 0 0 0 12.83 96zM432 160H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0 256H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaAlignRight(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M16 224h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16zm416 192H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm3.17-384H172.83A12.82 12.82 0 0 0 160 44.83v38.34A12.82 12.82 0 0 0 172.83 96h262.34A12.82 12.82 0 0 0 448 83.17V44.83A12.82 12.82 0 0 0 435.17 32zm0 256H172.83A12.82 12.82 0 0 0 160 300.83v38.34A12.82 12.82 0 0 0 172.83 352h262.34A12.82 12.82 0 0 0 448 339.17v-38.34A12.82 12.82 0 0 0 435.17 288z"},"child":[]}]})(props);}function FaBold(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 384 512"},"child":[{"tag":"path","attr":{"d":"M333.49 238a122 122 0 0 0 27-65.21C367.87 96.49 308 32 233.42 32H34a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h31.87v288H34a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h209.32c70.8 0 134.14-51.75 141-122.4 4.74-48.45-16.39-92.06-50.83-119.6zM145.66 112h87.76a48 48 0 0 1 0 96h-87.76zm87.76 288h-87.76V288h87.76a56 56 0 0 1 0 112z"},"child":[]}]})(props);}function FaCaretDown(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 320 512"},"child":[{"tag":"path","attr":{"d":"M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z"},"child":[]}]})(props);}function FaCheck(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"},"child":[]}]})(props);}function FaChevronDown(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"},"child":[]}]})(props);}function FaChevronUp(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M240.971 130.524l194.343 194.343c9.373 9.373 9.373 24.569 0 33.941l-22.667 22.667c-9.357 9.357-24.522 9.375-33.901.04L224 227.495 69.255 381.516c-9.379 9.335-24.544 9.317-33.901-.04l-22.667-22.667c-9.373-9.373-9.373-24.569 0-33.941L207.03 130.525c9.372-9.373 24.568-9.373 33.941-.001z"},"child":[]}]})(props);}function FaCode(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 640 512"},"child":[{"tag":"path","attr":{"d":"M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z"},"child":[]}]})(props);}function FaCog(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"},"child":[]}]})(props);}function FaCopy(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M320 448v40c0 13.255-10.745 24-24 24H24c-13.255 0-24-10.745-24-24V120c0-13.255 10.745-24 24-24h72v296c0 30.879 25.121 56 56 56h168zm0-344V0H152c-13.255 0-24 10.745-24 24v368c0 13.255 10.745 24 24 24h272c13.255 0 24-10.745 24-24V128H344c-13.2 0-24-10.8-24-24zm120.971-31.029L375.029 7.029A24 24 0 0 0 358.059 0H352v96h96v-6.059a24 24 0 0 0-7.029-16.97z"},"child":[]}]})(props);}function FaCut(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M278.06 256L444.48 89.57c4.69-4.69 4.69-12.29 0-16.97-32.8-32.8-85.99-32.8-118.79 0L210.18 188.12l-24.86-24.86c4.31-10.92 6.68-22.81 6.68-35.26 0-53.02-42.98-96-96-96S0 74.98 0 128s42.98 96 96 96c4.54 0 8.99-.32 13.36-.93L142.29 256l-32.93 32.93c-4.37-.61-8.83-.93-13.36-.93-53.02 0-96 42.98-96 96s42.98 96 96 96 96-42.98 96-96c0-12.45-2.37-24.34-6.68-35.26l24.86-24.86L325.69 439.4c32.8 32.8 85.99 32.8 118.79 0 4.69-4.68 4.69-12.28 0-16.97L278.06 256zM96 160c-17.64 0-32-14.36-32-32s14.36-32 32-32 32 14.36 32 32-14.36 32-32 32zm0 256c-17.64 0-32-14.36-32-32s14.36-32 32-32 32 14.36 32 32-14.36 32-32 32z"},"child":[]}]})(props);}function FaEdit(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 576 512"},"child":[{"tag":"path","attr":{"d":"M402.6 83.2l90.2 90.2c3.8 3.8 3.8 10 0 13.8L274.4 405.6l-92.8 10.3c-12.4 1.4-22.9-9.1-21.5-21.5l10.3-92.8L388.8 83.2c3.8-3.8 10-3.8 13.8 0zm162-22.9l-48.8-48.8c-15.2-15.2-39.9-15.2-55.2 0l-35.4 35.4c-3.8 3.8-3.8 10 0 13.8l90.2 90.2c3.8 3.8 10 3.8 13.8 0l35.4-35.4c15.2-15.3 15.2-40 0-55.2zM384 346.2V448H64V128h229.8c3.2 0 6.2-1.3 8.5-3.5l40-40c7.6-7.6 2.2-20.5-8.5-20.5H48C21.5 64 0 85.5 0 112v352c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V306.2c0-10.7-12.9-16-20.5-8.5l-40 40c-2.2 2.3-3.5 5.3-3.5 8.5z"},"child":[]}]})(props);}function FaEye(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 576 512"},"child":[{"tag":"path","attr":{"d":"M572.52 241.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400a144 144 0 1 1 144-144 143.93 143.93 0 0 1-144 144zm0-240a95.31 95.31 0 0 0-25.31 3.79 47.85 47.85 0 0 1-66.9 66.9A95.78 95.78 0 1 0 288 160z"},"child":[]}]})(props);}function FaHeading(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M448 96v320h32a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16H320a16 16 0 0 1-16-16v-32a16 16 0 0 1 16-16h32V288H160v128h32a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16H32a16 16 0 0 1-16-16v-32a16 16 0 0 1 16-16h32V96H32a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16h-32v128h192V96h-32a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16z"},"child":[]}]})(props);}function FaHighlighter(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 544 512"},"child":[{"tag":"path","attr":{"d":"M0 479.98L99.92 512l35.45-35.45-67.04-67.04L0 479.98zm124.61-240.01a36.592 36.592 0 0 0-10.79 38.1l13.05 42.83-50.93 50.94 96.23 96.23 50.86-50.86 42.74 13.08c13.73 4.2 28.65-.01 38.15-10.78l35.55-41.64-173.34-173.34-41.52 35.44zm403.31-160.7l-63.2-63.2c-20.49-20.49-53.38-21.52-75.12-2.35L190.55 183.68l169.77 169.78L530.27 154.4c19.18-21.74 18.15-54.63-2.35-75.13z"},"child":[]}]})(props);}function FaImage(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M464 448H48c-26.51 0-48-21.49-48-48V112c0-26.51 21.49-48 48-48h416c26.51 0 48 21.49 48 48v288c0 26.51-21.49 48-48 48zM112 120c-30.928 0-56 25.072-56 56s25.072 56 56 56 56-25.072 56-56-25.072-56-56-56zM64 384h384V272l-87.515-87.515c-4.686-4.686-12.284-4.686-16.971 0L208 320l-55.515-55.515c-4.686-4.686-12.284-4.686-16.971 0L64 336v48z"},"child":[]}]})(props);}function FaItalic(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 320 512"},"child":[{"tag":"path","attr":{"d":"M320 48v32a16 16 0 0 1-16 16h-62.76l-80 320H208a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16H16a16 16 0 0 1-16-16v-32a16 16 0 0 1 16-16h62.76l80-320H112a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h192a16 16 0 0 1 16 16z"},"child":[]}]})(props);}function FaLink(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z"},"child":[]}]})(props);}function FaListOl(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M61.77 401l17.5-20.15a19.92 19.92 0 0 0 5.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h22.83a157.41 157.41 0 0 0-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33 0 15.94 2.44 15.94 9.09 0 4.72-4.2 8.22-14.36 8.22a41.54 41.54 0 0 1-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16 0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM16 160h64a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H64V40a8 8 0 0 0-8-8H32a8 8 0 0 0-7.14 4.42l-8 16A8 8 0 0 0 24 64h8v64H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8zm-3.91 160H80a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44 0-29.06-25-39.56-44.47-39.56-21.36 0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44 0 0 1 9.46-3.84c3.33 0 9.28 1.56 9.28 8.75C51 248.19 0 257.31 0 304.59v4C0 316 5.08 320 12.09 320z"},"child":[]}]})(props);}function FaListUl(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M48 48a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm448 16H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaMinus(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M416 208H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h384c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"},"child":[]}]})(props);}function FaMoon(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M283.211 512c78.962 0 151.079-35.925 198.857-94.792 7.068-8.708-.639-21.43-11.562-19.35-124.203 23.654-238.262-71.576-238.262-196.954 0-72.222 38.662-138.635 101.498-174.394 9.686-5.512 7.25-20.197-3.756-22.23A258.156 258.156 0 0 0 283.211 0c-141.309 0-256 114.511-256 256 0 141.309 114.511 256 256 256z"},"child":[]}]})(props);}function FaMousePointer(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 320 512"},"child":[{"tag":"path","attr":{"d":"M302.189 329.126H196.105l55.831 135.993c3.889 9.428-.555 19.999-9.444 23.999l-49.165 21.427c-9.165 4-19.443-.571-23.332-9.714l-53.053-129.136-86.664 89.138C18.729 472.71 0 463.554 0 447.977V18.299C0 1.899 19.921-6.096 30.277 5.443l284.412 292.542c11.472 11.179 3.007 31.141-12.5 31.141z"},"child":[]}]})(props);}function FaPalette(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M204.3 5C104.9 24.4 24.8 104.3 5.2 203.4c-37 187 131.7 326.4 258.8 306.7 41.2-6.4 61.4-54.6 42.5-91.7-23.1-45.4 9.9-98.4 60.9-98.4h79.7c35.8 0 64.8-29.6 64.9-65.3C511.5 97.1 368.1-26.9 204.3 5zM96 320c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm32-128c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128-64c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 64c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z"},"child":[]}]})(props);}function FaPaste(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M128 184c0-30.879 25.122-56 56-56h136V56c0-13.255-10.745-24-24-24h-80.61C204.306 12.89 183.637 0 160 0s-44.306 12.89-55.39 32H24C10.745 32 0 42.745 0 56v336c0 13.255 10.745 24 24 24h104V184zm32-144c13.255 0 24 10.745 24 24s-10.745 24-24 24-24-10.745-24-24 10.745-24 24-24zm184 248h104v200c0 13.255-10.745 24-24 24H184c-13.255 0-24-10.745-24-24V184c0-13.255 10.745-24 24-24h136v104c0 13.2 10.8 24 24 24zm104-38.059V256h-96v-96h6.059a24 24 0 0 1 16.97 7.029l65.941 65.941a24.002 24.002 0 0 1 7.03 16.971z"},"child":[]}]})(props);}function FaQuoteRight(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M464 32H336c-26.5 0-48 21.5-48 48v128c0 26.5 21.5 48 48 48h80v64c0 35.3-28.7 64-64 64h-8c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h8c88.4 0 160-71.6 160-160V80c0-26.5-21.5-48-48-48zm-288 0H48C21.5 32 0 53.5 0 80v128c0 26.5 21.5 48 48 48h80v64c0 35.3-28.7 64-64 64h-8c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h8c88.4 0 160-71.6 160-160V80c0-26.5-21.5-48-48-48z"},"child":[]}]})(props);}function FaRedo(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M500.33 0h-47.41a12 12 0 0 0-12 12.57l4 82.76A247.42 247.42 0 0 0 256 8C119.34 8 7.9 119.53 8 256.19 8.1 393.07 119.1 504 256 504a247.1 247.1 0 0 0 166.18-63.91 12 12 0 0 0 .48-17.43l-34-34a12 12 0 0 0-16.38-.55A176 176 0 1 1 402.1 157.8l-101.53-4.87a12 12 0 0 0-12.57 12v47.41a12 12 0 0 0 12 12h200.33a12 12 0 0 0 12-12V12a12 12 0 0 0-12-12z"},"child":[]}]})(props);}function FaSearch(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"},"child":[]}]})(props);}function FaSmile(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 496 512"},"child":[{"tag":"path","attr":{"d":"M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm80 168c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm-160 0c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm194.8 170.2C334.3 380.4 292.5 400 248 400s-86.3-19.6-114.8-53.8c-13.6-16.3 11-36.7 24.6-20.5 22.4 26.9 55.2 42.2 90.2 42.2s67.8-15.4 90.2-42.2c13.4-16.2 38.1 4.2 24.6 20.5z"},"child":[]}]})(props);}function FaStrikethrough(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 224H293.9l-87.17-26.83A43.55 43.55 0 0 1 219.55 112h66.79A49.89 49.89 0 0 1 331 139.58a16 16 0 0 0 21.46 7.15l42.94-21.47a16 16 0 0 0 7.16-21.46l-.53-1A128 128 0 0 0 287.51 32h-68a123.68 123.68 0 0 0-123 135.64c2 20.89 10.1 39.83 21.78 56.36H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h480a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm-180.24 96A43 43 0 0 1 336 356.45 43.59 43.59 0 0 1 292.45 400h-66.79A49.89 49.89 0 0 1 181 372.42a16 16 0 0 0-21.46-7.15l-42.94 21.47a16 16 0 0 0-7.16 21.46l.53 1A128 128 0 0 0 224.49 480h68a123.68 123.68 0 0 0 123-135.64 114.25 114.25 0 0 0-5.34-24.36z"},"child":[]}]})(props);}function FaSubscript(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 448h-16V304a16 16 0 0 0-16-16h-48a16 16 0 0 0-14.29 8.83l-16 32A16 16 0 0 0 400 352h16v96h-16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h96a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM336 64h-67a16 16 0 0 0-13.14 6.87l-79.9 115-79.9-115A16 16 0 0 0 83 64H16A16 16 0 0 0 0 80v48a16 16 0 0 0 16 16h33.48l77.81 112-77.81 112H16a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h67a16 16 0 0 0 13.14-6.87l79.9-115 79.9 115A16 16 0 0 0 269 448h67a16 16 0 0 0 16-16v-48a16 16 0 0 0-16-16h-33.48l-77.81-112 77.81-112H336a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaSun(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M256 160c-52.9 0-96 43.1-96 96s43.1 96 96 96 96-43.1 96-96-43.1-96-96-96zm246.4 80.5l-94.7-47.3 33.5-100.4c4.5-13.6-8.4-26.5-21.9-21.9l-100.4 33.5-47.4-94.8c-6.4-12.8-24.6-12.8-31 0l-47.3 94.7L92.7 70.8c-13.6-4.5-26.5 8.4-21.9 21.9l33.5 100.4-94.7 47.4c-12.8 6.4-12.8 24.6 0 31l94.7 47.3-33.5 100.5c-4.5 13.6 8.4 26.5 21.9 21.9l100.4-33.5 47.3 94.7c6.4 12.8 24.6 12.8 31 0l47.3-94.7 100.4 33.5c13.6 4.5 26.5-8.4 21.9-21.9l-33.5-100.4 94.7-47.3c13-6.5 13-24.7.2-31.1zm-155.9 106c-49.9 49.9-131.1 49.9-181 0-49.9-49.9-49.9-131.1 0-181 49.9-49.9 131.1-49.9 181 0 49.9 49.9 49.9 131.1 0 181z"},"child":[]}]})(props);}function FaSuperscript(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 160h-16V16a16 16 0 0 0-16-16h-48a16 16 0 0 0-14.29 8.83l-16 32A16 16 0 0 0 400 64h16v96h-16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h96a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM336 64h-67a16 16 0 0 0-13.14 6.87l-79.9 115-79.9-115A16 16 0 0 0 83 64H16A16 16 0 0 0 0 80v48a16 16 0 0 0 16 16h33.48l77.81 112-77.81 112H16a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h67a16 16 0 0 0 13.14-6.87l79.9-115 79.9 115A16 16 0 0 0 269 448h67a16 16 0 0 0 16-16v-48a16 16 0 0 0-16-16h-33.48l-77.81-112 77.81-112H336a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaTable(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M464 32H48C21.49 32 0 53.49 0 80v352c0 26.51 21.49 48 48 48h416c26.51 0 48-21.49 48-48V80c0-26.51-21.49-48-48-48zM224 416H64v-96h160v96zm0-160H64v-96h160v96zm224 160H288v-96h160v96zm0-160H288v-96h160v96z"},"child":[]}]})(props);}function FaTextHeight(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 576 512"},"child":[{"tag":"path","attr":{"d":"M304 32H16A16 16 0 0 0 0 48v96a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32h56v304H80a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16h-40V112h56v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zm256 336h-48V144h48c14.31 0 21.33-17.31 11.31-27.31l-80-80a16 16 0 0 0-22.62 0l-80 80C379.36 126 384.36 144 400 144h48v224h-48c-14.31 0-21.32 17.31-11.31 27.31l80 80a16 16 0 0 0 22.62 0l80-80C580.64 386 575.64 368 560 368z"},"child":[]}]})(props);}function FaTextWidth(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M432 32H16A16 16 0 0 0 0 48v80a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-16h120v112h-24a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16h-24V112h120v16a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zm-68.69 260.69C354 283.36 336 288.36 336 304v48H112v-48c0-14.31-17.31-21.32-27.31-11.31l-80 80a16 16 0 0 0 0 22.62l80 80C94 484.64 112 479.64 112 464v-48h224v48c0 14.31 17.31 21.33 27.31 11.31l80-80a16 16 0 0 0 0-22.62z"},"child":[]}]})(props);}function FaTimes(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 352 512"},"child":[{"tag":"path","attr":{"d":"M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"},"child":[]}]})(props);}function FaTrash(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"},"child":[]}]})(props);}function FaUnderline(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M32 64h32v160c0 88.22 71.78 160 160 160s160-71.78 160-160V64h32a16 16 0 0 0 16-16V16a16 16 0 0 0-16-16H272a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32v160a80 80 0 0 1-160 0V64h32a16 16 0 0 0 16-16V16a16 16 0 0 0-16-16H32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16zm400 384H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaUndo(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M212.333 224.333H12c-6.627 0-12-5.373-12-12V12C0 5.373 5.373 0 12 0h48c6.627 0 12 5.373 12 12v78.112C117.773 39.279 184.26 7.47 258.175 8.007c136.906.994 246.448 111.623 246.157 248.532C504.041 393.258 393.12 504 256.333 504c-64.089 0-122.496-24.313-166.51-64.215-5.099-4.622-5.334-12.554-.467-17.42l33.967-33.967c4.474-4.474 11.662-4.717 16.401-.525C170.76 415.336 211.58 432 256.333 432c97.268 0 176-78.716 176-176 0-97.267-78.716-176-176-176-58.496 0-110.28 28.476-142.274 72.333h98.274c6.627 0 12 5.373 12 12v48c0 6.627-5.373 12-12 12z"},"child":[]}]})(props);}function FaUnlink(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M304.083 405.907c4.686 4.686 4.686 12.284 0 16.971l-44.674 44.674c-59.263 59.262-155.693 59.266-214.961 0-59.264-59.265-59.264-155.696 0-214.96l44.675-44.675c4.686-4.686 12.284-4.686 16.971 0l39.598 39.598c4.686 4.686 4.686 12.284 0 16.971l-44.675 44.674c-28.072 28.073-28.072 73.75 0 101.823 28.072 28.072 73.75 28.073 101.824 0l44.674-44.674c4.686-4.686 12.284-4.686 16.971 0l39.597 39.598zm-56.568-260.216c4.686 4.686 12.284 4.686 16.971 0l44.674-44.674c28.072-28.075 73.75-28.073 101.824 0 28.072 28.073 28.072 73.75 0 101.823l-44.675 44.674c-4.686 4.686-4.686 12.284 0 16.971l39.598 39.598c4.686 4.686 12.284 4.686 16.971 0l44.675-44.675c59.265-59.265 59.265-155.695 0-214.96-59.266-59.264-155.695-59.264-214.961 0l-44.674 44.674c-4.686 4.686-4.686 12.284 0 16.971l39.597 39.598zm234.828 359.28l22.627-22.627c9.373-9.373 9.373-24.569 0-33.941L63.598 7.029c-9.373-9.373-24.569-9.373-33.941 0L7.029 29.657c-9.373 9.373-9.373 24.569 0 33.941l441.373 441.373c9.373 9.372 24.569 9.372 33.941 0z"},"child":[]}]})(props);}
 
-// Function to sanitize HTML based on allowed tags
-var sanitizeHTML = function sanitizeHTML(html, allowedTags) {
-  if (!allowedTags || allowedTags.length === 0) return html;
-  return purify.sanitize(html, {
-    ALLOWED_TAGS: allowedTags,
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'style', 'class', 'target', 'rel', 'width', 'height', 'border', 'border-radius', 'margin', 'padding', 'text-align', 'list-style-type', 'allowedTags']
-  });
-};
-
-// Function to check if HTML contains only allowed tags
-var containsOnlyAllowedTags = function containsOnlyAllowedTags(html, allowedTags) {
-  if (!allowedTags || allowedTags.length === 0) return false;
-  var tempDiv = document.createElement('div');
-  tempDiv.innerHTML = html;
-  var allElements = tempDiv.querySelectorAll('*');
-  var _iterator = _createForOfIteratorHelper(allElements),
-    _step;
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var element = _step.value;
-      if (!allowedTags.includes(element.tagName.toLowerCase())) {
-        return false;
+var Dropdown = function Dropdown(_ref) {
+  var options = _ref.options,
+    value = _ref.value,
+    onChange = _ref.onChange,
+    placeholder = _ref.placeholder,
+    icon = _ref.icon,
+    _ref$width = _ref.width,
+    width = _ref$width === void 0 ? "120px" : _ref$width;
+  var _useState = useState(false),
+    _useState2 = _slicedToArray(_useState, 2),
+    isOpen = _useState2[0],
+    setIsOpen = _useState2[1];
+  var dropdownRef = useRef(null);
+  useEffect(function () {
+    var handleClickOutside = function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
       }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return function () {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  var handleSelect = function handleSelect(optionValue) {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+  var getDisplayLabel = function getDisplayLabel() {
+    if (!value) return placeholder;
+    var option = options.find(function (opt) {
+      return opt.value === value;
+    });
+    return option ? option.label : placeholder;
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "rte-dropdown",
+    ref: dropdownRef
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rte-btn rte-dropdown-btn",
+    onClick: function onClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsOpen(!isOpen);
     }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
-  }
-  return true;
+  }, icon && /*#__PURE__*/React.createElement("span", {
+    className: "rte-dropdown-icon"
+  }, icon), /*#__PURE__*/React.createElement("span", {
+    className: "rte-dropdown-text"
+  }, getDisplayLabel()), /*#__PURE__*/React.createElement(FaCaretDown, {
+    className: "rte-dropdown-arrow"
+  })), isOpen && /*#__PURE__*/React.createElement("div", {
+    className: "rte-dropdown-menu",
+    style: {
+      width: width
+    }
+  }, options.map(function (option) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: option.value,
+      className: "rte-dropdown-item ".concat(value === option.value ? "selected" : ""),
+      onClick: function onClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSelect(option.value);
+      },
+      style: option.style || {}
+    }, option.label);
+  })));
 };
 
-// TagSelector Component
 var TagSelector = function TagSelector(_ref) {
   var allowedTags = _ref.allowedTags,
     setAllowedTags = _ref.setAllowedTags,
     showTagSelector = _ref.showTagSelector,
     setShowTagSelector = _ref.setShowTagSelector,
     allTags = _ref.allTags;
-  var _useState = useState('all'),
+  var _useState = useState("all"),
     _useState2 = _slicedToArray(_useState, 2),
     filterMode = _useState2[0],
     setFilterMode = _useState2[1];
@@ -14366,11 +13030,11 @@ var TagSelector = function TagSelector(_ref) {
   };
   var getFilteredTags = function getFilteredTags() {
     switch (filterMode) {
-      case 'selected':
+      case "selected":
         return allTags.filter(function (tag) {
           return allowedTags.includes(tag);
         });
-      case 'deselected':
+      case "deselected":
         return allTags.filter(function (tag) {
           return !allowedTags.includes(tag);
         });
@@ -14409,36 +13073,36 @@ var TagSelector = function TagSelector(_ref) {
     className: "tag-filter-options"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "filter-btn ".concat(filterMode === 'all' ? 'active' : ''),
+    className: "filter-btn ".concat(filterMode === "all" ? "active" : ""),
     onClick: function onClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      setFilterMode('all');
+      setFilterMode("all");
     }
   }, "All"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "filter-btn ".concat(filterMode === 'selected' ? 'active' : ''),
+    className: "filter-btn ".concat(filterMode === "selected" ? "active" : ""),
     onClick: function onClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      setFilterMode('selected');
+      setFilterMode("selected");
     }
   }, "Selected"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "filter-btn ".concat(filterMode === 'deselected' ? 'active' : ''),
+    className: "filter-btn ".concat(filterMode === "deselected" ? "active" : ""),
     onClick: function onClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      setFilterMode('deselected');
+      setFilterMode("deselected");
     }
   }, "Deselected")), /*#__PURE__*/React.createElement("div", {
     className: "tag-filter-info"
-  }, filterMode === 'all' && /*#__PURE__*/React.createElement("span", null, "Showing all ", allTags.length, " tags and actions"), filterMode === 'selected' && /*#__PURE__*/React.createElement("span", null, "Showing ", allowedTags.length, " selected tags and actions"), filterMode === 'deselected' && /*#__PURE__*/React.createElement("span", null, "Showing ", allTags.length - allowedTags.length, " deselected tags and actions"))), /*#__PURE__*/React.createElement("div", {
+  }, filterMode === "all" && /*#__PURE__*/React.createElement("span", null, "Showing all ", allTags.length, " tags and actions"), filterMode === "selected" && /*#__PURE__*/React.createElement("span", null, "Showing ", allowedTags.length, " selected tags and actions"), filterMode === "deselected" && /*#__PURE__*/React.createElement("span", null, "Showing ", allTags.length - allowedTags.length, " deselected tags and actions"))), /*#__PURE__*/React.createElement("div", {
     className: "tag-selector-grid"
   }, getFilteredTags().map(function (tag) {
     return /*#__PURE__*/React.createElement("div", {
       key: tag,
-      className: "tag-item ".concat(allowedTags.includes(tag) ? 'selected' : ''),
+      className: "tag-item ".concat(allowedTags.includes(tag) ? "selected" : ""),
       onClick: function onClick(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -14460,91 +13124,202 @@ var TagSelector = function TagSelector(_ref) {
     }
   }, "Done"))));
 };
-var Dropdown = function Dropdown(_ref2) {
-  var options = _ref2.options,
-    value = _ref2.value,
-    onChange = _ref2.onChange,
-    placeholder = _ref2.placeholder,
-    icon = _ref2.icon,
-    _ref2$width = _ref2.width,
-    width = _ref2$width === void 0 ? "120px" : _ref2$width;
-    _ref2.theme;
-  var _useState3 = useState(false),
-    _useState4 = _slicedToArray(_useState3, 2),
-    isOpen = _useState4[0],
-    setIsOpen = _useState4[1];
-  var dropdownRef = useRef(null);
-  useEffect(function () {
-    var handleClickOutside = function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return function () {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-  var handleSelect = function handleSelect(optionValue) {
-    onChange(optionValue);
-    setIsOpen(false);
-  };
-  var getDisplayLabel = function getDisplayLabel() {
-    if (!value) return placeholder;
-    var option = options.find(function (opt) {
-      return opt.value === value;
-    });
-    return option ? option.label : placeholder;
-  };
-  return /*#__PURE__*/React.createElement("div", {
-    className: "rte-dropdown",
-    ref: dropdownRef
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "rte-btn rte-dropdown-btn",
-    onClick: function onClick(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsOpen(!isOpen);
-    }
-  }, icon && /*#__PURE__*/React.createElement("span", {
-    className: "rte-dropdown-icon"
-  }, icon), /*#__PURE__*/React.createElement("span", {
-    className: "rte-dropdown-text"
-  }, getDisplayLabel()), /*#__PURE__*/React.createElement(FaCaretDown, {
-    className: "rte-dropdown-arrow"
-  })), isOpen && /*#__PURE__*/React.createElement("div", {
-    className: "rte-dropdown-menu",
-    style: {
-      width: width
-    }
-  }, options.map(function (option, index) {
-    return /*#__PURE__*/React.createElement("div", {
-      key: index,
-      className: "rte-dropdown-item ".concat(value === option.value ? 'selected' : ''),
-      onClick: function onClick(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        handleSelect(option.value);
-      },
-      style: option.style || {}
-    }, option.label);
-  })));
-};
 
-// Toolbar buttons - combined into a single array
-var toolbarButtons = [{
+/**
+ * Editor Constants
+ * 
+ * This module exports constants used throughout the rich text editor:
+ * - Font family and size options for dropdowns
+ * - Toolbar button configurations
+ * - List style options
+ * - Button-to-tag mappings
+ * - Default allowed HTML tags
+ */
+
+// ============================================================================
+// FONT OPTIONS - Available fonts and sizes for the editor
+// ============================================================================
+
+/**
+ * Font family options for the font family dropdown.
+ * Each option includes a display label and CSS font-family value.
+ * The value uses CSS font stacks (fallback fonts) for better compatibility.
+ * 
+ * @type {Array<{label: string, value: string}>}
+ */
+var FONT_FAMILY_OPTIONS = [{
+  label: "Default",
+  value: ""
+},
+// Empty value means use default/browser font
+{
+  label: "Arial",
+  value: "Arial, Helvetica, sans-serif"
+}, {
+  label: "Courier New",
+  value: "'Courier New', Courier, monospace"
+}, {
+  label: "Georgia",
+  value: "Georgia, serif"
+}, {
+  label: "Impact",
+  value: "Impact, Charcoal, sans-serif"
+}, {
+  label: "Lucida Console",
+  value: "'Lucida Console', Monaco, monospace"
+}, {
+  label: "Palatino",
+  value: "'Palatino Linotype', 'Book Antiqua', Palatino, serif"
+}, {
+  label: "Tahoma",
+  value: "Tahoma, Geneva, sans-serif"
+}, {
+  label: "Times New Roman",
+  value: "'Times New Roman', Times, serif"
+}, {
+  label: "Trebuchet MS",
+  value: "'Trebuchet MS', Helvetica, sans-serif"
+}, {
+  label: "Verdana",
+  value: "Verdana, Geneva, sans-serif"
+}, {
+  label: "Comic Sans MS",
+  value: "'Comic Sans MS', cursive, sans-serif"
+}, {
+  label: "Helvetica",
+  value: "Helvetica, Arial, sans-serif"
+}, {
+  label: "Roboto",
+  value: "Roboto, sans-serif"
+},
+// Google Font
+{
+  label: "Open Sans",
+  value: "'Open Sans', sans-serif"
+},
+// Google Font
+{
+  label: "Lato",
+  value: "Lato, sans-serif"
+},
+// Google Font
+{
+  label: "Montserrat",
+  value: "Montserrat, sans-serif"
+},
+// Google Font
+{
+  label: "Poppins",
+  value: "Poppins, sans-serif"
+} // Google Font
+];
+
+/**
+ * Font size options for the font size dropdown.
+ * Sizes are specified in points (pt) which is a common unit for fonts.
+ * Range from 8pt (very small) to 72pt (very large/display).
+ * 
+ * @type {Array<{label: string, value: string}>}
+ */
+var FONT_SIZE_OPTIONS = [{
+  label: "8pt",
+  value: "8pt"
+},
+// Very small
+{
+  label: "9pt",
+  value: "9pt"
+}, {
+  label: "10pt",
+  value: "10pt"
+}, {
+  label: "11pt",
+  value: "11pt"
+}, {
+  label: "12pt",
+  value: "12pt"
+},
+// Small (typical for footnotes)
+{
+  label: "14pt",
+  value: "14pt"
+}, {
+  label: "16pt",
+  value: "16pt"
+},
+// Default/body text size
+{
+  label: "18pt",
+  value: "18pt"
+}, {
+  label: "20pt",
+  value: "20pt"
+}, {
+  label: "22pt",
+  value: "22pt"
+}, {
+  label: "24pt",
+  value: "24pt"
+}, {
+  label: "26pt",
+  value: "26pt"
+}, {
+  label: "28pt",
+  value: "28pt"
+}, {
+  label: "36pt",
+  value: "36pt"
+},
+// Large heading size
+{
+  label: "48pt",
+  value: "48pt"
+},
+// Display size
+{
+  label: "72pt",
+  value: "72pt"
+} // Very large display size
+];
+
+// ============================================================================
+// TOOLBAR CONFIGURATION - Buttons and their properties
+// ============================================================================
+
+/**
+ * Toolbar button configurations.
+ * Defines all buttons shown in the editor toolbar, their icons, commands, and options.
+ * 
+ * Button types:
+ * - Regular button: { cmd, Icon, tooltip }
+ * - Dropdown: { type: "dropdown", cmd, Icon, options: [...], tooltip }
+ * - Button with argument: { cmd, arg, Icon, tooltip }
+ * 
+ * @type {Array<Object>}
+ * 
+ * @property {string} cmd - Command name to execute when button is clicked
+ * @property {React.Component} Icon - React icon component from react-icons
+ * @property {string} tooltip - Tooltip text shown on hover
+ * @property {string} [type] - Button type ('dropdown' for dropdown buttons)
+ * @property {string} [arg] - Additional argument for the command
+ * @property {Array} [options] - Options array for dropdown buttons
+ */
+var TOOLBAR_BUTTONS = [
+// History/Undo-Redo
+{
   cmd: "undo",
-  icon: /*#__PURE__*/React.createElement(FaUndo, null),
+  Icon: FaUndo,
   tooltip: "Undo"
 }, {
   cmd: "redo",
-  icon: /*#__PURE__*/React.createElement(FaRedo, null),
+  Icon: FaRedo,
   tooltip: "Redo"
-}, {
+},
+// Heading/Paragraph Formatting (Dropdown)
+{
   type: "dropdown",
   cmd: "formatBlock",
-  icon: /*#__PURE__*/React.createElement(FaHeading, null),
+  Icon: FaHeading,
   options: [{
     label: "Normal",
     value: "p"
@@ -14567,298 +13342,2149 @@ var toolbarButtons = [{
     label: "Heading 6",
     value: "h6"
   }]
-}, {
+},
+// Font Family (Dropdown)
+{
+  type: "dropdown",
+  cmd: "fontFamily",
+  Icon: FaTextHeight,
+  options: FONT_FAMILY_OPTIONS,
+  tooltip: "Font Family"
+},
+// Font Size (Dropdown)
+{
+  type: "dropdown",
+  cmd: "fontSize",
+  Icon: FaTextWidth,
+  options: FONT_SIZE_OPTIONS,
+  tooltip: "Font Size"
+},
+// Text Formatting (Inline styles)
+{
   cmd: "bold",
-  icon: /*#__PURE__*/React.createElement(FaBold, null),
+  Icon: FaBold,
   tooltip: "Bold"
 }, {
   cmd: "italic",
-  icon: /*#__PURE__*/React.createElement(FaItalic, null),
+  Icon: FaItalic,
   tooltip: "Italic"
 }, {
   cmd: "underline",
-  icon: /*#__PURE__*/React.createElement(FaUnderline, null),
+  Icon: FaUnderline,
   tooltip: "Underline"
 }, {
   cmd: "strikeThrough",
-  icon: /*#__PURE__*/React.createElement(FaStrikethrough, null),
+  Icon: FaStrikethrough,
   tooltip: "Strikethrough"
 }, {
   cmd: "superscript",
-  icon: /*#__PURE__*/React.createElement(FaSuperscript, null),
+  Icon: FaSuperscript,
   tooltip: "Superscript"
 }, {
   cmd: "subscript",
-  icon: /*#__PURE__*/React.createElement(FaSubscript, null),
+  Icon: FaSubscript,
   tooltip: "Subscript"
-}, {
+},
+// Text Transformation
+{
   cmd: "toUpperCase",
-  icon: /*#__PURE__*/React.createElement(FaTextHeight, null),
+  Icon: FaTextHeight,
   tooltip: "Uppercase"
 }, {
   cmd: "toLowerCase",
-  icon: /*#__PURE__*/React.createElement(FaTextWidth, null),
+  Icon: FaTextWidth,
   tooltip: "Lowercase"
-}, {
+},
+// Text Alignment
+{
   cmd: "justifyLeft",
-  icon: /*#__PURE__*/React.createElement(FaAlignLeft, null),
+  Icon: FaAlignLeft,
   tooltip: "Align Left"
 }, {
   cmd: "justifyCenter",
-  icon: /*#__PURE__*/React.createElement(FaAlignCenter, null),
+  Icon: FaAlignCenter,
   tooltip: "Align Center"
 }, {
   cmd: "justifyRight",
-  icon: /*#__PURE__*/React.createElement(FaAlignRight, null),
+  Icon: FaAlignRight,
   tooltip: "Align Right"
-}, {
+},
+// Block Formatting
+{
   cmd: "formatBlock",
   arg: "blockquote",
-  icon: /*#__PURE__*/React.createElement(FaQuoteRight, null),
+  Icon: FaQuoteRight,
   tooltip: "Blockquote"
-}, {
+},
+// { cmd: "insertCodeBlock", Icon: FaCode, tooltip: "Code Block" }, // Commented out - not currently active
+{
   cmd: "toggleHTML",
-  icon: /*#__PURE__*/React.createElement(FaCode, null),
+  Icon: FaCode,
   tooltip: "Toggle HTML"
-}, {
+},
+// Toggle between WYSIWYG and HTML code view
+
+// Links
+{
   cmd: "createLink",
-  icon: /*#__PURE__*/React.createElement(FaLink, null),
+  Icon: FaLink,
   tooltip: "Insert Link"
 }, {
   cmd: "unlink",
-  icon: /*#__PURE__*/React.createElement(FaUnlink, null),
+  Icon: FaUnlink,
   tooltip: "Remove Link"
-}, {
+},
+// Media and Special Elements
+{
   cmd: "insertImage",
-  icon: /*#__PURE__*/React.createElement(FaImage, null),
+  Icon: FaImage,
   tooltip: "Insert Image"
 }, {
   cmd: "insertTableGrid",
-  icon: /*#__PURE__*/React.createElement(FaTable, null),
+  Icon: FaTable,
   tooltip: "Insert Table"
 }, {
   cmd: "insertEmoji",
-  icon: /*#__PURE__*/React.createElement(FaSmile, null),
+  Icon: FaSmile,
   tooltip: "Insert Emoji"
 }, {
   cmd: "insertHorizontalRule",
-  icon: /*#__PURE__*/React.createElement(FaMinus, null),
+  Icon: FaMinus,
   tooltip: "Insert Horizontal Line"
-}, {
+},
+// Colors
+{
   cmd: "textColor",
-  icon: /*#__PURE__*/React.createElement(FaPalette, null),
+  Icon: FaPalette,
   tooltip: "Text Color"
 }, {
   cmd: "highlight",
-  icon: /*#__PURE__*/React.createElement(FaHighlighter, null),
+  Icon: FaHighlighter,
   tooltip: "Highlight Text"
-}, {
+},
+// Clipboard Operations
+{
   cmd: "cut",
-  icon: /*#__PURE__*/React.createElement(FaCut, null),
+  Icon: FaCut,
   tooltip: "Cut"
 }, {
   cmd: "copy",
-  icon: /*#__PURE__*/React.createElement(FaCopy, null),
+  Icon: FaCopy,
   tooltip: "Copy"
 }, {
   cmd: "paste",
-  icon: /*#__PURE__*/React.createElement(FaPaste, null),
+  Icon: FaPaste,
   tooltip: "Paste"
-}, {
+},
+// Text Operations
+{
   cmd: "removeText",
-  icon: /*#__PURE__*/React.createElement(FaTrash, null),
+  Icon: FaTrash,
   tooltip: "Delete"
 }, {
   cmd: "selectAll",
-  icon: /*#__PURE__*/React.createElement(FaMousePointer, null),
+  Icon: FaMousePointer,
   tooltip: "Select All"
-}, {
+},
+// Search
+{
   cmd: "search",
-  icon: /*#__PURE__*/React.createElement(FaSearch, null),
+  Icon: FaSearch,
   tooltip: "Search"
 }];
 
-// List style options
-var unorderedListOptions = [{
+// ============================================================================
+// LIST STYLE OPTIONS - Available list styles for ordered/unordered lists
+// ============================================================================
+
+/**
+ * Unordered list style options (bullets).
+ * Used in the list style dropdown for unordered lists (ul).
+ * 
+ * @type {Array<{label: string, value: string}>}
+ * 
+ * @property {string} label - Display label for the style
+ * @property {string} value - CSS list-style-type value
+ */
+var UNORDERED_LIST_OPTIONS = [{
   label: "Disc",
   value: "disc"
-}, {
+},
+// Filled circle (•)
+{
   label: "Circle",
   value: "circle"
-}, {
+},
+// Hollow circle (○)
+{
   label: "Square",
   value: "square"
-}];
-var orderedListOptions = [{
+} // Filled square (■)
+];
+
+/**
+ * Ordered list style options (numbering).
+ * Used in the list style dropdown for ordered lists (ol).
+ * 
+ * @type {Array<{label: string, value: string}>}
+ * 
+ * @property {string} label - Display label with example numbering
+ * @property {string} value - CSS list-style-type value
+ */
+var ORDERED_LIST_OPTIONS = [{
   label: "1, 2, 3",
   value: "decimal"
-}, {
+},
+// Arabic numerals: 1, 2, 3
+{
   label: "a, b, c",
   value: "lower-alpha"
-}, {
+},
+// Lowercase letters: a, b, c
+{
   label: "A, B, C",
   value: "upper-alpha"
-}, {
+},
+// Uppercase letters: A, B, C
+{
   label: "I, II, III",
   value: "upper-roman"
-}, {
+},
+// Uppercase Roman: I, II, III
+{
   label: "i, ii, iii",
   value: "lower-roman"
-}];
+} // Lowercase Roman: i, ii, iii
+];
 
-// Helper function to check if a button should be shown based on allowed tags
+// ============================================================================
+// BUTTON MAPPINGS - Maps button commands to HTML tags and action names
+// ============================================================================
+
+/**
+ * Maps toolbar button commands to their corresponding HTML tags.
+ * Used to determine which HTML tag a button command will create/modify.
+ * This is useful for validation and tag filtering.
+ * 
+ * @type {Object<string, string>}
+ * 
+ * @example
+ * BUTTON_TAG_MAP.bold // Returns: "strong"
+ * BUTTON_TAG_MAP.createLink // Returns: "a"
+ */
+var BUTTON_TAG_MAP = {
+  bold: "strong",
+  // Bold text creates <strong> tag
+  italic: "em",
+  // Italic text creates <em> tag
+  underline: "u",
+  // Underline creates <u> tag
+  strikeThrough: "s",
+  // Strikethrough creates <s> tag
+  superscript: "sup",
+  // Superscript creates <sup> tag
+  subscript: "sub",
+  // Subscript creates <sub> tag
+  formatBlock: "blockquote",
+  // Blockquote creates <blockquote> tag
+  createLink: "a",
+  // Link creates <a> tag
+  insertImage: "img",
+  // Image creates <img> tag
+  insertTableGrid: "table",
+  // Table creates <table> tag
+  insertUnorderedList: "ul",
+  // Unordered list creates <ul> tag
+  insertOrderedList: "ol" // Ordered list creates <ol> tag
+};
+
+/**
+ * Maps toolbar button commands to action names.
+ * Used for internal action tracking and identification.
+ * Some commands don't directly map to HTML tags, so they use action names instead.
+ * 
+ * @type {Object<string, string>}
+ * 
+ * @example
+ * BUTTON_ACTION_MAP.cut // Returns: "cut"
+ * BUTTON_ACTION_MAP.textColor // Returns: "text-color"
+ */
+var BUTTON_ACTION_MAP = {
+  // Clipboard operations
+  cut: "cut",
+  copy: "copy",
+  paste: "paste",
+  // Text operations
+  removeText: "remove",
+  textColor: "text-color",
+  // Text color styling
+  highlight: "highlight-color",
+  // Background highlight color
+  insertEmoji: "emoji",
+  // Emoji insertion
+  selectAll: "select",
+  // Select all text
+
+  // Text transformation
+  toUpperCase: "uppercase",
+  // Convert to uppercase
+  toLowerCase: "lowercase",
+  // Convert to lowercase
+
+  // Alignment operations
+  justifyLeft: "align-left",
+  justifyCenter: "align-center",
+  justifyRight: "align-right",
+  // Other operations
+  unlink: "remove-link",
+  // Remove link
+  insertHorizontalRule: "hr",
+  // Horizontal rule element
+  fontFamily: "font-family",
+  // Font family styling
+  fontSize: "font-size" // Font size styling
+};
+
+// ============================================================================
+// DEFAULT ALLOWED TAGS - List of HTML tags allowed by default
+// ============================================================================
+
+/**
+ * Default list of allowed HTML tags for the editor.
+ * This is used as the base set of allowed tags when no custom allowedTags prop is provided.
+ * 
+ * Tags are organized by category:
+ * - Text structure: p, h1-h6
+ * - Text formatting: strong, em, u, s, sup, sub
+ * - Block elements: blockquote, pre, code
+ * - Lists: ul, ol, li
+ * - Links and media: a, img
+ * - Tables: table, thead, tbody, tr, th, td
+ * - Line breaks: br, hr
+ * - Containers: span, div
+ * - Action names: cut, copy, paste, etc. (for internal tracking)
+ * 
+ * @type {Array<string>}
+ * 
+ * @note This list can be customized via the allowedTags prop in the Editor component.
+ * @note Some entries (like "cut", "copy") are action identifiers, not actual HTML tags.
+ */
+var DEFAULT_ALLOWED_TAGS = [
+// Text structure elements
+"p",
+// Paragraph
+"h1",
+// Heading 1
+"h2",
+// Heading 2
+"h3",
+// Heading 3
+"h4",
+// Heading 4
+"h5",
+// Heading 5
+"h6",
+// Heading 6
+
+// Text formatting elements
+"strong",
+// Bold text
+"em",
+// Italic text
+"u",
+// Underlined text
+"s",
+// Strikethrough text
+"sup",
+// Superscript
+"sub",
+// Subscript
+
+// Block elements
+"blockquote",
+// Blockquote
+"pre",
+// Preformatted text
+"code",
+// Inline code
+
+// List elements
+"ul",
+// Unordered list
+"ol",
+// Ordered list
+"li",
+// List item
+
+// Links and media
+"a",
+// Anchor/link
+"img",
+// Image
+
+// Table elements
+"table",
+// Table
+"thead",
+// Table head
+"tbody",
+// Table body
+"tr",
+// Table row
+"th",
+// Table header cell
+"td",
+// Table data cell
+
+// Line breaks and separators
+"br",
+// Line break
+"hr",
+// Horizontal rule
+
+// Container elements
+"span",
+// Inline container
+"div",
+// Block container
+
+// Action identifiers (not actual HTML tags, used for internal tracking)
+"cut", "copy", "paste", "remove", "text-color", "highlight-color", "emoji", "select", "uppercase", "lowercase", "align-left", "align-center", "align-right", "remove-link", "font-family", "font-size"];
+
+var storageKeySuffix = "-allowedTags";
+var arraysEqual = function arraysEqual(a, b) {
+  if (a.length !== b.length) return false;
+  var setA = new Set(a);
+  return b.every(function (item) {
+    return setA.has(item);
+  });
+};
+var useAllowedTags = function useAllowedTags(_ref) {
+  var plugins = _ref.plugins,
+    propAllowedTags = _ref.propAllowedTags,
+    storageKey = _ref.storageKey;
+  var pluginTags = useMemo(function () {
+    return plugins.filter(function (plugin) {
+      return Boolean(plugin === null || plugin === void 0 ? void 0 : plugin.tag);
+    }).map(function (plugin) {
+      return plugin.tag;
+    });
+  }, [plugins]);
+  var allTags = useMemo(function () {
+    return Array.from(new Set([].concat(_toConsumableArray(DEFAULT_ALLOWED_TAGS), _toConsumableArray(pluginTags))));
+  }, [pluginTags]);
+  var _useState = useState(function () {
+      if (propAllowedTags !== null && propAllowedTags !== void 0 && propAllowedTags.length) {
+        return Array.from(new Set([].concat(_toConsumableArray(propAllowedTags), _toConsumableArray(pluginTags))));
+      }
+      return allTags;
+    }),
+    _useState2 = _slicedToArray(_useState, 2),
+    allowedTags = _useState2[0],
+    setAllowedTags = _useState2[1];
+  useEffect(function () {
+    if (!storageKey || propAllowedTags !== null && propAllowedTags !== void 0 && propAllowedTags.length) return;
+    try {
+      var savedTags = localStorage.getItem("".concat(storageKey).concat(storageKeySuffix));
+      if (savedTags) {
+        var parsed = JSON.parse(savedTags);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAllowedTags(Array.from(new Set([].concat(_toConsumableArray(parsed), _toConsumableArray(pluginTags)))));
+        }
+      }
+    } catch (error) {
+      console.error("Error accessing localStorage:", error);
+    }
+  }, [storageKey, propAllowedTags, pluginTags]);
+  useEffect(function () {
+    if (!(propAllowedTags !== null && propAllowedTags !== void 0 && propAllowedTags.length)) return;
+    var merged = Array.from(new Set([].concat(_toConsumableArray(propAllowedTags), _toConsumableArray(pluginTags))));
+    setAllowedTags(function (prev) {
+      return arraysEqual(prev, merged) ? prev : merged;
+    });
+  }, [propAllowedTags, pluginTags]);
+  useEffect(function () {
+    if (!storageKey || propAllowedTags !== null && propAllowedTags !== void 0 && propAllowedTags.length) return;
+    try {
+      localStorage.setItem("".concat(storageKey).concat(storageKeySuffix), JSON.stringify(allowedTags));
+    } catch (error) {
+      console.error("Error saving allowed tags to localStorage:", error);
+    }
+  }, [allowedTags, storageKey, propAllowedTags]);
+  return {
+    allowedTags: allowedTags,
+    setAllowedTags: setAllowedTags,
+    allTags: allTags
+  };
+};
+
+var GLOBAL_THEME_KEY = "rte-global-theme";
+var useTheme = function useTheme() {
+  var _useState = useState("light"),
+    _useState2 = _slicedToArray(_useState, 2),
+    theme = _useState2[0],
+    setTheme = _useState2[1];
+  var _useState3 = useState(false),
+    _useState4 = _slicedToArray(_useState3, 2),
+    mounted = _useState4[0],
+    setMounted = _useState4[1];
+  useEffect(function () {
+    setMounted(true);
+    try {
+      var savedTheme = localStorage.getItem(GLOBAL_THEME_KEY);
+      if (savedTheme === "dark" || savedTheme === "light") {
+        setTheme(savedTheme);
+      } else {
+        setTheme("light");
+      }
+    } catch (error) {
+      console.error("Error reading theme from localStorage:", error);
+    }
+  }, []);
+  useEffect(function () {
+    if (!mounted) return;
+    try {
+      localStorage.setItem(GLOBAL_THEME_KEY, theme);
+    } catch (error) {
+      console.error("Error saving theme to localStorage:", error);
+    }
+  }, [theme, mounted]);
+  var toggleTheme = function toggleTheme() {
+    setTheme(function (prevTheme) {
+      return prevTheme === "light" ? "dark" : "light";
+    });
+  };
+  return {
+    theme: theme,
+    toggleTheme: toggleTheme,
+    mounted: mounted
+  };
+};
+
 var shouldShowButton = function shouldShowButton(cmd, allowedTags) {
-  var buttonTagMap = {
-    'bold': 'strong',
-    'italic': 'em',
-    'underline': 'u',
-    'strikeThrough': 's',
-    'superscript': 'sup',
-    'subscript': 'sub',
-    'formatBlock': 'blockquote',
-    'createLink': 'a',
-    'insertImage': 'img',
-    'insertTableGrid': 'table',
-    'insertUnorderedList': 'ul',
-    'insertOrderedList': 'ol'
-  };
-  var buttonActionMap = {
-    'cut': 'cut',
-    'copy': 'copy',
-    'paste': 'paste',
-    'removeText': 'remove',
-    'textColor': 'text-color',
-    'highlight': 'highlight-color',
-    'insertEmoji': 'emoji',
-    'selectAll': 'select',
-    'toUpperCase': 'uppercase',
-    'toLowerCase': 'lowercase',
-    'justifyLeft': 'align-left',
-    'justifyCenter': 'align-center',
-    'justifyRight': 'align-right',
-    'unlink': 'remove-link',
-    'insertHorizontalRule': 'hr'
-  };
-  if (buttonActionMap[cmd]) {
-    return allowedTags.includes(buttonActionMap[cmd]);
+  if (!allowedTags || allowedTags.length === 0) {
+    return false;
   }
-  var tag = buttonTagMap[cmd];
+  if (BUTTON_ACTION_MAP[cmd]) {
+    return allowedTags.includes(BUTTON_ACTION_MAP[cmd]);
+  }
+  var tag = BUTTON_TAG_MAP[cmd];
   return !tag || allowedTags.includes(tag);
 };
-function Editor(_ref3) {
-  var _ref3$value = _ref3.value,
-    value = _ref3$value === void 0 ? "" : _ref3$value,
-    onChange = _ref3.onChange,
-    _ref3$height = _ref3.height,
-    height = _ref3$height === void 0 ? "auto" : _ref3$height,
-    _ref3$width = _ref3.width,
-    width = _ref3$width === void 0 ? "100%" : _ref3$width,
-    _ref3$minHeight = _ref3.minHeight,
-    minHeight = _ref3$minHeight === void 0 ? 200 : _ref3$minHeight,
-    _ref3$className = _ref3.className,
-    className = _ref3$className === void 0 ? "" : _ref3$className,
-    _ref3$allowedTags = _ref3.allowedTags,
-    propAllowedTags = _ref3$allowedTags === void 0 ? null : _ref3$allowedTags,
-    _ref3$storageKey = _ref3.storageKey,
-    storageKey = _ref3$storageKey === void 0 ? "rte-editor-content" : _ref3$storageKey,
-    _ref3$plugins = _ref3.plugins,
-    plugins = _ref3$plugins === void 0 ? [] : _ref3$plugins;
-  var editorRef = useRef(null);
-  var editorContainerRef = useRef(null);
-  var fileRef = useRef(null);
-  var colorInputRef = useRef(null);
-  var highlightColorRef = useRef(null);
+
+/*! @license DOMPurify 3.3.0 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.3.0/LICENSE */
+
+var entries = Object.entries,
+  setPrototypeOf = Object.setPrototypeOf,
+  isFrozen = Object.isFrozen,
+  getPrototypeOf = Object.getPrototypeOf,
+  getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+var freeze = Object.freeze,
+  seal = Object.seal,
+  create = Object.create; // eslint-disable-line import/no-mutable-exports
+var _ref = typeof Reflect !== 'undefined' && Reflect,
+  apply = _ref.apply,
+  construct = _ref.construct;
+if (!freeze) {
+  freeze = function freeze(x) {
+    return x;
+  };
+}
+if (!seal) {
+  seal = function seal(x) {
+    return x;
+  };
+}
+if (!apply) {
+  apply = function apply(func, thisArg) {
+    for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      args[_key - 2] = arguments[_key];
+    }
+    return func.apply(thisArg, args);
+  };
+}
+if (!construct) {
+  construct = function construct(Func) {
+    for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+      args[_key2 - 1] = arguments[_key2];
+    }
+    return _construct(Func, args);
+  };
+}
+var arrayForEach = unapply(Array.prototype.forEach);
+var arrayLastIndexOf = unapply(Array.prototype.lastIndexOf);
+var arrayPop = unapply(Array.prototype.pop);
+var arrayPush = unapply(Array.prototype.push);
+var arraySplice = unapply(Array.prototype.splice);
+var stringToLowerCase = unapply(String.prototype.toLowerCase);
+var stringToString = unapply(String.prototype.toString);
+var stringMatch = unapply(String.prototype.match);
+var stringReplace = unapply(String.prototype.replace);
+var stringIndexOf = unapply(String.prototype.indexOf);
+var stringTrim = unapply(String.prototype.trim);
+var objectHasOwnProperty = unapply(Object.prototype.hasOwnProperty);
+var regExpTest = unapply(RegExp.prototype.test);
+var typeErrorCreate = unconstruct(TypeError);
+/**
+ * Creates a new function that calls the given function with a specified thisArg and arguments.
+ *
+ * @param func - The function to be wrapped and called.
+ * @returns A new function that calls the given function with a specified thisArg and arguments.
+ */
+function unapply(func) {
+  return function (thisArg) {
+    if (thisArg instanceof RegExp) {
+      thisArg.lastIndex = 0;
+    }
+    for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+      args[_key3 - 1] = arguments[_key3];
+    }
+    return apply(func, thisArg, args);
+  };
+}
+/**
+ * Creates a new function that constructs an instance of the given constructor function with the provided arguments.
+ *
+ * @param func - The constructor function to be wrapped and called.
+ * @returns A new function that constructs an instance of the given constructor function with the provided arguments.
+ */
+function unconstruct(Func) {
+  return function () {
+    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      args[_key4] = arguments[_key4];
+    }
+    return construct(Func, args);
+  };
+}
+/**
+ * Add properties to a lookup table
+ *
+ * @param set - The set to which elements will be added.
+ * @param array - The array containing elements to be added to the set.
+ * @param transformCaseFunc - An optional function to transform the case of each element before adding to the set.
+ * @returns The modified set with added elements.
+ */
+function addToSet(set, array) {
+  var transformCaseFunc = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : stringToLowerCase;
+  if (setPrototypeOf) {
+    // Make 'in' and truthy checks like Boolean(set.constructor)
+    // independent of any properties defined on Object.prototype.
+    // Prevent prototype setters from intercepting set as a this value.
+    setPrototypeOf(set, null);
+  }
+  var l = array.length;
+  while (l--) {
+    var element = array[l];
+    if (typeof element === 'string') {
+      var lcElement = transformCaseFunc(element);
+      if (lcElement !== element) {
+        // Config presets (e.g. tags.js, attrs.js) are immutable.
+        if (!isFrozen(array)) {
+          array[l] = lcElement;
+        }
+        element = lcElement;
+      }
+    }
+    set[element] = true;
+  }
+  return set;
+}
+/**
+ * Clean up an array to harden against CSPP
+ *
+ * @param array - The array to be cleaned.
+ * @returns The cleaned version of the array
+ */
+function cleanArray(array) {
+  for (var index = 0; index < array.length; index++) {
+    var isPropertyExist = objectHasOwnProperty(array, index);
+    if (!isPropertyExist) {
+      array[index] = null;
+    }
+  }
+  return array;
+}
+/**
+ * Shallow clone an object
+ *
+ * @param object - The object to be cloned.
+ * @returns A new object that copies the original.
+ */
+function clone(object) {
+  var newObject = create(null);
+  var _iterator = _createForOfIteratorHelper(entries(object)),
+    _step;
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var _step$value = _slicedToArray(_step.value, 2),
+        property = _step$value[0],
+        value = _step$value[1];
+      var isPropertyExist = objectHasOwnProperty(object, property);
+      if (isPropertyExist) {
+        if (Array.isArray(value)) {
+          newObject[property] = cleanArray(value);
+        } else if (value && _typeof(value) === 'object' && value.constructor === Object) {
+          newObject[property] = clone(value);
+        } else {
+          newObject[property] = value;
+        }
+      }
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+  return newObject;
+}
+/**
+ * This method automatically checks if the prop is function or getter and behaves accordingly.
+ *
+ * @param object - The object to look up the getter function in its prototype chain.
+ * @param prop - The property name for which to find the getter function.
+ * @returns The getter function found in the prototype chain or a fallback function.
+ */
+function lookupGetter(object, prop) {
+  while (object !== null) {
+    var desc = getOwnPropertyDescriptor(object, prop);
+    if (desc) {
+      if (desc.get) {
+        return unapply(desc.get);
+      }
+      if (typeof desc.value === 'function') {
+        return unapply(desc.value);
+      }
+    }
+    object = getPrototypeOf(object);
+  }
+  function fallbackValue() {
+    return null;
+  }
+  return fallbackValue;
+}
+var html$1 = freeze(['a', 'abbr', 'acronym', 'address', 'area', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo', 'big', 'blink', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'content', 'data', 'datalist', 'dd', 'decorator', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'element', 'em', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'main', 'map', 'mark', 'marquee', 'menu', 'menuitem', 'meter', 'nav', 'nobr', 'ol', 'optgroup', 'option', 'output', 'p', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'search', 'section', 'select', 'shadow', 'slot', 'small', 'source', 'spacer', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr']);
+var svg$1 = freeze(['svg', 'a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 'defs', 'desc', 'ellipse', 'enterkeyhint', 'exportparts', 'filter', 'font', 'g', 'glyph', 'glyphref', 'hkern', 'image', 'inputmode', 'line', 'lineargradient', 'marker', 'mask', 'metadata', 'mpath', 'part', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 'stop', 'style', 'switch', 'symbol', 'text', 'textpath', 'title', 'tref', 'tspan', 'view', 'vkern']);
+var svgFilters = freeze(['feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', 'feDistantLight', 'feDropShadow', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence']);
+// List of SVG elements that are disallowed by default.
+// We still need to know them so that we can do namespace
+// checks properly in case one wants to add them to
+// allow-list.
+var svgDisallowed = freeze(['animate', 'color-profile', 'cursor', 'discard', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri', 'foreignobject', 'hatch', 'hatchpath', 'mesh', 'meshgradient', 'meshpatch', 'meshrow', 'missing-glyph', 'script', 'set', 'solidcolor', 'unknown', 'use']);
+var mathMl$1 = freeze(['math', 'menclose', 'merror', 'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mspace', 'msqrt', 'mstyle', 'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder', 'munderover', 'mprescripts']);
+// Similarly to SVG, we want to know all MathML elements,
+// even those that we disallow by default.
+var mathMlDisallowed = freeze(['maction', 'maligngroup', 'malignmark', 'mlongdiv', 'mscarries', 'mscarry', 'msgroup', 'mstack', 'msline', 'msrow', 'semantics', 'annotation', 'annotation-xml', 'mprescripts', 'none']);
+var text = freeze(['#text']);
+var html = freeze(['accept', 'action', 'align', 'alt', 'autocapitalize', 'autocomplete', 'autopictureinpicture', 'autoplay', 'background', 'bgcolor', 'border', 'capture', 'cellpadding', 'cellspacing', 'checked', 'cite', 'class', 'clear', 'color', 'cols', 'colspan', 'controls', 'controlslist', 'coords', 'crossorigin', 'datetime', 'decoding', 'default', 'dir', 'disabled', 'disablepictureinpicture', 'disableremoteplayback', 'download', 'draggable', 'enctype', 'enterkeyhint', 'exportparts', 'face', 'for', 'headers', 'height', 'hidden', 'high', 'href', 'hreflang', 'id', 'inert', 'inputmode', 'integrity', 'ismap', 'kind', 'label', 'lang', 'list', 'loading', 'loop', 'low', 'max', 'maxlength', 'media', 'method', 'min', 'minlength', 'multiple', 'muted', 'name', 'nonce', 'noshade', 'novalidate', 'nowrap', 'open', 'optimum', 'part', 'pattern', 'placeholder', 'playsinline', 'popover', 'popovertarget', 'popovertargetaction', 'poster', 'preload', 'pubdate', 'radiogroup', 'readonly', 'rel', 'required', 'rev', 'reversed', 'role', 'rows', 'rowspan', 'spellcheck', 'scope', 'selected', 'shape', 'size', 'sizes', 'slot', 'span', 'srclang', 'start', 'src', 'srcset', 'step', 'style', 'summary', 'tabindex', 'title', 'translate', 'type', 'usemap', 'valign', 'value', 'width', 'wrap', 'xmlns', 'slot']);
+var svg = freeze(['accent-height', 'accumulate', 'additive', 'alignment-baseline', 'amplitude', 'ascent', 'attributename', 'attributetype', 'azimuth', 'basefrequency', 'baseline-shift', 'begin', 'bias', 'by', 'class', 'clip', 'clippathunits', 'clip-path', 'clip-rule', 'color', 'color-interpolation', 'color-interpolation-filters', 'color-profile', 'color-rendering', 'cx', 'cy', 'd', 'dx', 'dy', 'diffuseconstant', 'direction', 'display', 'divisor', 'dur', 'edgemode', 'elevation', 'end', 'exponent', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'filterunits', 'flood-color', 'flood-opacity', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'fx', 'fy', 'g1', 'g2', 'glyph-name', 'glyphref', 'gradientunits', 'gradienttransform', 'height', 'href', 'id', 'image-rendering', 'in', 'in2', 'intercept', 'k', 'k1', 'k2', 'k3', 'k4', 'kerning', 'keypoints', 'keysplines', 'keytimes', 'lang', 'lengthadjust', 'letter-spacing', 'kernelmatrix', 'kernelunitlength', 'lighting-color', 'local', 'marker-end', 'marker-mid', 'marker-start', 'markerheight', 'markerunits', 'markerwidth', 'maskcontentunits', 'maskunits', 'max', 'mask', 'mask-type', 'media', 'method', 'mode', 'min', 'name', 'numoctaves', 'offset', 'operator', 'opacity', 'order', 'orient', 'orientation', 'origin', 'overflow', 'paint-order', 'path', 'pathlength', 'patterncontentunits', 'patterntransform', 'patternunits', 'points', 'preservealpha', 'preserveaspectratio', 'primitiveunits', 'r', 'rx', 'ry', 'radius', 'refx', 'refy', 'repeatcount', 'repeatdur', 'restart', 'result', 'rotate', 'scale', 'seed', 'shape-rendering', 'slope', 'specularconstant', 'specularexponent', 'spreadmethod', 'startoffset', 'stddeviation', 'stitchtiles', 'stop-color', 'stop-opacity', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke', 'stroke-width', 'style', 'surfacescale', 'systemlanguage', 'tabindex', 'tablevalues', 'targetx', 'targety', 'transform', 'transform-origin', 'text-anchor', 'text-decoration', 'text-rendering', 'textlength', 'type', 'u1', 'u2', 'unicode', 'values', 'viewbox', 'visibility', 'version', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'width', 'word-spacing', 'wrap', 'writing-mode', 'xchannelselector', 'ychannelselector', 'x', 'x1', 'x2', 'xmlns', 'y', 'y1', 'y2', 'z', 'zoomandpan']);
+var mathMl = freeze(['accent', 'accentunder', 'align', 'bevelled', 'close', 'columnsalign', 'columnlines', 'columnspan', 'denomalign', 'depth', 'dir', 'display', 'displaystyle', 'encoding', 'fence', 'frame', 'height', 'href', 'id', 'largeop', 'length', 'linethickness', 'lspace', 'lquote', 'mathbackground', 'mathcolor', 'mathsize', 'mathvariant', 'maxsize', 'minsize', 'movablelimits', 'notation', 'numalign', 'open', 'rowalign', 'rowlines', 'rowspacing', 'rowspan', 'rspace', 'rquote', 'scriptlevel', 'scriptminsize', 'scriptsizemultiplier', 'selection', 'separator', 'separators', 'stretchy', 'subscriptshift', 'supscriptshift', 'symmetric', 'voffset', 'width', 'xmlns']);
+var xml = freeze(['xlink:href', 'xml:id', 'xlink:title', 'xml:space', 'xmlns:xlink']);
+
+// eslint-disable-next-line unicorn/better-regex
+var MUSTACHE_EXPR = seal(/\{\{[\w\W]*|[\w\W]*\}\}/gm); // Specify template detection regex for SAFE_FOR_TEMPLATES mode
+var ERB_EXPR = seal(/<%[\w\W]*|[\w\W]*%>/gm);
+var TMPLIT_EXPR = seal(/\$\{[\w\W]*/gm); // eslint-disable-line unicorn/better-regex
+var DATA_ATTR = seal(/^data-[\-\w.\u00B7-\uFFFF]+$/); // eslint-disable-line no-useless-escape
+var ARIA_ATTR = seal(/^aria-[\-\w]+$/); // eslint-disable-line no-useless-escape
+var IS_ALLOWED_URI = seal(/^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i // eslint-disable-line no-useless-escape
+);
+var IS_SCRIPT_OR_DATA = seal(/^(?:\w+script|data):/i);
+var ATTR_WHITESPACE = seal(/[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g // eslint-disable-line no-control-regex
+);
+var DOCTYPE_NAME = seal(/^html$/i);
+var CUSTOM_ELEMENT = seal(/^[a-z][.\w]*(-[.\w]+)+$/i);
+var EXPRESSIONS = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  ARIA_ATTR: ARIA_ATTR,
+  ATTR_WHITESPACE: ATTR_WHITESPACE,
+  CUSTOM_ELEMENT: CUSTOM_ELEMENT,
+  DATA_ATTR: DATA_ATTR,
+  DOCTYPE_NAME: DOCTYPE_NAME,
+  ERB_EXPR: ERB_EXPR,
+  IS_ALLOWED_URI: IS_ALLOWED_URI,
+  IS_SCRIPT_OR_DATA: IS_SCRIPT_OR_DATA,
+  MUSTACHE_EXPR: MUSTACHE_EXPR,
+  TMPLIT_EXPR: TMPLIT_EXPR
+});
+
+/* eslint-disable @typescript-eslint/indent */
+// https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
+var NODE_TYPE = {
+  element: 1,
+  attribute: 2,
+  text: 3,
+  cdataSection: 4,
+  entityReference: 5,
+  // Deprecated
+  entityNode: 6,
+  // Deprecated
+  progressingInstruction: 7,
+  comment: 8,
+  document: 9,
+  documentType: 10,
+  documentFragment: 11,
+  notation: 12 // Deprecated
+};
+var getGlobal = function getGlobal() {
+  return typeof window === 'undefined' ? null : window;
+};
+/**
+ * Creates a no-op policy for internal use only.
+ * Don't export this function outside this module!
+ * @param trustedTypes The policy factory.
+ * @param purifyHostElement The Script element used to load DOMPurify (to determine policy name suffix).
+ * @return The policy created (or null, if Trusted Types
+ * are not supported or creating the policy failed).
+ */
+var _createTrustedTypesPolicy = function _createTrustedTypesPolicy(trustedTypes, purifyHostElement) {
+  if (_typeof(trustedTypes) !== 'object' || typeof trustedTypes.createPolicy !== 'function') {
+    return null;
+  }
+  // Allow the callers to control the unique policy name
+  // by adding a data-tt-policy-suffix to the script element with the DOMPurify.
+  // Policy creation with duplicate names throws in Trusted Types.
+  var suffix = null;
+  var ATTR_NAME = 'data-tt-policy-suffix';
+  if (purifyHostElement && purifyHostElement.hasAttribute(ATTR_NAME)) {
+    suffix = purifyHostElement.getAttribute(ATTR_NAME);
+  }
+  var policyName = 'dompurify' + (suffix ? '#' + suffix : '');
+  try {
+    return trustedTypes.createPolicy(policyName, {
+      createHTML: function createHTML(html) {
+        return html;
+      },
+      createScriptURL: function createScriptURL(scriptUrl) {
+        return scriptUrl;
+      }
+    });
+  } catch (_) {
+    // Policy creation failed (most likely another DOMPurify script has
+    // already run). Skip creating the policy, as this will only cause errors
+    // if TT are enforced.
+    console.warn('TrustedTypes policy ' + policyName + ' could not be created.');
+    return null;
+  }
+};
+var _createHooksMap = function _createHooksMap() {
+  return {
+    afterSanitizeAttributes: [],
+    afterSanitizeElements: [],
+    afterSanitizeShadowDOM: [],
+    beforeSanitizeAttributes: [],
+    beforeSanitizeElements: [],
+    beforeSanitizeShadowDOM: [],
+    uponSanitizeAttribute: [],
+    uponSanitizeElement: [],
+    uponSanitizeShadowNode: []
+  };
+};
+function createDOMPurify() {
+  var window = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : getGlobal();
+  var DOMPurify = function DOMPurify(root) {
+    return createDOMPurify(root);
+  };
+  DOMPurify.version = '3.3.0';
+  DOMPurify.removed = [];
+  if (!window || !window.document || window.document.nodeType !== NODE_TYPE.document || !window.Element) {
+    // Not running in a browser, provide a factory function
+    // so that you can pass your own Window
+    DOMPurify.isSupported = false;
+    return DOMPurify;
+  }
+  var document = window.document;
+  var originalDocument = document;
+  var currentScript = originalDocument.currentScript;
+  var DocumentFragment = window.DocumentFragment,
+    HTMLTemplateElement = window.HTMLTemplateElement,
+    Node = window.Node,
+    Element = window.Element,
+    NodeFilter = window.NodeFilter,
+    _window$NamedNodeMap = window.NamedNodeMap,
+    NamedNodeMap = _window$NamedNodeMap === void 0 ? window.NamedNodeMap || window.MozNamedAttrMap : _window$NamedNodeMap,
+    HTMLFormElement = window.HTMLFormElement,
+    DOMParser = window.DOMParser,
+    trustedTypes = window.trustedTypes;
+  var ElementPrototype = Element.prototype;
+  var cloneNode = lookupGetter(ElementPrototype, 'cloneNode');
+  var remove = lookupGetter(ElementPrototype, 'remove');
+  var getNextSibling = lookupGetter(ElementPrototype, 'nextSibling');
+  var getChildNodes = lookupGetter(ElementPrototype, 'childNodes');
+  var getParentNode = lookupGetter(ElementPrototype, 'parentNode');
+  // As per issue #47, the web-components registry is inherited by a
+  // new document created via createHTMLDocument. As per the spec
+  // (http://w3c.github.io/webcomponents/spec/custom/#creating-and-passing-registries)
+  // a new empty registry is used when creating a template contents owner
+  // document, so we use that as our parent document to ensure nothing
+  // is inherited.
+  if (typeof HTMLTemplateElement === 'function') {
+    var template = document.createElement('template');
+    if (template.content && template.content.ownerDocument) {
+      document = template.content.ownerDocument;
+    }
+  }
+  var trustedTypesPolicy;
+  var emptyHTML = '';
+  var _document = document,
+    implementation = _document.implementation,
+    createNodeIterator = _document.createNodeIterator,
+    createDocumentFragment = _document.createDocumentFragment,
+    getElementsByTagName = _document.getElementsByTagName;
+  var importNode = originalDocument.importNode;
+  var hooks = _createHooksMap();
+  /**
+   * Expose whether this browser supports running the full DOMPurify.
+   */
+  DOMPurify.isSupported = typeof entries === 'function' && typeof getParentNode === 'function' && implementation && implementation.createHTMLDocument !== undefined;
+  var MUSTACHE_EXPR = EXPRESSIONS.MUSTACHE_EXPR,
+    ERB_EXPR = EXPRESSIONS.ERB_EXPR,
+    TMPLIT_EXPR = EXPRESSIONS.TMPLIT_EXPR,
+    DATA_ATTR = EXPRESSIONS.DATA_ATTR,
+    ARIA_ATTR = EXPRESSIONS.ARIA_ATTR,
+    IS_SCRIPT_OR_DATA = EXPRESSIONS.IS_SCRIPT_OR_DATA,
+    ATTR_WHITESPACE = EXPRESSIONS.ATTR_WHITESPACE,
+    CUSTOM_ELEMENT = EXPRESSIONS.CUSTOM_ELEMENT;
+  var IS_ALLOWED_URI$1 = EXPRESSIONS.IS_ALLOWED_URI;
+  /**
+   * We consider the elements and attributes below to be safe. Ideally
+   * don't add any new ones but feel free to remove unwanted ones.
+   */
+  /* allowed element names */
+  var ALLOWED_TAGS = null;
+  var DEFAULT_ALLOWED_TAGS = addToSet({}, [].concat(_toConsumableArray(html$1), _toConsumableArray(svg$1), _toConsumableArray(svgFilters), _toConsumableArray(mathMl$1), _toConsumableArray(text)));
+  /* Allowed attribute names */
+  var ALLOWED_ATTR = null;
+  var DEFAULT_ALLOWED_ATTR = addToSet({}, [].concat(_toConsumableArray(html), _toConsumableArray(svg), _toConsumableArray(mathMl), _toConsumableArray(xml)));
+  /*
+   * Configure how DOMPurify should handle custom elements and their attributes as well as customized built-in elements.
+   * @property {RegExp|Function|null} tagNameCheck one of [null, regexPattern, predicate]. Default: `null` (disallow any custom elements)
+   * @property {RegExp|Function|null} attributeNameCheck one of [null, regexPattern, predicate]. Default: `null` (disallow any attributes not on the allow list)
+   * @property {boolean} allowCustomizedBuiltInElements allow custom elements derived from built-ins if they pass CUSTOM_ELEMENT_HANDLING.tagNameCheck. Default: `false`.
+   */
+  var CUSTOM_ELEMENT_HANDLING = Object.seal(create(null, {
+    tagNameCheck: {
+      writable: true,
+      configurable: false,
+      enumerable: true,
+      value: null
+    },
+    attributeNameCheck: {
+      writable: true,
+      configurable: false,
+      enumerable: true,
+      value: null
+    },
+    allowCustomizedBuiltInElements: {
+      writable: true,
+      configurable: false,
+      enumerable: true,
+      value: false
+    }
+  }));
+  /* Explicitly forbidden tags (overrides ALLOWED_TAGS/ADD_TAGS) */
+  var FORBID_TAGS = null;
+  /* Explicitly forbidden attributes (overrides ALLOWED_ATTR/ADD_ATTR) */
+  var FORBID_ATTR = null;
+  /* Config object to store ADD_TAGS/ADD_ATTR functions (when used as functions) */
+  var EXTRA_ELEMENT_HANDLING = Object.seal(create(null, {
+    tagCheck: {
+      writable: true,
+      configurable: false,
+      enumerable: true,
+      value: null
+    },
+    attributeCheck: {
+      writable: true,
+      configurable: false,
+      enumerable: true,
+      value: null
+    }
+  }));
+  /* Decide if ARIA attributes are okay */
+  var ALLOW_ARIA_ATTR = true;
+  /* Decide if custom data attributes are okay */
+  var ALLOW_DATA_ATTR = true;
+  /* Decide if unknown protocols are okay */
+  var ALLOW_UNKNOWN_PROTOCOLS = false;
+  /* Decide if self-closing tags in attributes are allowed.
+   * Usually removed due to a mXSS issue in jQuery 3.0 */
+  var ALLOW_SELF_CLOSE_IN_ATTR = true;
+  /* Output should be safe for common template engines.
+   * This means, DOMPurify removes data attributes, mustaches and ERB
+   */
+  var SAFE_FOR_TEMPLATES = false;
+  /* Output should be safe even for XML used within HTML and alike.
+   * This means, DOMPurify removes comments when containing risky content.
+   */
+  var SAFE_FOR_XML = true;
+  /* Decide if document with <html>... should be returned */
+  var WHOLE_DOCUMENT = false;
+  /* Track whether config is already set on this instance of DOMPurify. */
+  var SET_CONFIG = false;
+  /* Decide if all elements (e.g. style, script) must be children of
+   * document.body. By default, browsers might move them to document.head */
+  var FORCE_BODY = false;
+  /* Decide if a DOM `HTMLBodyElement` should be returned, instead of a html
+   * string (or a TrustedHTML object if Trusted Types are supported).
+   * If `WHOLE_DOCUMENT` is enabled a `HTMLHtmlElement` will be returned instead
+   */
+  var RETURN_DOM = false;
+  /* Decide if a DOM `DocumentFragment` should be returned, instead of a html
+   * string  (or a TrustedHTML object if Trusted Types are supported) */
+  var RETURN_DOM_FRAGMENT = false;
+  /* Try to return a Trusted Type object instead of a string, return a string in
+   * case Trusted Types are not supported  */
+  var RETURN_TRUSTED_TYPE = false;
+  /* Output should be free from DOM clobbering attacks?
+   * This sanitizes markups named with colliding, clobberable built-in DOM APIs.
+   */
+  var SANITIZE_DOM = true;
+  /* Achieve full DOM Clobbering protection by isolating the namespace of named
+   * properties and JS variables, mitigating attacks that abuse the HTML/DOM spec rules.
+   *
+   * HTML/DOM spec rules that enable DOM Clobbering:
+   *   - Named Access on Window (§7.3.3)
+   *   - DOM Tree Accessors (§3.1.5)
+   *   - Form Element Parent-Child Relations (§4.10.3)
+   *   - Iframe srcdoc / Nested WindowProxies (§4.8.5)
+   *   - HTMLCollection (§4.2.10.2)
+   *
+   * Namespace isolation is implemented by prefixing `id` and `name` attributes
+   * with a constant string, i.e., `user-content-`
+   */
+  var SANITIZE_NAMED_PROPS = false;
+  var SANITIZE_NAMED_PROPS_PREFIX = 'user-content-';
+  /* Keep element content when removing element? */
+  var KEEP_CONTENT = true;
+  /* If a `Node` is passed to sanitize(), then performs sanitization in-place instead
+   * of importing it into a new Document and returning a sanitized copy */
+  var IN_PLACE = false;
+  /* Allow usage of profiles like html, svg and mathMl */
+  var USE_PROFILES = {};
+  /* Tags to ignore content of when KEEP_CONTENT is true */
+  var FORBID_CONTENTS = null;
+  var DEFAULT_FORBID_CONTENTS = addToSet({}, ['annotation-xml', 'audio', 'colgroup', 'desc', 'foreignobject', 'head', 'iframe', 'math', 'mi', 'mn', 'mo', 'ms', 'mtext', 'noembed', 'noframes', 'noscript', 'plaintext', 'script', 'style', 'svg', 'template', 'thead', 'title', 'video', 'xmp']);
+  /* Tags that are safe for data: URIs */
+  var DATA_URI_TAGS = null;
+  var DEFAULT_DATA_URI_TAGS = addToSet({}, ['audio', 'video', 'img', 'source', 'image', 'track']);
+  /* Attributes safe for values like "javascript:" */
+  var URI_SAFE_ATTRIBUTES = null;
+  var DEFAULT_URI_SAFE_ATTRIBUTES = addToSet({}, ['alt', 'class', 'for', 'id', 'label', 'name', 'pattern', 'placeholder', 'role', 'summary', 'title', 'value', 'style', 'xmlns']);
+  var MATHML_NAMESPACE = 'http://www.w3.org/1998/Math/MathML';
+  var SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+  var HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+  /* Document namespace */
+  var NAMESPACE = HTML_NAMESPACE;
+  var IS_EMPTY_INPUT = false;
+  /* Allowed XHTML+XML namespaces */
+  var ALLOWED_NAMESPACES = null;
+  var DEFAULT_ALLOWED_NAMESPACES = addToSet({}, [MATHML_NAMESPACE, SVG_NAMESPACE, HTML_NAMESPACE], stringToString);
+  var MATHML_TEXT_INTEGRATION_POINTS = addToSet({}, ['mi', 'mo', 'mn', 'ms', 'mtext']);
+  var HTML_INTEGRATION_POINTS = addToSet({}, ['annotation-xml']);
+  // Certain elements are allowed in both SVG and HTML
+  // namespace. We need to specify them explicitly
+  // so that they don't get erroneously deleted from
+  // HTML namespace.
+  var COMMON_SVG_AND_HTML_ELEMENTS = addToSet({}, ['title', 'style', 'font', 'a', 'script']);
+  /* Parsing of strict XHTML documents */
+  var PARSER_MEDIA_TYPE = null;
+  var SUPPORTED_PARSER_MEDIA_TYPES = ['application/xhtml+xml', 'text/html'];
+  var DEFAULT_PARSER_MEDIA_TYPE = 'text/html';
+  var transformCaseFunc = null;
+  /* Keep a reference to config to pass to hooks */
+  var CONFIG = null;
+  /* Ideally, do not touch anything below this line */
+  /* ______________________________________________ */
+  var formElement = document.createElement('form');
+  var isRegexOrFunction = function isRegexOrFunction(testValue) {
+    return testValue instanceof RegExp || testValue instanceof Function;
+  };
+  /**
+   * _parseConfig
+   *
+   * @param cfg optional config literal
+   */
+  // eslint-disable-next-line complexity
+  var _parseConfig = function _parseConfig() {
+    var cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    if (CONFIG && CONFIG === cfg) {
+      return;
+    }
+    /* Shield configuration object from tampering */
+    if (!cfg || _typeof(cfg) !== 'object') {
+      cfg = {};
+    }
+    /* Shield configuration object from prototype pollution */
+    cfg = clone(cfg);
+    PARSER_MEDIA_TYPE =
+    // eslint-disable-next-line unicorn/prefer-includes
+    SUPPORTED_PARSER_MEDIA_TYPES.indexOf(cfg.PARSER_MEDIA_TYPE) === -1 ? DEFAULT_PARSER_MEDIA_TYPE : cfg.PARSER_MEDIA_TYPE;
+    // HTML tags and attributes are not case-sensitive, converting to lowercase. Keeping XHTML as is.
+    transformCaseFunc = PARSER_MEDIA_TYPE === 'application/xhtml+xml' ? stringToString : stringToLowerCase;
+    /* Set configuration parameters */
+    ALLOWED_TAGS = objectHasOwnProperty(cfg, 'ALLOWED_TAGS') ? addToSet({}, cfg.ALLOWED_TAGS, transformCaseFunc) : DEFAULT_ALLOWED_TAGS;
+    ALLOWED_ATTR = objectHasOwnProperty(cfg, 'ALLOWED_ATTR') ? addToSet({}, cfg.ALLOWED_ATTR, transformCaseFunc) : DEFAULT_ALLOWED_ATTR;
+    ALLOWED_NAMESPACES = objectHasOwnProperty(cfg, 'ALLOWED_NAMESPACES') ? addToSet({}, cfg.ALLOWED_NAMESPACES, stringToString) : DEFAULT_ALLOWED_NAMESPACES;
+    URI_SAFE_ATTRIBUTES = objectHasOwnProperty(cfg, 'ADD_URI_SAFE_ATTR') ? addToSet(clone(DEFAULT_URI_SAFE_ATTRIBUTES), cfg.ADD_URI_SAFE_ATTR, transformCaseFunc) : DEFAULT_URI_SAFE_ATTRIBUTES;
+    DATA_URI_TAGS = objectHasOwnProperty(cfg, 'ADD_DATA_URI_TAGS') ? addToSet(clone(DEFAULT_DATA_URI_TAGS), cfg.ADD_DATA_URI_TAGS, transformCaseFunc) : DEFAULT_DATA_URI_TAGS;
+    FORBID_CONTENTS = objectHasOwnProperty(cfg, 'FORBID_CONTENTS') ? addToSet({}, cfg.FORBID_CONTENTS, transformCaseFunc) : DEFAULT_FORBID_CONTENTS;
+    FORBID_TAGS = objectHasOwnProperty(cfg, 'FORBID_TAGS') ? addToSet({}, cfg.FORBID_TAGS, transformCaseFunc) : clone({});
+    FORBID_ATTR = objectHasOwnProperty(cfg, 'FORBID_ATTR') ? addToSet({}, cfg.FORBID_ATTR, transformCaseFunc) : clone({});
+    USE_PROFILES = objectHasOwnProperty(cfg, 'USE_PROFILES') ? cfg.USE_PROFILES : false;
+    ALLOW_ARIA_ATTR = cfg.ALLOW_ARIA_ATTR !== false; // Default true
+    ALLOW_DATA_ATTR = cfg.ALLOW_DATA_ATTR !== false; // Default true
+    ALLOW_UNKNOWN_PROTOCOLS = cfg.ALLOW_UNKNOWN_PROTOCOLS || false; // Default false
+    ALLOW_SELF_CLOSE_IN_ATTR = cfg.ALLOW_SELF_CLOSE_IN_ATTR !== false; // Default true
+    SAFE_FOR_TEMPLATES = cfg.SAFE_FOR_TEMPLATES || false; // Default false
+    SAFE_FOR_XML = cfg.SAFE_FOR_XML !== false; // Default true
+    WHOLE_DOCUMENT = cfg.WHOLE_DOCUMENT || false; // Default false
+    RETURN_DOM = cfg.RETURN_DOM || false; // Default false
+    RETURN_DOM_FRAGMENT = cfg.RETURN_DOM_FRAGMENT || false; // Default false
+    RETURN_TRUSTED_TYPE = cfg.RETURN_TRUSTED_TYPE || false; // Default false
+    FORCE_BODY = cfg.FORCE_BODY || false; // Default false
+    SANITIZE_DOM = cfg.SANITIZE_DOM !== false; // Default true
+    SANITIZE_NAMED_PROPS = cfg.SANITIZE_NAMED_PROPS || false; // Default false
+    KEEP_CONTENT = cfg.KEEP_CONTENT !== false; // Default true
+    IN_PLACE = cfg.IN_PLACE || false; // Default false
+    IS_ALLOWED_URI$1 = cfg.ALLOWED_URI_REGEXP || IS_ALLOWED_URI;
+    NAMESPACE = cfg.NAMESPACE || HTML_NAMESPACE;
+    MATHML_TEXT_INTEGRATION_POINTS = cfg.MATHML_TEXT_INTEGRATION_POINTS || MATHML_TEXT_INTEGRATION_POINTS;
+    HTML_INTEGRATION_POINTS = cfg.HTML_INTEGRATION_POINTS || HTML_INTEGRATION_POINTS;
+    CUSTOM_ELEMENT_HANDLING = cfg.CUSTOM_ELEMENT_HANDLING || {};
+    if (cfg.CUSTOM_ELEMENT_HANDLING && isRegexOrFunction(cfg.CUSTOM_ELEMENT_HANDLING.tagNameCheck)) {
+      CUSTOM_ELEMENT_HANDLING.tagNameCheck = cfg.CUSTOM_ELEMENT_HANDLING.tagNameCheck;
+    }
+    if (cfg.CUSTOM_ELEMENT_HANDLING && isRegexOrFunction(cfg.CUSTOM_ELEMENT_HANDLING.attributeNameCheck)) {
+      CUSTOM_ELEMENT_HANDLING.attributeNameCheck = cfg.CUSTOM_ELEMENT_HANDLING.attributeNameCheck;
+    }
+    if (cfg.CUSTOM_ELEMENT_HANDLING && typeof cfg.CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements === 'boolean') {
+      CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements = cfg.CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements;
+    }
+    if (SAFE_FOR_TEMPLATES) {
+      ALLOW_DATA_ATTR = false;
+    }
+    if (RETURN_DOM_FRAGMENT) {
+      RETURN_DOM = true;
+    }
+    /* Parse profile info */
+    if (USE_PROFILES) {
+      ALLOWED_TAGS = addToSet({}, text);
+      ALLOWED_ATTR = [];
+      if (USE_PROFILES.html === true) {
+        addToSet(ALLOWED_TAGS, html$1);
+        addToSet(ALLOWED_ATTR, html);
+      }
+      if (USE_PROFILES.svg === true) {
+        addToSet(ALLOWED_TAGS, svg$1);
+        addToSet(ALLOWED_ATTR, svg);
+        addToSet(ALLOWED_ATTR, xml);
+      }
+      if (USE_PROFILES.svgFilters === true) {
+        addToSet(ALLOWED_TAGS, svgFilters);
+        addToSet(ALLOWED_ATTR, svg);
+        addToSet(ALLOWED_ATTR, xml);
+      }
+      if (USE_PROFILES.mathMl === true) {
+        addToSet(ALLOWED_TAGS, mathMl$1);
+        addToSet(ALLOWED_ATTR, mathMl);
+        addToSet(ALLOWED_ATTR, xml);
+      }
+    }
+    /* Merge configuration parameters */
+    if (cfg.ADD_TAGS) {
+      if (typeof cfg.ADD_TAGS === 'function') {
+        EXTRA_ELEMENT_HANDLING.tagCheck = cfg.ADD_TAGS;
+      } else {
+        if (ALLOWED_TAGS === DEFAULT_ALLOWED_TAGS) {
+          ALLOWED_TAGS = clone(ALLOWED_TAGS);
+        }
+        addToSet(ALLOWED_TAGS, cfg.ADD_TAGS, transformCaseFunc);
+      }
+    }
+    if (cfg.ADD_ATTR) {
+      if (typeof cfg.ADD_ATTR === 'function') {
+        EXTRA_ELEMENT_HANDLING.attributeCheck = cfg.ADD_ATTR;
+      } else {
+        if (ALLOWED_ATTR === DEFAULT_ALLOWED_ATTR) {
+          ALLOWED_ATTR = clone(ALLOWED_ATTR);
+        }
+        addToSet(ALLOWED_ATTR, cfg.ADD_ATTR, transformCaseFunc);
+      }
+    }
+    if (cfg.ADD_URI_SAFE_ATTR) {
+      addToSet(URI_SAFE_ATTRIBUTES, cfg.ADD_URI_SAFE_ATTR, transformCaseFunc);
+    }
+    if (cfg.FORBID_CONTENTS) {
+      if (FORBID_CONTENTS === DEFAULT_FORBID_CONTENTS) {
+        FORBID_CONTENTS = clone(FORBID_CONTENTS);
+      }
+      addToSet(FORBID_CONTENTS, cfg.FORBID_CONTENTS, transformCaseFunc);
+    }
+    /* Add #text in case KEEP_CONTENT is set to true */
+    if (KEEP_CONTENT) {
+      ALLOWED_TAGS['#text'] = true;
+    }
+    /* Add html, head and body to ALLOWED_TAGS in case WHOLE_DOCUMENT is true */
+    if (WHOLE_DOCUMENT) {
+      addToSet(ALLOWED_TAGS, ['html', 'head', 'body']);
+    }
+    /* Add tbody to ALLOWED_TAGS in case tables are permitted, see #286, #365 */
+    if (ALLOWED_TAGS.table) {
+      addToSet(ALLOWED_TAGS, ['tbody']);
+      delete FORBID_TAGS.tbody;
+    }
+    if (cfg.TRUSTED_TYPES_POLICY) {
+      if (typeof cfg.TRUSTED_TYPES_POLICY.createHTML !== 'function') {
+        throw typeErrorCreate('TRUSTED_TYPES_POLICY configuration option must provide a "createHTML" hook.');
+      }
+      if (typeof cfg.TRUSTED_TYPES_POLICY.createScriptURL !== 'function') {
+        throw typeErrorCreate('TRUSTED_TYPES_POLICY configuration option must provide a "createScriptURL" hook.');
+      }
+      // Overwrite existing TrustedTypes policy.
+      trustedTypesPolicy = cfg.TRUSTED_TYPES_POLICY;
+      // Sign local variables required by `sanitize`.
+      emptyHTML = trustedTypesPolicy.createHTML('');
+    } else {
+      // Uninitialized policy, attempt to initialize the internal dompurify policy.
+      if (trustedTypesPolicy === undefined) {
+        trustedTypesPolicy = _createTrustedTypesPolicy(trustedTypes, currentScript);
+      }
+      // If creating the internal policy succeeded sign internal variables.
+      if (trustedTypesPolicy !== null && typeof emptyHTML === 'string') {
+        emptyHTML = trustedTypesPolicy.createHTML('');
+      }
+    }
+    // Prevent further manipulation of configuration.
+    // Not available in IE8, Safari 5, etc.
+    if (freeze) {
+      freeze(cfg);
+    }
+    CONFIG = cfg;
+  };
+  /* Keep track of all possible SVG and MathML tags
+   * so that we can perform the namespace checks
+   * correctly. */
+  var ALL_SVG_TAGS = addToSet({}, [].concat(_toConsumableArray(svg$1), _toConsumableArray(svgFilters), _toConsumableArray(svgDisallowed)));
+  var ALL_MATHML_TAGS = addToSet({}, [].concat(_toConsumableArray(mathMl$1), _toConsumableArray(mathMlDisallowed)));
+  /**
+   * @param element a DOM element whose namespace is being checked
+   * @returns Return false if the element has a
+   *  namespace that a spec-compliant parser would never
+   *  return. Return true otherwise.
+   */
+  var _checkValidNamespace = function _checkValidNamespace(element) {
+    var parent = getParentNode(element);
+    // In JSDOM, if we're inside shadow DOM, then parentNode
+    // can be null. We just simulate parent in this case.
+    if (!parent || !parent.tagName) {
+      parent = {
+        namespaceURI: NAMESPACE,
+        tagName: 'template'
+      };
+    }
+    var tagName = stringToLowerCase(element.tagName);
+    var parentTagName = stringToLowerCase(parent.tagName);
+    if (!ALLOWED_NAMESPACES[element.namespaceURI]) {
+      return false;
+    }
+    if (element.namespaceURI === SVG_NAMESPACE) {
+      // The only way to switch from HTML namespace to SVG
+      // is via <svg>. If it happens via any other tag, then
+      // it should be killed.
+      if (parent.namespaceURI === HTML_NAMESPACE) {
+        return tagName === 'svg';
+      }
+      // The only way to switch from MathML to SVG is via`
+      // svg if parent is either <annotation-xml> or MathML
+      // text integration points.
+      if (parent.namespaceURI === MATHML_NAMESPACE) {
+        return tagName === 'svg' && (parentTagName === 'annotation-xml' || MATHML_TEXT_INTEGRATION_POINTS[parentTagName]);
+      }
+      // We only allow elements that are defined in SVG
+      // spec. All others are disallowed in SVG namespace.
+      return Boolean(ALL_SVG_TAGS[tagName]);
+    }
+    if (element.namespaceURI === MATHML_NAMESPACE) {
+      // The only way to switch from HTML namespace to MathML
+      // is via <math>. If it happens via any other tag, then
+      // it should be killed.
+      if (parent.namespaceURI === HTML_NAMESPACE) {
+        return tagName === 'math';
+      }
+      // The only way to switch from SVG to MathML is via
+      // <math> and HTML integration points
+      if (parent.namespaceURI === SVG_NAMESPACE) {
+        return tagName === 'math' && HTML_INTEGRATION_POINTS[parentTagName];
+      }
+      // We only allow elements that are defined in MathML
+      // spec. All others are disallowed in MathML namespace.
+      return Boolean(ALL_MATHML_TAGS[tagName]);
+    }
+    if (element.namespaceURI === HTML_NAMESPACE) {
+      // The only way to switch from SVG to HTML is via
+      // HTML integration points, and from MathML to HTML
+      // is via MathML text integration points
+      if (parent.namespaceURI === SVG_NAMESPACE && !HTML_INTEGRATION_POINTS[parentTagName]) {
+        return false;
+      }
+      if (parent.namespaceURI === MATHML_NAMESPACE && !MATHML_TEXT_INTEGRATION_POINTS[parentTagName]) {
+        return false;
+      }
+      // We disallow tags that are specific for MathML
+      // or SVG and should never appear in HTML namespace
+      return !ALL_MATHML_TAGS[tagName] && (COMMON_SVG_AND_HTML_ELEMENTS[tagName] || !ALL_SVG_TAGS[tagName]);
+    }
+    // For XHTML and XML documents that support custom namespaces
+    if (PARSER_MEDIA_TYPE === 'application/xhtml+xml' && ALLOWED_NAMESPACES[element.namespaceURI]) {
+      return true;
+    }
+    // The code should never reach this place (this means
+    // that the element somehow got namespace that is not
+    // HTML, SVG, MathML or allowed via ALLOWED_NAMESPACES).
+    // Return false just in case.
+    return false;
+  };
+  /**
+   * _forceRemove
+   *
+   * @param node a DOM node
+   */
+  var _forceRemove = function _forceRemove(node) {
+    arrayPush(DOMPurify.removed, {
+      element: node
+    });
+    try {
+      // eslint-disable-next-line unicorn/prefer-dom-node-remove
+      getParentNode(node).removeChild(node);
+    } catch (_) {
+      remove(node);
+    }
+  };
+  /**
+   * _removeAttribute
+   *
+   * @param name an Attribute name
+   * @param element a DOM node
+   */
+  var _removeAttribute = function _removeAttribute(name, element) {
+    try {
+      arrayPush(DOMPurify.removed, {
+        attribute: element.getAttributeNode(name),
+        from: element
+      });
+    } catch (_) {
+      arrayPush(DOMPurify.removed, {
+        attribute: null,
+        from: element
+      });
+    }
+    element.removeAttribute(name);
+    // We void attribute values for unremovable "is" attributes
+    if (name === 'is') {
+      if (RETURN_DOM || RETURN_DOM_FRAGMENT) {
+        try {
+          _forceRemove(element);
+        } catch (_) {}
+      } else {
+        try {
+          element.setAttribute(name, '');
+        } catch (_) {}
+      }
+    }
+  };
+  /**
+   * _initDocument
+   *
+   * @param dirty - a string of dirty markup
+   * @return a DOM, filled with the dirty markup
+   */
+  var _initDocument = function _initDocument(dirty) {
+    /* Create a HTML document */
+    var doc = null;
+    var leadingWhitespace = null;
+    if (FORCE_BODY) {
+      dirty = '<remove></remove>' + dirty;
+    } else {
+      /* If FORCE_BODY isn't used, leading whitespace needs to be preserved manually */
+      var matches = stringMatch(dirty, /^[\r\n\t ]+/);
+      leadingWhitespace = matches && matches[0];
+    }
+    if (PARSER_MEDIA_TYPE === 'application/xhtml+xml' && NAMESPACE === HTML_NAMESPACE) {
+      // Root of XHTML doc must contain xmlns declaration (see https://www.w3.org/TR/xhtml1/normative.html#strict)
+      dirty = '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>' + dirty + '</body></html>';
+    }
+    var dirtyPayload = trustedTypesPolicy ? trustedTypesPolicy.createHTML(dirty) : dirty;
+    /*
+     * Use the DOMParser API by default, fallback later if needs be
+     * DOMParser not work for svg when has multiple root element.
+     */
+    if (NAMESPACE === HTML_NAMESPACE) {
+      try {
+        doc = new DOMParser().parseFromString(dirtyPayload, PARSER_MEDIA_TYPE);
+      } catch (_) {}
+    }
+    /* Use createHTMLDocument in case DOMParser is not available */
+    if (!doc || !doc.documentElement) {
+      doc = implementation.createDocument(NAMESPACE, 'template', null);
+      try {
+        doc.documentElement.innerHTML = IS_EMPTY_INPUT ? emptyHTML : dirtyPayload;
+      } catch (_) {
+        // Syntax error if dirtyPayload is invalid xml
+      }
+    }
+    var body = doc.body || doc.documentElement;
+    if (dirty && leadingWhitespace) {
+      body.insertBefore(document.createTextNode(leadingWhitespace), body.childNodes[0] || null);
+    }
+    /* Work on whole document or just its body */
+    if (NAMESPACE === HTML_NAMESPACE) {
+      return getElementsByTagName.call(doc, WHOLE_DOCUMENT ? 'html' : 'body')[0];
+    }
+    return WHOLE_DOCUMENT ? doc.documentElement : body;
+  };
+  /**
+   * Creates a NodeIterator object that you can use to traverse filtered lists of nodes or elements in a document.
+   *
+   * @param root The root element or node to start traversing on.
+   * @return The created NodeIterator
+   */
+  var _createNodeIterator = function _createNodeIterator(root) {
+    return createNodeIterator.call(root.ownerDocument || root, root,
+    // eslint-disable-next-line no-bitwise
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_PROCESSING_INSTRUCTION | NodeFilter.SHOW_CDATA_SECTION, null);
+  };
+  /**
+   * _isClobbered
+   *
+   * @param element element to check for clobbering attacks
+   * @return true if clobbered, false if safe
+   */
+  var _isClobbered = function _isClobbered(element) {
+    return element instanceof HTMLFormElement && (typeof element.nodeName !== 'string' || typeof element.textContent !== 'string' || typeof element.removeChild !== 'function' || !(element.attributes instanceof NamedNodeMap) || typeof element.removeAttribute !== 'function' || typeof element.setAttribute !== 'function' || typeof element.namespaceURI !== 'string' || typeof element.insertBefore !== 'function' || typeof element.hasChildNodes !== 'function');
+  };
+  /**
+   * Checks whether the given object is a DOM node.
+   *
+   * @param value object to check whether it's a DOM node
+   * @return true is object is a DOM node
+   */
+  var _isNode = function _isNode(value) {
+    return typeof Node === 'function' && value instanceof Node;
+  };
+  function _executeHooks(hooks, currentNode, data) {
+    arrayForEach(hooks, function (hook) {
+      hook.call(DOMPurify, currentNode, data, CONFIG);
+    });
+  }
+  /**
+   * _sanitizeElements
+   *
+   * @protect nodeName
+   * @protect textContent
+   * @protect removeChild
+   * @param currentNode to check for permission to exist
+   * @return true if node was killed, false if left alive
+   */
+  var _sanitizeElements = function _sanitizeElements(currentNode) {
+    var content = null;
+    /* Execute a hook if present */
+    _executeHooks(hooks.beforeSanitizeElements, currentNode, null);
+    /* Check if element is clobbered or can clobber */
+    if (_isClobbered(currentNode)) {
+      _forceRemove(currentNode);
+      return true;
+    }
+    /* Now let's check the element's type and name */
+    var tagName = transformCaseFunc(currentNode.nodeName);
+    /* Execute a hook if present */
+    _executeHooks(hooks.uponSanitizeElement, currentNode, {
+      tagName: tagName,
+      allowedTags: ALLOWED_TAGS
+    });
+    /* Detect mXSS attempts abusing namespace confusion */
+    if (SAFE_FOR_XML && currentNode.hasChildNodes() && !_isNode(currentNode.firstElementChild) && regExpTest(/<[/\w!]/g, currentNode.innerHTML) && regExpTest(/<[/\w!]/g, currentNode.textContent)) {
+      _forceRemove(currentNode);
+      return true;
+    }
+    /* Remove any occurrence of processing instructions */
+    if (currentNode.nodeType === NODE_TYPE.progressingInstruction) {
+      _forceRemove(currentNode);
+      return true;
+    }
+    /* Remove any kind of possibly harmful comments */
+    if (SAFE_FOR_XML && currentNode.nodeType === NODE_TYPE.comment && regExpTest(/<[/\w]/g, currentNode.data)) {
+      _forceRemove(currentNode);
+      return true;
+    }
+    /* Remove element if anything forbids its presence */
+    if (!(EXTRA_ELEMENT_HANDLING.tagCheck instanceof Function && EXTRA_ELEMENT_HANDLING.tagCheck(tagName)) && (!ALLOWED_TAGS[tagName] || FORBID_TAGS[tagName])) {
+      /* Check if we have a custom element to handle */
+      if (!FORBID_TAGS[tagName] && _isBasicCustomElement(tagName)) {
+        if (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, tagName)) {
+          return false;
+        }
+        if (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(tagName)) {
+          return false;
+        }
+      }
+      /* Keep content except for bad-listed elements */
+      if (KEEP_CONTENT && !FORBID_CONTENTS[tagName]) {
+        var parentNode = getParentNode(currentNode) || currentNode.parentNode;
+        var childNodes = getChildNodes(currentNode) || currentNode.childNodes;
+        if (childNodes && parentNode) {
+          var childCount = childNodes.length;
+          for (var i = childCount - 1; i >= 0; --i) {
+            var childClone = cloneNode(childNodes[i], true);
+            childClone.__removalCount = (currentNode.__removalCount || 0) + 1;
+            parentNode.insertBefore(childClone, getNextSibling(currentNode));
+          }
+        }
+      }
+      _forceRemove(currentNode);
+      return true;
+    }
+    /* Check whether element has a valid namespace */
+    if (currentNode instanceof Element && !_checkValidNamespace(currentNode)) {
+      _forceRemove(currentNode);
+      return true;
+    }
+    /* Make sure that older browsers don't get fallback-tag mXSS */
+    if ((tagName === 'noscript' || tagName === 'noembed' || tagName === 'noframes') && regExpTest(/<\/no(script|embed|frames)/i, currentNode.innerHTML)) {
+      _forceRemove(currentNode);
+      return true;
+    }
+    /* Sanitize element content to be template-safe */
+    if (SAFE_FOR_TEMPLATES && currentNode.nodeType === NODE_TYPE.text) {
+      /* Get the element's text content */
+      content = currentNode.textContent;
+      arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], function (expr) {
+        content = stringReplace(content, expr, ' ');
+      });
+      if (currentNode.textContent !== content) {
+        arrayPush(DOMPurify.removed, {
+          element: currentNode.cloneNode()
+        });
+        currentNode.textContent = content;
+      }
+    }
+    /* Execute a hook if present */
+    _executeHooks(hooks.afterSanitizeElements, currentNode, null);
+    return false;
+  };
+  /**
+   * _isValidAttribute
+   *
+   * @param lcTag Lowercase tag name of containing element.
+   * @param lcName Lowercase attribute name.
+   * @param value Attribute value.
+   * @return Returns true if `value` is valid, otherwise false.
+   */
+  // eslint-disable-next-line complexity
+  var _isValidAttribute = function _isValidAttribute(lcTag, lcName, value) {
+    /* Make sure attribute cannot clobber */
+    if (SANITIZE_DOM && (lcName === 'id' || lcName === 'name') && (value in document || value in formElement)) {
+      return false;
+    }
+    /* Allow valid data-* attributes: At least one character after "-"
+        (https://html.spec.whatwg.org/multipage/dom.html#embedding-custom-non-visible-data-with-the-data-*-attributes)
+        XML-compatible (https://html.spec.whatwg.org/multipage/infrastructure.html#xml-compatible and http://www.w3.org/TR/xml/#d0e804)
+        We don't need to check the value; it's always URI safe. */
+    if (ALLOW_DATA_ATTR && !FORBID_ATTR[lcName] && regExpTest(DATA_ATTR, lcName)) ;else if (ALLOW_ARIA_ATTR && regExpTest(ARIA_ATTR, lcName)) ;else if (EXTRA_ELEMENT_HANDLING.attributeCheck instanceof Function && EXTRA_ELEMENT_HANDLING.attributeCheck(lcName, lcTag)) ;else if (!ALLOWED_ATTR[lcName] || FORBID_ATTR[lcName]) {
+      if (
+      // First condition does a very basic check if a) it's basically a valid custom element tagname AND
+      // b) if the tagName passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.tagNameCheck
+      // and c) if the attribute name passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.attributeNameCheck
+      _isBasicCustomElement(lcTag) && (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, lcTag) || CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(lcTag)) && (CUSTOM_ELEMENT_HANDLING.attributeNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.attributeNameCheck, lcName) || CUSTOM_ELEMENT_HANDLING.attributeNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.attributeNameCheck(lcName, lcTag)) ||
+      // Alternative, second condition checks if it's an `is`-attribute, AND
+      // the value passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.tagNameCheck
+      lcName === 'is' && CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements && (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, value) || CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(value))) ;else {
+        return false;
+      }
+      /* Check value is safe. First, is attr inert? If so, is safe */
+    } else if (URI_SAFE_ATTRIBUTES[lcName]) ;else if (regExpTest(IS_ALLOWED_URI$1, stringReplace(value, ATTR_WHITESPACE, ''))) ;else if ((lcName === 'src' || lcName === 'xlink:href' || lcName === 'href') && lcTag !== 'script' && stringIndexOf(value, 'data:') === 0 && DATA_URI_TAGS[lcTag]) ;else if (ALLOW_UNKNOWN_PROTOCOLS && !regExpTest(IS_SCRIPT_OR_DATA, stringReplace(value, ATTR_WHITESPACE, ''))) ;else if (value) {
+      return false;
+    } else ;
+    return true;
+  };
+  /**
+   * _isBasicCustomElement
+   * checks if at least one dash is included in tagName, and it's not the first char
+   * for more sophisticated checking see https://github.com/sindresorhus/validate-element-name
+   *
+   * @param tagName name of the tag of the node to sanitize
+   * @returns Returns true if the tag name meets the basic criteria for a custom element, otherwise false.
+   */
+  var _isBasicCustomElement = function _isBasicCustomElement(tagName) {
+    return tagName !== 'annotation-xml' && stringMatch(tagName, CUSTOM_ELEMENT);
+  };
+  /**
+   * _sanitizeAttributes
+   *
+   * @protect attributes
+   * @protect nodeName
+   * @protect removeAttribute
+   * @protect setAttribute
+   *
+   * @param currentNode to sanitize
+   */
+  var _sanitizeAttributes = function _sanitizeAttributes(currentNode) {
+    /* Execute a hook if present */
+    _executeHooks(hooks.beforeSanitizeAttributes, currentNode, null);
+    var attributes = currentNode.attributes;
+    /* Check if we have attributes; if not we might have a text node */
+    if (!attributes || _isClobbered(currentNode)) {
+      return;
+    }
+    var hookEvent = {
+      attrName: '',
+      attrValue: '',
+      keepAttr: true,
+      allowedAttributes: ALLOWED_ATTR,
+      forceKeepAttr: undefined
+    };
+    var l = attributes.length;
+    /* Go backwards over all attributes; safely remove bad ones */
+    var _loop = function _loop() {
+        var attr = attributes[l];
+        var name = attr.name,
+          namespaceURI = attr.namespaceURI,
+          attrValue = attr.value;
+        var lcName = transformCaseFunc(name);
+        var initValue = attrValue;
+        var value = name === 'value' ? initValue : stringTrim(initValue);
+        /* Execute a hook if present */
+        hookEvent.attrName = lcName;
+        hookEvent.attrValue = value;
+        hookEvent.keepAttr = true;
+        hookEvent.forceKeepAttr = undefined; // Allows developers to see this is a property they can set
+        _executeHooks(hooks.uponSanitizeAttribute, currentNode, hookEvent);
+        value = hookEvent.attrValue;
+        /* Full DOM Clobbering protection via namespace isolation,
+         * Prefix id and name attributes with `user-content-`
+         */
+        if (SANITIZE_NAMED_PROPS && (lcName === 'id' || lcName === 'name')) {
+          // Remove the attribute with this value
+          _removeAttribute(name, currentNode);
+          // Prefix the value and later re-create the attribute with the sanitized value
+          value = SANITIZE_NAMED_PROPS_PREFIX + value;
+        }
+        /* Work around a security issue with comments inside attributes */
+        if (SAFE_FOR_XML && regExpTest(/((--!?|])>)|<\/(style|title|textarea)/i, value)) {
+          _removeAttribute(name, currentNode);
+          return 0; // continue
+        }
+        /* Make sure we cannot easily use animated hrefs, even if animations are allowed */
+        if (lcName === 'attributename' && stringMatch(value, 'href')) {
+          _removeAttribute(name, currentNode);
+          return 0; // continue
+        }
+        /* Did the hooks approve of the attribute? */
+        if (hookEvent.forceKeepAttr) {
+          return 0; // continue
+        }
+        /* Did the hooks approve of the attribute? */
+        if (!hookEvent.keepAttr) {
+          _removeAttribute(name, currentNode);
+          return 0; // continue
+        }
+        /* Work around a security issue in jQuery 3.0 */
+        if (!ALLOW_SELF_CLOSE_IN_ATTR && regExpTest(/\/>/i, value)) {
+          _removeAttribute(name, currentNode);
+          return 0; // continue
+        }
+        /* Sanitize attribute content to be template-safe */
+        if (SAFE_FOR_TEMPLATES) {
+          arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], function (expr) {
+            value = stringReplace(value, expr, ' ');
+          });
+        }
+        /* Is `value` valid for this attribute? */
+        var lcTag = transformCaseFunc(currentNode.nodeName);
+        if (!_isValidAttribute(lcTag, lcName, value)) {
+          _removeAttribute(name, currentNode);
+          return 0; // continue
+        }
+        /* Handle attributes that require Trusted Types */
+        if (trustedTypesPolicy && _typeof(trustedTypes) === 'object' && typeof trustedTypes.getAttributeType === 'function') {
+          if (namespaceURI) ;else {
+            switch (trustedTypes.getAttributeType(lcTag, lcName)) {
+              case 'TrustedHTML':
+                {
+                  value = trustedTypesPolicy.createHTML(value);
+                  break;
+                }
+              case 'TrustedScriptURL':
+                {
+                  value = trustedTypesPolicy.createScriptURL(value);
+                  break;
+                }
+            }
+          }
+        }
+        /* Handle invalid data-* attribute set by try-catching it */
+        if (value !== initValue) {
+          try {
+            if (namespaceURI) {
+              currentNode.setAttributeNS(namespaceURI, name, value);
+            } else {
+              /* Fallback to setAttribute() for browser-unrecognized namespaces e.g. "x-schema". */
+              currentNode.setAttribute(name, value);
+            }
+            if (_isClobbered(currentNode)) {
+              _forceRemove(currentNode);
+            } else {
+              arrayPop(DOMPurify.removed);
+            }
+          } catch (_) {
+            _removeAttribute(name, currentNode);
+          }
+        }
+      },
+      _ret;
+    while (l--) {
+      _ret = _loop();
+      if (_ret === 0) continue;
+    }
+    /* Execute a hook if present */
+    _executeHooks(hooks.afterSanitizeAttributes, currentNode, null);
+  };
+  /**
+   * _sanitizeShadowDOM
+   *
+   * @param fragment to iterate over recursively
+   */
+  var _sanitizeShadowDOM = function _sanitizeShadowDOM(fragment) {
+    var shadowNode = null;
+    var shadowIterator = _createNodeIterator(fragment);
+    /* Execute a hook if present */
+    _executeHooks(hooks.beforeSanitizeShadowDOM, fragment, null);
+    while (shadowNode = shadowIterator.nextNode()) {
+      /* Execute a hook if present */
+      _executeHooks(hooks.uponSanitizeShadowNode, shadowNode, null);
+      /* Sanitize tags and elements */
+      _sanitizeElements(shadowNode);
+      /* Check attributes next */
+      _sanitizeAttributes(shadowNode);
+      /* Deep shadow DOM detected */
+      if (shadowNode.content instanceof DocumentFragment) {
+        _sanitizeShadowDOM(shadowNode.content);
+      }
+    }
+    /* Execute a hook if present */
+    _executeHooks(hooks.afterSanitizeShadowDOM, fragment, null);
+  };
+  // eslint-disable-next-line complexity
+  DOMPurify.sanitize = function (dirty) {
+    var cfg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var body = null;
+    var importedNode = null;
+    var currentNode = null;
+    var returnNode = null;
+    /* Make sure we have a string to sanitize.
+      DO NOT return early, as this will return the wrong type if
+      the user has requested a DOM object rather than a string */
+    IS_EMPTY_INPUT = !dirty;
+    if (IS_EMPTY_INPUT) {
+      dirty = '<!-->';
+    }
+    /* Stringify, in case dirty is an object */
+    if (typeof dirty !== 'string' && !_isNode(dirty)) {
+      if (typeof dirty.toString === 'function') {
+        dirty = dirty.toString();
+        if (typeof dirty !== 'string') {
+          throw typeErrorCreate('dirty is not a string, aborting');
+        }
+      } else {
+        throw typeErrorCreate('toString is not a function');
+      }
+    }
+    /* Return dirty HTML if DOMPurify cannot run */
+    if (!DOMPurify.isSupported) {
+      return dirty;
+    }
+    /* Assign config vars */
+    if (!SET_CONFIG) {
+      _parseConfig(cfg);
+    }
+    /* Clean up removed elements */
+    DOMPurify.removed = [];
+    /* Check if dirty is correctly typed for IN_PLACE */
+    if (typeof dirty === 'string') {
+      IN_PLACE = false;
+    }
+    if (IN_PLACE) {
+      /* Do some early pre-sanitization to avoid unsafe root nodes */
+      if (dirty.nodeName) {
+        var tagName = transformCaseFunc(dirty.nodeName);
+        if (!ALLOWED_TAGS[tagName] || FORBID_TAGS[tagName]) {
+          throw typeErrorCreate('root node is forbidden and cannot be sanitized in-place');
+        }
+      }
+    } else if (dirty instanceof Node) {
+      /* If dirty is a DOM element, append to an empty document to avoid
+         elements being stripped by the parser */
+      body = _initDocument('<!---->');
+      importedNode = body.ownerDocument.importNode(dirty, true);
+      if (importedNode.nodeType === NODE_TYPE.element && importedNode.nodeName === 'BODY') {
+        /* Node is already a body, use as is */
+        body = importedNode;
+      } else if (importedNode.nodeName === 'HTML') {
+        body = importedNode;
+      } else {
+        // eslint-disable-next-line unicorn/prefer-dom-node-append
+        body.appendChild(importedNode);
+      }
+    } else {
+      /* Exit directly if we have nothing to do */
+      if (!RETURN_DOM && !SAFE_FOR_TEMPLATES && !WHOLE_DOCUMENT &&
+      // eslint-disable-next-line unicorn/prefer-includes
+      dirty.indexOf('<') === -1) {
+        return trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML(dirty) : dirty;
+      }
+      /* Initialize the document to work on */
+      body = _initDocument(dirty);
+      /* Check we have a DOM node from the data */
+      if (!body) {
+        return RETURN_DOM ? null : RETURN_TRUSTED_TYPE ? emptyHTML : '';
+      }
+    }
+    /* Remove first element node (ours) if FORCE_BODY is set */
+    if (body && FORCE_BODY) {
+      _forceRemove(body.firstChild);
+    }
+    /* Get node iterator */
+    var nodeIterator = _createNodeIterator(IN_PLACE ? dirty : body);
+    /* Now start iterating over the created document */
+    while (currentNode = nodeIterator.nextNode()) {
+      /* Sanitize tags and elements */
+      _sanitizeElements(currentNode);
+      /* Check attributes next */
+      _sanitizeAttributes(currentNode);
+      /* Shadow DOM detected, sanitize it */
+      if (currentNode.content instanceof DocumentFragment) {
+        _sanitizeShadowDOM(currentNode.content);
+      }
+    }
+    /* If we sanitized `dirty` in-place, return it. */
+    if (IN_PLACE) {
+      return dirty;
+    }
+    /* Return sanitized string or DOM */
+    if (RETURN_DOM) {
+      if (RETURN_DOM_FRAGMENT) {
+        returnNode = createDocumentFragment.call(body.ownerDocument);
+        while (body.firstChild) {
+          // eslint-disable-next-line unicorn/prefer-dom-node-append
+          returnNode.appendChild(body.firstChild);
+        }
+      } else {
+        returnNode = body;
+      }
+      if (ALLOWED_ATTR.shadowroot || ALLOWED_ATTR.shadowrootmode) {
+        /*
+          AdoptNode() is not used because internal state is not reset
+          (e.g. the past names map of a HTMLFormElement), this is safe
+          in theory but we would rather not risk another attack vector.
+          The state that is cloned by importNode() is explicitly defined
+          by the specs.
+        */
+        returnNode = importNode.call(originalDocument, returnNode, true);
+      }
+      return returnNode;
+    }
+    var serializedHTML = WHOLE_DOCUMENT ? body.outerHTML : body.innerHTML;
+    /* Serialize doctype if allowed */
+    if (WHOLE_DOCUMENT && ALLOWED_TAGS['!doctype'] && body.ownerDocument && body.ownerDocument.doctype && body.ownerDocument.doctype.name && regExpTest(DOCTYPE_NAME, body.ownerDocument.doctype.name)) {
+      serializedHTML = '<!DOCTYPE ' + body.ownerDocument.doctype.name + '>\n' + serializedHTML;
+    }
+    /* Sanitize final string template-safe */
+    if (SAFE_FOR_TEMPLATES) {
+      arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], function (expr) {
+        serializedHTML = stringReplace(serializedHTML, expr, ' ');
+      });
+    }
+    return trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML(serializedHTML) : serializedHTML;
+  };
+  DOMPurify.setConfig = function () {
+    var cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    _parseConfig(cfg);
+    SET_CONFIG = true;
+  };
+  DOMPurify.clearConfig = function () {
+    CONFIG = null;
+    SET_CONFIG = false;
+  };
+  DOMPurify.isValidAttribute = function (tag, attr, value) {
+    /* Initialize shared config vars if necessary. */
+    if (!CONFIG) {
+      _parseConfig({});
+    }
+    var lcTag = transformCaseFunc(tag);
+    var lcName = transformCaseFunc(attr);
+    return _isValidAttribute(lcTag, lcName, value);
+  };
+  DOMPurify.addHook = function (entryPoint, hookFunction) {
+    if (typeof hookFunction !== 'function') {
+      return;
+    }
+    arrayPush(hooks[entryPoint], hookFunction);
+  };
+  DOMPurify.removeHook = function (entryPoint, hookFunction) {
+    if (hookFunction !== undefined) {
+      var index = arrayLastIndexOf(hooks[entryPoint], hookFunction);
+      return index === -1 ? undefined : arraySplice(hooks[entryPoint], index, 1)[0];
+    }
+    return arrayPop(hooks[entryPoint]);
+  };
+  DOMPurify.removeHooks = function (entryPoint) {
+    hooks[entryPoint] = [];
+  };
+  DOMPurify.removeAllHooks = function () {
+    hooks = _createHooksMap();
+  };
+  return DOMPurify;
+}
+var purify = createDOMPurify();
+
+/**
+ * Sanitizes HTML content by removing disallowed tags and attributes.
+ * Uses DOMPurify library for secure HTML sanitization.
+ * 
+ * @param {string} html - The HTML string to sanitize
+ * @param {Array<string>|null} allowedTags - Array of allowed HTML tag names (e.g., ['p', 'strong', 'em'])
+ *                                          If null or empty, returns HTML unchanged (all tags allowed)
+ * @returns {string} - Sanitized HTML string with only allowed tags and attributes
+ * 
+ * @example
+ * sanitizeHTML('<p>Hello <script>alert("xss")</script></p>', ['p'])
+ * // Returns: '<p>Hello </p>' (script tag removed)
+ */
+var sanitizeHTML = function sanitizeHTML(html, allowedTags) {
+  // If no allowed tags specified, return HTML as-is (no sanitization)
+  if (!allowedTags || allowedTags.length === 0) return html;
+
+  // Use DOMPurify to sanitize HTML based on allowed tags and attributes
+  return purify.sanitize(html, {
+    ALLOWED_TAGS: allowedTags,
+    // Only these HTML tags are allowed
+    ALLOWED_ATTR: ["href",
+    // Links
+    "src",
+    // Images, iframes, etc.
+    "alt",
+    // Image alt text
+    "style",
+    // Inline CSS styles
+    "class",
+    // CSS classes
+    "target",
+    // Link target (_blank, etc.)
+    "rel",
+    // Link relationship (noopener, noreferrer)
+    "width",
+    // Element width
+    "height",
+    // Element height
+    "border",
+    // Border styling
+    "border-radius",
+    // Rounded corners
+    "margin",
+    // Margin spacing
+    "padding",
+    // Padding spacing
+    "text-align",
+    // Text alignment
+    "list-style-type",
+    // List bullet/number style
+    "allowedTags" // Custom attribute (if needed)
+    ]
+  });
+};
+
+/**
+ * Checks if HTML contains only allowed tags (without sanitizing).
+ * This is a validation function used to determine if sanitization is needed.
+ * 
+ * @param {string} html - The HTML string to check
+ * @param {Array<string>|null} allowedTags - Array of allowed HTML tag names
+ * @returns {boolean} - true if HTML contains only allowed tags, false otherwise
+ *                     Returns false if allowedTags is null or empty
+ * 
+ * @example
+ * containsOnlyAllowedTags('<p>Hello</p>', ['p', 'strong'])
+ * // Returns: true
+ * 
+ * containsOnlyAllowedTags('<p>Hello<script></script></p>', ['p'])
+ * // Returns: false (script tag not allowed)
+ */
+var containsOnlyAllowedTags = function containsOnlyAllowedTags(html, allowedTags) {
+  // If no allowed tags specified, return false (HTML needs sanitization)
+  if (!allowedTags || allowedTags.length === 0) return false;
+
+  // Create a temporary DOM element to parse the HTML
+  var tempDiv = document.createElement("div");
+  tempDiv.innerHTML = html;
+
+  // Get all elements in the parsed HTML
+  var allElements = tempDiv.querySelectorAll("*");
+
+  // Check each element to see if its tag is in the allowed list
+  var _iterator = _createForOfIteratorHelper(allElements),
+    _step;
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var element = _step.value;
+      // Compare tag name in lowercase (HTML tags are case-insensitive)
+      if (!allowedTags.includes(element.tagName.toLowerCase())) {
+        return false; // Found a disallowed tag
+      }
+    }
+
+    // All tags are allowed
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+  return true;
+};
+
+/**
+ * Main Editor Component
+ * @param {string} value - Initial HTML content value
+ * @param {Function} onChange - Callback fired when content changes
+ * @param {string|number} height - Editor height ('auto', 'responsive', or pixel value)
+ * @param {string|number} width - Editor width ('auto', 'responsive', or pixel value)
+ * @param {string} minHeight - Minimum height in pixels
+ * @param {string} className - Additional CSS classes
+ * @param {Array|null} allowedTags - Array of allowed HTML tags (null = all tags allowed)
+ * @param {string} storageKey - Key for localStorage persistence
+ * @param {Array} plugins - Array of plugin objects for custom functionality
+ */
+function Editor(_ref) {
+  var _ref$value = _ref.value,
+    value = _ref$value === void 0 ? "" : _ref$value,
+    onChange = _ref.onChange,
+    _ref$height = _ref.height,
+    height = _ref$height === void 0 ? "auto" : _ref$height,
+    _ref$width = _ref.width,
+    width = _ref$width === void 0 ? "100%" : _ref$width,
+    _ref$minHeight = _ref.minHeight,
+    minHeight = _ref$minHeight === void 0 ? "200px" : _ref$minHeight,
+    _ref$className = _ref.className,
+    className = _ref$className === void 0 ? "" : _ref$className,
+    _ref$allowedTags = _ref.allowedTags,
+    propAllowedTags = _ref$allowedTags === void 0 ? null : _ref$allowedTags,
+    _ref$storageKey = _ref.storageKey,
+    storageKey = _ref$storageKey === void 0 ? "rte-editor-content" : _ref$storageKey,
+    pluginsProp = _ref.plugins;
+  // ============================================================================
+  // REFS - References to DOM elements and preserved states
+  // ============================================================================
+  var editorRef = useRef(null); // Reference to the main contentEditable div
+  var editorContainerRef = useRef(null); // Reference to the editor container wrapper
+  var fileRef = useRef(null); // Reference to hidden file input for image upload
+  var colorInputRef = useRef(null); // Reference to hidden color input for text color
+  var highlightColorRef = useRef(null); // Reference to hidden color input for background color
+
+  // ============================================================================
+  // STATE - Component state management
+  // ============================================================================
+  var _useState = useState(false),
+    _useState2 = _slicedToArray(_useState, 2),
+    focused = _useState2[0],
+    setFocused = _useState2[1]; // Whether the editor has focus
+  var _useState3 = useState(false),
+    _useState4 = _slicedToArray(_useState3, 2),
+    isPreview = _useState4[0],
+    setIsPreview = _useState4[1]; // Whether preview mode is active
   var _useState5 = useState(false),
     _useState6 = _slicedToArray(_useState5, 2),
-    focused = _useState6[0],
-    setFocused = _useState6[1];
-  var _useState7 = useState(false),
-    _useState8 = _slicedToArray(_useState7, 2),
-    isPreview = _useState8[0],
-    setIsPreview = _useState8[1];
-  var _useState9 = useState(false),
-    _useState0 = _slicedToArray(_useState9, 2),
-    showTableGrid = _useState0[0],
-    setShowTableGrid = _useState0[1];
-  var _useState1 = useState({
+    showTableGrid = _useState6[0],
+    setShowTableGrid = _useState6[1]; // Show/hide table grid selector
+  var _useState7 = useState({
       rows: 0,
       cols: 0
     }),
+    _useState8 = _slicedToArray(_useState7, 2),
+    gridSize = _useState8[0],
+    setGridSize = _useState8[1]; // Current hovered table grid size
+  var _useState9 = useState(false),
+    _useState0 = _slicedToArray(_useState9, 2),
+    showEmojiPicker = _useState0[0],
+    setShowEmojiPicker = _useState0[1]; // Show/hide emoji picker
+  var _useState1 = useState(""),
     _useState10 = _slicedToArray(_useState1, 2),
-    gridSize = _useState10[0],
-    setGridSize = _useState10[1];
-  var _useState11 = useState(false),
+    previewContent = _useState10[0],
+    setPreviewContent = _useState10[1]; // HTML content for preview mode
+  var _useState11 = useState(value || ""),
     _useState12 = _slicedToArray(_useState11, 2),
-    showEmojiPicker = _useState12[0],
-    setShowEmojiPicker = _useState12[1];
-  var _useState13 = useState(""),
-    _useState14 = _slicedToArray(_useState13, 2),
-    previewContent = _useState14[0],
-    setPreviewContent = _useState14[1];
+    editorHtml = _useState12[0],
+    setEditorHtml = _useState12[1]; // Current editor HTML content
 
-  // Extract plugin tags - memoized to prevent recreation on every render
-  var getPluginTags = function getPluginTags(plugins) {
-    return plugins.filter(function (plugin) {
-      return plugin.tag;
-    }) // only plugins that have a tag
-    .map(function (plugin) {
-      return plugin.tag;
-    });
-  };
-  var pluginTags = useMemo(function () {
-    return getPluginTags(plugins);
-  }, [plugins]);
+  // Normalize plugins prop - ensure it's always an array
+  var normalizedPlugins = useMemo(function () {
+    return pluginsProp !== null && pluginsProp !== void 0 ? pluginsProp : [];
+  }, [pluginsProp]);
 
-  // The complete list of tags for the TagSelector - memoized
-  var allTags = useMemo(function () {
-    return ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'u', 's', 'sup', 'sub', 'blockquote', 'pre', 'code', 'ul', 'ol', 'li', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'br', 'hr', 'span', 'div', 'cut', 'copy', 'paste', 'remove', 'text-color', 'highlight-color', 'emoji', 'select', 'uppercase', 'lowercase', 'align-left', 'align-center', 'align-right', 'remove-link'].concat(_toConsumableArray(pluginTags));
-  }, [pluginTags]);
-
-  // Initialize allowedTags with pluginTags included
-  var _useState15 = useState(function () {
-      var defaultAllowedTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'u', 's', 'sup', 'sub', 'blockquote', 'pre', 'code', 'ul', 'ol', 'li', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'br', 'hr', 'span', 'div', 'cut', 'copy', 'paste', 'remove', 'text-color', 'highlight-color', 'emoji', 'select', 'uppercase', 'lowercase', 'align-left', 'align-center', 'align-right', 'remove-link'].concat(_toConsumableArray(pluginTags));
-      if (propAllowedTags) {
-        // Merge propAllowedTags with pluginTags, making sure to include all pluginTags
-        return _toConsumableArray(new Set([].concat(_toConsumableArray(propAllowedTags), _toConsumableArray(pluginTags))));
-      }
-      return defaultAllowedTags;
+  // ============================================================================
+  // HOOKS - Custom hooks for allowed tags and theme management
+  // ============================================================================
+  var _useAllowedTags = useAllowedTags({
+      plugins: normalizedPlugins,
+      propAllowedTags: propAllowedTags,
+      storageKey: storageKey
     }),
+    allowedTags = _useAllowedTags.allowedTags,
+    setAllowedTags = _useAllowedTags.setAllowedTags,
+    allTags = _useAllowedTags.allTags;
+  var _useTheme = useTheme(),
+    theme = _useTheme.theme,
+    toggleTheme = _useTheme.toggleTheme; // Theme management (light/dark)
+  var _useState13 = useState("en"),
+    _useState14 = _slicedToArray(_useState13, 2),
+    currentLanguage = _useState14[0];
+    _useState14[1]; // Editor language setting
+
+  // Tag selector state - for filtering allowed HTML tags
+  var _useState15 = useState(false),
     _useState16 = _slicedToArray(_useState15, 2),
-    allowedTags = _useState16[0],
-    setAllowedTags = _useState16[1];
-  var _useState17 = useState(false),
+    showTagSelector = _useState16[0],
+    setShowTagSelector = _useState16[1];
+
+  // Search and replace state
+  var _useState17 = useState(""),
     _useState18 = _slicedToArray(_useState17, 2),
-    showTagSelector = _useState18[0],
-    setShowTagSelector = _useState18[1];
-  var _useState19 = useState(""),
+    searchQuery = _useState18[0],
+    setSearchQuery = _useState18[1]; // Current search query
+  var _useState19 = useState([]),
     _useState20 = _slicedToArray(_useState19, 2),
-    searchQuery = _useState20[0],
-    setSearchQuery = _useState20[1];
-  var _useState21 = useState([]),
+    searchResults = _useState20[0],
+    setSearchResults = _useState20[1]; // Array of matched elements
+  var _useState21 = useState(-1),
     _useState22 = _slicedToArray(_useState21, 2),
-    searchResults = _useState22[0],
-    setSearchResults = _useState22[1];
-  var _useState23 = useState(-1),
+    currentSearchIndex = _useState22[0],
+    setCurrentSearchIndex = _useState22[1]; // Index of currently highlighted match
+  var _useState23 = useState(false),
     _useState24 = _slicedToArray(_useState23, 2),
-    currentSearchIndex = _useState24[0],
-    setCurrentSearchIndex = _useState24[1];
-  var _useState25 = useState(false),
+    showSearch = _useState24[0],
+    setShowSearch = _useState24[1]; // Show/hide search bar
+  var _useState25 = useState(0),
     _useState26 = _slicedToArray(_useState25, 2),
-    showSearch = _useState26[0],
-    setShowSearch = _useState26[1];
-  var _useState27 = useState(0),
+    searchCount = _useState26[0],
+    setSearchCount = _useState26[1]; // Total number of search matches
+
+  // Image editing state
+  var _useState27 = useState(null),
     _useState28 = _slicedToArray(_useState27, 2),
-    searchCount = _useState28[0],
-    setSearchCount = _useState28[1];
-  var _useState29 = useState(null),
+    selectedImage = _useState28[0],
+    setSelectedImage = _useState28[1]; // Currently selected image element
+  var _useState29 = useState(false),
     _useState30 = _slicedToArray(_useState29, 2),
-    selectedImage = _useState30[0],
-    setSelectedImage = _useState30[1];
-  var _useState31 = useState(false),
-    _useState32 = _slicedToArray(_useState31, 2),
-    showImageEditor = _useState32[0],
-    setShowImageEditor = _useState32[1];
-  var _useState33 = useState({
+    showImageEditor = _useState30[0],
+    setShowImageEditor = _useState30[1]; // Show/hide image editor modal
+  var _useState31 = useState({
       width: '',
       height: '',
       alignment: '',
@@ -14870,117 +15496,106 @@ function Editor(_ref3) {
       altText: '',
       lockAspectRatio: true
     }),
+    _useState32 = _slicedToArray(_useState31, 2),
+    imageProps = _useState32[0],
+    setImageProps = _useState32[1];
+  var _useState33 = useState(1),
     _useState34 = _slicedToArray(_useState33, 2),
-    imageProps = _useState34[0],
-    setImageProps = _useState34[1];
-  var _useState35 = useState(1),
+    aspectRatio = _useState34[0],
+    setAspectRatio = _useState34[1]; // Original aspect ratio of selected image
+
+  // Image resizing state
+  var _useState35 = useState(false),
     _useState36 = _slicedToArray(_useState35, 2),
-    aspectRatio = _useState36[0],
-    setAspectRatio = _useState36[1];
-  var _useState37 = useState(false),
-    _useState38 = _slicedToArray(_useState37, 2),
-    isResizing = _useState38[0],
-    setIsResizing = _useState38[1];
-  var _useState39 = useState({
+    isResizing = _useState36[0],
+    setIsResizing = _useState36[1]; // Whether user is currently resizing an image
+  var _useState37 = useState({
       startX: 0,
+      // Mouse X position when resize started
       startY: 0,
+      // Mouse Y position when resize started
       startWidth: 0,
+      // Image width when resize started
       startHeight: 0,
-      handle: null
+      // Image height when resize started
+      handle: null // Resize handle direction ('se', 's', 'e', etc.)
     }),
-    _useState40 = _slicedToArray(_useState39, 2),
-    resizeData = _useState40[0];
-    _useState40[1];
-  var _useState41 = useState({
+    _useState38 = _slicedToArray(_useState37, 2),
+    resizeData = _useState38[0];
+    _useState38[1];
+
+  // Overlay style for image selection highlight
+  var _useState39 = useState({
       display: 'none',
       left: 0,
       top: 0,
       width: 0,
       height: 0
     }),
-    _useState42 = _slicedToArray(_useState41, 2);
-    _useState42[0];
-    var setOverlayStyle = _useState42[1];
-  var _useState43 = useState('p'),
+    _useState40 = _slicedToArray(_useState39, 2);
+    _useState40[0];
+    var setOverlayStyle = _useState40[1];
+
+  // Current formatting state - tracks what's applied at cursor position
+  var _useState41 = useState('p'),
+    _useState42 = _slicedToArray(_useState41, 2),
+    currentHeading = _useState42[0],
+    setCurrentHeading = _useState42[1]; // Current heading level (h1-h6 or p)
+  var _useState43 = useState('16px'),
     _useState44 = _slicedToArray(_useState43, 2),
-    currentHeading = _useState44[0],
-    setCurrentHeading = _useState44[1];
-  var _useState45 = useState('16px'),
-    _useState46 = _slicedToArray(_useState45, 2);
-    _useState46[0];
-    var setCurrentFontSize = _useState46[1];
-
-  // Keep only the global theme management system
-  var GLOBAL_THEME_KEY = 'rte-global-theme';
-
-  // Initialize theme with safe default for SSR (prevents hydration mismatch)
-  // Will be updated from localStorage after mount on client side
-  var _useState47 = useState('light'),
+    currentFontSize = _useState44[0],
+    setCurrentFontSize = _useState44[1]; // Current font size
+  var _useState45 = useState(''),
+    _useState46 = _slicedToArray(_useState45, 2),
+    currentFontFamily = _useState46[0],
+    setCurrentFontFamily = _useState46[1]; // Current font family
+  var _useState47 = useState(false),
     _useState48 = _slicedToArray(_useState47, 2),
-    theme = _useState48[0],
-    setTheme = _useState48[1];
-  var _useState49 = useState(false),
-    _useState50 = _slicedToArray(_useState49, 2),
-    mounted = _useState50[0],
-    setMounted = _useState50[1];
+    isCodeView = _useState48[0],
+    setIsCodeView = _useState48[1]; // Whether HTML code view is active
 
-  // Active formatting state
-  var _useState51 = useState({
+  // Active formatting state - tracks which formatting is currently applied at cursor
+  // Used to show active state of toolbar buttons
+  var _useState49 = useState({
       bold: false,
       italic: false,
       underline: false,
-      strikethrough: false,
+      strikeThrough: false,
       superscript: false,
       subscript: false,
       justifyLeft: false,
       justifyCenter: false,
       justifyRight: false,
       insertUnorderedList: false,
-      insertOrderedList: false
+      insertOrderedList: false,
+      toggleHTML: false,
+      formatBlock: false,
+      toUpperCase: false,
+      toLowerCase: false
     }),
-    _useState52 = _slicedToArray(_useState51, 2),
-    activeFormatting = _useState52[0],
-    setActiveFormatting = _useState52[1];
-  var savedSelectionRef = useRef(null);
-  var savedTableSelectionRef = useRef(null);
-  var savedEmojiSelectionRef = useRef(null);
-  var isSettingContent = useRef(false);
-  var lastValueRef = useRef(value);
-  var lastHtmlRef = useRef("");
+    _useState50 = _slicedToArray(_useState49, 2),
+    activeFormatting = _useState50[0],
+    setActiveFormatting = _useState50[1];
 
-  // Initialize theme from localStorage after mount (client-side only)
-  useEffect(function () {
-    setMounted(true);
-    try {
-      var savedTheme = localStorage.getItem(GLOBAL_THEME_KEY);
-      if (savedTheme === 'dark' || savedTheme === 'light') {
-        setTheme(savedTheme);
-      } else {
-        // Default to light theme
-        setTheme('light');
-      }
-    } catch (e) {
-      console.error('Error reading theme from localStorage:', e);
-    }
-  }, []);
+  // ============================================================================
+  // REFS FOR SELECTION PRESERVATION - Save selections before async operations
+  // ============================================================================
+  var savedSelectionRef = useRef(null); // Saved selection before opening dialogs
+  var savedTableSelectionRef = useRef(null); // Saved selection before table insertion
+  var savedEmojiSelectionRef = useRef(null); // Saved selection before emoji picker
+  var isSettingContent = useRef(false); // Flag to prevent onChange during programmatic content updates
+  var lastValueRef = useRef(value); // Last known value prop to detect changes
+  var lastHtmlRef = useRef(""); // Last known HTML to prevent unnecessary onChange calls
 
-  // Save theme preference to localStorage whenever it changes (only after mount)
-  useEffect(function () {
-    if (mounted) {
-      try {
-        localStorage.setItem(GLOBAL_THEME_KEY, theme);
-      } catch (e) {
-        console.error('Error saving theme to localStorage:', e);
-      }
-    }
-  }, [theme, mounted]);
+  // ============================================================================
+  // FORMATTING DETECTION - Update active formatting state based on cursor position
+  // ============================================================================
 
-  // Toggle theme function
-  var toggleTheme = function toggleTheme() {
-    setTheme(function (prevTheme) {
-      return prevTheme === 'light' ? 'dark' : 'light';
-    });
-  };
+  /**
+   * Updates the activeFormatting state based on the current selection/cursor position.
+   * This function detects which formatting is currently applied at the cursor,
+   * which is used to show active states on toolbar buttons.
+   */
   var updateActiveFormatting = function updateActiveFormatting() {
     if (!editorRef.current) return;
     var selection = window.getSelection();
@@ -14989,6 +15604,7 @@ function Editor(_ref3) {
     var container = range.commonAncestorContainer;
 
     // Check if the selection is within the editor
+    // Traverse up the DOM tree to verify selection is inside editor
     var node = container;
     while (node && node !== editorRef.current) {
       node = node.parentNode;
@@ -14997,28 +15613,68 @@ function Editor(_ref3) {
     // If the selection is not within the editor, do nothing
     if (node !== editorRef.current) return;
 
-    // Get the current block element
+    // Get the current block element (paragraph, heading, etc.)
+    // If container is a text node, get its parent element
     var blockElement = container.nodeType === 3 ? container.parentNode : container;
 
     // Check formatting only within the current block
     var blockRange = document.createRange();
     blockRange.selectNodeContents(blockElement);
+
+    // Check if current block is a blockquote by traversing up the DOM tree
+    var isBlockquote = false;
+    var currentNode = blockElement;
+    while (currentNode && currentNode !== editorRef.current) {
+      if (currentNode.nodeType === 1 && currentNode.tagName.toLowerCase() === 'blockquote') {
+        isBlockquote = true;
+        break;
+      }
+      currentNode = currentNode.parentNode;
+    }
+
+    // Check if selected text is uppercase or lowercase
+    // This is used to show active state on uppercase/lowercase buttons
+    var selectedText = selection.toString().trim();
+    var hasLetters = /[a-zA-Z]/.test(selectedText);
+    var isUpperCase = false;
+    var isLowerCase = false;
+    if (hasLetters && selectedText.length > 0) {
+      // Check if all letters are uppercase (must have letters and be uppercase)
+      isUpperCase = selectedText === selectedText.toUpperCase() && selectedText !== selectedText.toLowerCase();
+      // Check if all letters are lowercase (must have letters and be lowercase)
+      isLowerCase = selectedText === selectedText.toLowerCase() && selectedText !== selectedText.toUpperCase();
+    }
+
+    // Update active formatting state using browser's queryCommandState API
+    // This checks which formatting commands are currently active
     setActiveFormatting({
       bold: document.queryCommandState('bold'),
       italic: document.queryCommandState('italic'),
       underline: document.queryCommandState('underline'),
-      strikethrough: document.queryCommandState('strikeThrough'),
+      strikeThrough: document.queryCommandState('strikeThrough'),
       superscript: document.queryCommandState('superscript'),
       subscript: document.queryCommandState('subscript'),
       justifyLeft: document.queryCommandState('justifyLeft'),
       justifyCenter: document.queryCommandState('justifyCenter'),
       justifyRight: document.queryCommandState('justifyRight'),
       insertUnorderedList: document.queryCommandState('insertUnorderedList'),
-      insertOrderedList: document.queryCommandState('insertOrderedList')
+      insertOrderedList: document.queryCommandState('insertOrderedList'),
+      formatBlock: isBlockquote,
+      // Custom check for blockquote
+      toggleHTML: isCodeView,
+      // Based on component state
+      toUpperCase: isUpperCase,
+      // Custom check based on text content
+      toLowerCase: isLowerCase // Custom check based on text content
     });
   };
 
-  // Listen for selection changes to update active formatting
+  // ============================================================================
+  // EFFECTS - Side effects for selection changes and focus management
+  // ============================================================================
+
+  // Listen for selection changes globally to update active formatting state
+  // This ensures toolbar buttons reflect the formatting at cursor position
   useEffect(function () {
     var handleSelectionChange = function handleSelectionChange() {
       updateActiveFormatting();
@@ -15029,7 +15685,7 @@ function Editor(_ref3) {
     };
   }, []);
 
-  // Update active formatting when editor is focused
+  // Update active formatting when editor gains focus
   useEffect(function () {
     if (focused) {
       updateActiveFormatting();
@@ -15037,58 +15693,53 @@ function Editor(_ref3) {
   }, [focused]);
 
   // Update active formatting after content changes (only when not setting content programmatically)
+  // This prevents unnecessary updates during programmatic content changes
   useEffect(function () {
     if (!isSettingContent.current) {
       updateActiveFormatting();
     }
   }, [value]);
-  useEffect(function () {
-    if (!storageKey) return;
-    try {
-      var savedTags = localStorage.getItem("".concat(storageKey, "-allowedTags"));
-      if (savedTags) {
-        try {
-          var parsedTags = JSON.parse(savedTags);
-          if (Array.isArray(parsedTags) && parsedTags.length > 0) {
-            // Only use saved tags if propAllowedTags is not provided
-            if (!propAllowedTags) {
-              setAllowedTags(parsedTags);
-            }
-          }
-        } catch (e) {
-          console.error('Error parsing saved allowed tags:', e);
-        }
+
+  // ============================================================================
+  // CONTENT CHANGE HANDLER - Called whenever editor content changes
+  // ============================================================================
+
+  /**
+   * Ensures all links in the editor have target="_blank" and rel="noopener noreferrer".
+   * This function processes all anchor tags and adds these attributes if missing.
+   */
+  var ensureLinksOpenInNewTab = function ensureLinksOpenInNewTab() {
+    if (!editorRef.current) return false;
+    var links = editorRef.current.querySelectorAll('a');
+    var hasChanges = false;
+    links.forEach(function (link) {
+      if (!link.getAttribute('target') || link.getAttribute('target') !== '_blank') {
+        link.setAttribute('target', '_blank');
+        hasChanges = true;
       }
-    } catch (e) {
-      console.error('Error accessing localStorage:', e);
-    }
-  }, [storageKey, propAllowedTags]);
+      if (!link.getAttribute('rel') || !link.getAttribute('rel').includes('noopener')) {
+        link.setAttribute('rel', 'noopener noreferrer');
+        hasChanges = true;
+      }
+    });
+    return hasChanges;
+  };
 
-  // Sync allowedTags with propAllowedTags when it changes
-  useEffect(function () {
-    if (propAllowedTags && Array.isArray(propAllowedTags)) {
-      // Merge propAllowedTags with pluginTags
-      var mergedTags = _toConsumableArray(new Set([].concat(_toConsumableArray(propAllowedTags), _toConsumableArray(pluginTags))));
-      // Only update if it's actually different to avoid unnecessary re-renders
-      setAllowedTags(function (prevTags) {
-        var prevSet = new Set(prevTags);
-        var newSet = new Set(mergedTags);
-        if (prevSet.size !== newSet.size || !mergedTags.every(function (tag) {
-          return prevSet.has(tag);
-        })) {
-          return mergedTags;
-        }
-        return prevTags;
-      });
-    }
-    // If propAllowedTags is null/undefined, keep the current state (don't reset to defaults)
-    // This allows the TagSelector to work independently when no prop is provided
-  }, [propAllowedTags, pluginTags]);
-
-  //handle change function
+  /**
+   * Handles content changes in the editor.
+   * This function is called on input events and:
+   * 1. Validates and sanitizes HTML based on allowed tags
+   * 2. Ensures all links have target="_blank"
+   * 3. Updates internal state
+   * 4. Calls the onChange callback
+   * 5. Preserves cursor position after sanitization
+   */
   var handleChange = function handleChange() {
+    // Prevent onChange during programmatic content updates to avoid loops
     if (isSettingContent.current) return;
     if (!editorRef.current) return;
+
+    // Save current selection to restore after sanitization
     var selection = window.getSelection();
     var savedRange = null;
     if (selection.rangeCount > 0) {
@@ -15096,19 +15747,28 @@ function Editor(_ref3) {
     }
     var html = editorRef.current.innerHTML;
 
-    // Check if the content has actually changed
+    // Check if the content has actually changed to prevent unnecessary updates
     if (html === lastHtmlRef.current) {
       return;
     }
+
+    // Sanitize HTML if it contains disallowed tags
+    // This ensures only permitted HTML tags are present in the content
     if (!containsOnlyAllowedTags(html, allowedTags)) {
       html = sanitizeHTML(html, allowedTags);
+
+      // Only update if sanitization changed something
       if (editorRef.current.innerHTML !== html) {
         editorRef.current.innerHTML = html;
+
+        // Restore cursor position after sanitization
+        // This prevents cursor from jumping to the end
         if (savedRange) {
           try {
             selection.removeAllRanges();
             selection.addRange(savedRange);
           } catch (e) {
+            // If restoration fails (e.g., range is invalid), place cursor at end
             var range = document.createRange();
             range.selectNodeContents(editorRef.current);
             range.collapse(false);
@@ -15119,56 +15779,101 @@ function Editor(_ref3) {
       }
     }
 
-    // Update the ref to the new HTML
+    // Ensure all links have target="_blank"
+    var linksChanged = ensureLinksOpenInNewTab();
+    if (linksChanged) {
+      html = editorRef.current.innerHTML;
+      // Restore cursor position after link updates
+      if (savedRange) {
+        try {
+          selection.removeAllRanges();
+          selection.addRange(savedRange);
+        } catch (e) {
+          // If restoration fails, place cursor at end
+          var _range = document.createRange();
+          _range.selectNodeContents(editorRef.current);
+          _range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(_range);
+        }
+      }
+    }
+
+    // Update the ref to the new HTML (used for change detection)
     lastHtmlRef.current = html;
+    setEditorHtml(html);
+
+    // Call parent's onChange callback if provided
     onChange === null || onChange === void 0 || onChange(html);
 
-    // Update active formatting after content change
+    // Update active formatting state after content change
     updateActiveFormatting();
   };
+
+  // ============================================================================
+  // PLUGIN SYSTEM - Support for custom plugins/extensions
+  // ============================================================================
+
+  /**
+   * Determines if a plugin should be shown based on allowed tags.
+   * If plugin requires a specific tag, it's only shown if that tag is allowed.
+   */
   var shouldShowPlugin = function shouldShowPlugin(plugin) {
     if (plugin.tag) {
       return allowedTags.includes(plugin.tag);
     }
     return true;
   };
+
+  /**
+   * Handles plugin action execution.
+   * Plugins can define actions in multiple ways:
+   * 1. tag: Wrap selected text in a custom HTML tag
+   * 2. cmd: Execute a built-in command (like bold, italic, etc.)
+   * 3. action: Execute a custom function
+   * 4. type: Special types like 'timestamp'
+   */
   var handlePluginAction = function handlePluginAction(plugin) {
     var _window$getSelection;
+    // Ensure editor has focus before executing plugin action
     if (editorRef.current && document.activeElement !== editorRef.current) {
       editorRef.current.focus();
     }
     var selection = (_window$getSelection = window.getSelection()) === null || _window$getSelection === void 0 ? void 0 : _window$getSelection.toString();
 
     // 1️⃣ If plugin defines a new HTML tag (non-technical users can just provide { tag: 'mark' })
+    // Wrap selected text in the custom tag
     if (plugin.tag && selection) {
       var html = "<".concat(plugin.tag, ">").concat(selection, "</").concat(plugin.tag, ">");
       document.execCommand("insertHTML", false, html);
     }
-    // 2️⃣ If plugin defines a built-in command
+    // 2️⃣ If plugin defines a built-in command, execute it
     else if (plugin.cmd) {
       exec(plugin.cmd, plugin.arg || null);
     }
-    // 3️⃣ If plugin defines a custom function
+    // 3️⃣ If plugin defines a custom function, call it with editor ref
     else if (typeof plugin.action === "function") {
       plugin.action(editorRef.current);
     }
-    // 4️⃣ If plugin defines a type like 'timestamp'
+    // 4️⃣ If plugin defines a type like 'timestamp', insert current timestamp
     else if (plugin.type === "timestamp") {
       var now = new Date().toLocaleString();
       document.execCommand("insertText", false, now);
     }
+
+    // Trigger change handler after plugin action
     handleChange();
   };
-  useEffect(function () {
-    if (!storageKey) return;
-    try {
-      localStorage.setItem("".concat(storageKey, "-allowedTags"), JSON.stringify(allowedTags));
-    } catch (e) {
-      console.error('Error saving allowed tags to localStorage:', e);
-    }
-  }, [allowedTags, storageKey]);
 
-  // Update the useEffect that handles value changes
+  // ============================================================================
+  // VALUE PROP SYNC - Synchronize external value prop with editor content
+  // ============================================================================
+
+  /**
+   * Effect to sync the value prop with editor content.
+   * This allows parent components to control editor content externally.
+   * Only updates if value actually changed to prevent unnecessary re-renders.
+   */
   useEffect(function () {
     if (editorRef.current && value !== undefined) {
       var sanitizedValue = sanitizeHTML(value, allowedTags);
@@ -15177,59 +15882,255 @@ function Editor(_ref3) {
       if (value !== lastValueRef.current) {
         // Only update if the content has actually changed
         if (editorRef.current.innerHTML !== sanitizedValue) {
+          // Set flag to prevent onChange from firing during programmatic update
           isSettingContent.current = true;
           try {
             editorRef.current.innerHTML = sanitizedValue;
             // Update both refs to prevent onChange from firing
             lastValueRef.current = value;
             lastHtmlRef.current = sanitizedValue;
-
-            // Also update preview content if we're in preview mode
-            if (isPreview) {
-              setPreviewContent(sanitizedValue);
-            }
+            setEditorHtml(sanitizedValue);
           } finally {
             // Use setTimeout to ensure the flag stays true long enough
-            // to catch any async events that might fire
+            // to catch any async events that might fire after DOM update
             setTimeout(function () {
               isSettingContent.current = false;
             }, 0);
           }
         } else {
           // Even if HTML didn't change, update the refs to match
+          // This keeps refs in sync with props
           lastValueRef.current = value;
           lastHtmlRef.current = sanitizedValue;
+          setEditorHtml(sanitizedValue);
         }
       }
     }
   }, [value, allowedTags, isPreview]);
+
+  // ============================================================================
+  // PREVIEW MODE - Convert markdown to HTML for preview display
+  // ============================================================================
+
+  /**
+   * Effect to handle preview mode.
+   * When preview is active, converts markdown syntax to HTML and displays it.
+   * When preview is disabled, restores the editor content.
+   */
+  useEffect(function () {
+    var _editorRef$current;
+    if (!isPreview) {
+      // Exit preview mode - clear preview content and restore editor
+      setPreviewContent('');
+      if (editorRef.current) {
+        var htmlToRestore = editorHtml || '';
+        if (editorRef.current.innerHTML !== htmlToRestore) {
+          editorRef.current.innerHTML = htmlToRestore;
+        }
+      }
+      return;
+    }
+
+    // Enter preview mode - get source HTML and convert markdown
+    var sourceHtml = editorHtml && editorHtml.trim() ? editorHtml : ((_editorRef$current = editorRef.current) === null || _editorRef$current === void 0 ? void 0 : _editorRef$current.textContent) || '';
+    if (!sourceHtml.trim()) {
+      setPreviewContent('');
+      return;
+    }
+
+    // Convert markdown syntax (like # headings, - lists, etc.) to HTML
+    var html = convertMarkdownHeadingsInHTML(sourceHtml);
+    // Sanitize the converted HTML to ensure only allowed tags remain
+    html = sanitizeHTML(html, allowedTags);
+    setPreviewContent(html);
+  }, [isPreview, allowedTags, convertMarkdownHeadingsInHTML, editorHtml]);
+
+  // ============================================================================
+  // FORMATTING STATE TRACKING - Track current heading, font size, and font family
+  // ============================================================================
+
+  /**
+   * Effect to track current formatting state (heading, font size, font family).
+   * Updates state based on the element at the cursor position.
+   * Used to show current values in dropdowns (heading selector, font size, etc.).
+   */
   useEffect(function () {
     var updateFormattingState = function updateFormattingState() {
       var selection = window.getSelection();
       if (selection.rangeCount > 0) {
         var range = selection.getRangeAt(0);
+        // Get the element at cursor position (handle text nodes)
         var element = range.commonAncestorContainer.nodeType === 3 ? range.commonAncestorContainer.parentElement : range.commonAncestorContainer;
+
+        // Find the current heading/paragraph block element
         var blockElement = element.closest ? element.closest('h1, h2, h3, h4, h5, h6, p') : null;
         if (blockElement) {
           setCurrentHeading(blockElement.tagName.toLowerCase());
         } else {
           setCurrentHeading('p');
         }
-        var currentElement = element;
-        var fontSize = null;
-        while (currentElement && currentElement !== editorRef.current) {
-          var computedStyle = window.getComputedStyle(currentElement);
-          if (computedStyle.fontSize && computedStyle.fontSize !== '') {
-            fontSize = computedStyle.fontSize;
-            break;
+        var currentSizeElement = element;
+        var detectedFontSize = null;
+        var matchedFontSize = '';
+        var _loop = function _loop() {
+            var computedStyle = window.getComputedStyle(currentSizeElement);
+
+            // Check if element has inline style for fontSize (directly applied font size)
+            var inlineFontSize = currentSizeElement.style.fontSize;
+            if (inlineFontSize && inlineFontSize.trim() !== '') {
+              // First, try exact match with our options
+              var exactMatch = FONT_SIZE_OPTIONS.find(function (opt) {
+                return opt.value === inlineFontSize;
+              });
+              if (exactMatch) {
+                matchedFontSize = exactMatch.value;
+                return 0; // break
+              }
+              // Try to normalize and match (convert px to pt if needed)
+              var normalizedInline = inlineFontSize.trim().toLowerCase();
+              var matchOption = FONT_SIZE_OPTIONS.find(function (opt) {
+                var optValue = opt.value.toLowerCase();
+                // Direct match or close match
+                return optValue === normalizedInline || normalizedInline === optValue.replace('pt', 'px') || optValue === normalizedInline.replace('px', 'pt');
+              });
+              if (matchOption) {
+                matchedFontSize = matchOption.value;
+                return 0; // break
+              }
+            }
+
+            // Check computed style for fontSize
+            if (computedStyle.fontSize && computedStyle.fontSize !== '' && computedStyle.fontSize !== 'initial' && computedStyle.fontSize !== 'inherit') {
+              detectedFontSize = computedStyle.fontSize;
+
+              // Try to match with our font size options
+              var normalizedComputed = detectedFontSize.trim().toLowerCase();
+              var matchingOption = FONT_SIZE_OPTIONS.find(function (opt) {
+                var optValue = opt.value.toLowerCase();
+                // Try to match by converting units
+                if (optValue === normalizedComputed) return true;
+                // Convert px to pt for comparison (1pt = 1.33px approximately, but for exact matches)
+                var optInPx = parseFloat(optValue) * 1.333;
+                var computedInPt = parseFloat(normalizedComputed);
+                if (!isNaN(optInPx) && !isNaN(computedInPt)) {
+                  return Math.abs(optInPx - computedInPt) < 0.5;
+                }
+                return false;
+              });
+              if (matchingOption && !matchedFontSize) {
+                matchedFontSize = matchingOption.value;
+              }
+            }
+            currentSizeElement = currentSizeElement.parentElement;
+          },
+          _ret;
+        while (currentSizeElement && currentSizeElement !== editorRef.current) {
+          _ret = _loop();
+          if (_ret === 0) break;
+        }
+
+        // Set the matched font size or default to 16pt (matching our options)
+        if (matchedFontSize) {
+          setCurrentFontSize(matchedFontSize);
+        } else if (detectedFontSize) {
+          // If we detected a font size but it doesn't match our options, try to convert px to pt
+          var normalized = detectedFontSize.trim().toLowerCase();
+          if (normalized.includes('px')) {
+            var pxValue = parseFloat(normalized);
+            if (!isNaN(pxValue)) {
+              // Convert px to pt (approximately)
+              var ptValue = Math.round(pxValue * 0.75);
+              var convertedOption = FONT_SIZE_OPTIONS.find(function (opt) {
+                var optPt = parseFloat(opt.value);
+                return !isNaN(optPt) && Math.abs(optPt - ptValue) < 1;
+              });
+              if (convertedOption) {
+                setCurrentFontSize(convertedOption.value);
+              } else {
+                setCurrentFontSize('16pt');
+              }
+            } else {
+              setCurrentFontSize('16pt');
+            }
+          } else {
+            setCurrentFontSize('16pt');
           }
-          currentElement = currentElement.parentElement;
-        }
-        if (fontSize) {
-          setCurrentFontSize(fontSize);
         } else {
-          setCurrentFontSize('16px');
+          setCurrentFontSize('16pt');
         }
+        var currentFontElement = element;
+        var matchedFontFamily = '';
+        var _loop2 = function _loop2() {
+            var computedStyle = window.getComputedStyle(currentFontElement);
+
+            // Check if element has inline style for fontFamily (directly applied font)
+            var inlineFontFamily = currentFontElement.style.fontFamily;
+            if (inlineFontFamily && inlineFontFamily.trim() !== '') {
+              // First, try exact match (including quotes)
+              var exactMatch = FONT_FAMILY_OPTIONS.find(function (opt) {
+                if (!opt.value || opt.value === '') return false;
+                // Normalize both for comparison (remove quotes, normalize whitespace)
+                var normalizedOpt = opt.value.replace(/['"]/g, '').toLowerCase().trim();
+                var normalizedInline = inlineFontFamily.replace(/['"]/g, '').toLowerCase().trim();
+                return normalizedOpt === normalizedInline;
+              });
+              if (exactMatch) {
+                matchedFontFamily = exactMatch.value;
+                return 0; // break
+              }
+
+              // Try match by primary font name (first font in the list)
+              var normalizedInline = inlineFontFamily.replace(/['"]/g, '').toLowerCase();
+              var primaryFontInline = normalizedInline.split(',')[0].trim();
+              var matchOption = FONT_FAMILY_OPTIONS.find(function (opt) {
+                if (!opt.value || opt.value === '') return false;
+                var optValue = opt.value.replace(/['"]/g, '').toLowerCase();
+                var optPrimary = optValue.split(',')[0].trim();
+
+                // Extract just the font name (before any space or special chars)
+                var inlineName = primaryFontInline.split(' ')[0].toLowerCase();
+                var optName = optPrimary.split(' ')[0].toLowerCase();
+                return optName === inlineName || primaryFontInline.includes(optName) || optPrimary.includes(inlineName);
+              });
+              if (matchOption) {
+                matchedFontFamily = matchOption.value;
+                return 0; // break
+              }
+            }
+
+            // Check computed style for fontFamily
+            if (computedStyle.fontFamily && computedStyle.fontFamily !== '' && computedStyle.fontFamily !== 'initial' && computedStyle.fontFamily !== 'inherit') {
+              var fontFamily = computedStyle.fontFamily;
+              var normalizedComputed = fontFamily.replace(/['"]/g, '').toLowerCase();
+              var primaryFont = normalizedComputed.split(',')[0].trim();
+
+              // Try to match with our font family options
+              var matchingOption = FONT_FAMILY_OPTIONS.find(function (opt) {
+                if (!opt.value || opt.value === '') return false;
+                var optValue = opt.value.replace(/['"]/g, '').toLowerCase();
+                var optPrimary = optValue.split(',')[0].trim();
+
+                // Extract just the font name (before any space or special chars)
+                var computedName = primaryFont.split(' ')[0].toLowerCase();
+                var optName = optPrimary.split(' ')[0].toLowerCase();
+
+                // Check for exact match or if primary fonts match
+                return optName === computedName || primaryFont.includes(optName) || optPrimary.includes(computedName);
+              });
+              if (matchingOption && !matchedFontFamily) {
+                matchedFontFamily = matchingOption.value;
+              }
+            }
+            currentFontElement = currentFontElement.parentElement;
+          },
+          _ret2;
+        while (currentFontElement && currentFontElement !== editorRef.current) {
+          _ret2 = _loop2();
+          if (_ret2 === 0) break;
+        }
+
+        // Set the matched font family or default to empty string (which shows "Default" in dropdown)
+        setCurrentFontFamily(matchedFontFamily || '');
       }
     };
     document.addEventListener('selectionchange', updateFormattingState);
@@ -15239,75 +16140,869 @@ function Editor(_ref3) {
     };
   }, []);
 
-  // Handle Enter key - FIXED to handle multiple consecutive Enter presses
-  useEffect(function () {
-    if (!editorRef.current) return;
-    // Replace the entire handleKeyDown function with this updated version
-    var handleKeyDown = function handleKeyDown(e) {
-      if (e.key === 'Enter') {
-        // Check if we're in a list item
-        var selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-          var _range = selection.getRangeAt(0);
-          var element = _range.commonAncestorContainer.nodeType === 3 ? _range.commonAncestorContainer.parentElement : _range.commonAncestorContainer;
-          var listItem = element.closest('li');
-          if (listItem) {
-            // Let browser handle Enter in lists
+  // ============================================================================
+  // MARKDOWN CONVERSION - Convert markdown syntax to HTML for preview mode
+  // ============================================================================
+
+  /**
+   * Converts markdown syntax to HTML.
+   * Supports:
+   * - Headings: # ## ### etc.
+   * - Bold: **text** or __text__
+   * - Italic: *text* or _text_
+   * - Strikethrough: ~~text~~
+   * - Inline code: `code`
+   * - Links: [text](url)
+   * - Lists: - item or 1. item
+   * - Blockquotes: > text
+   * - Code blocks: ```language\ncode```
+   * - Horizontal rules: ---
+   * 
+   * @param {string} html - HTML string that may contain markdown syntax
+   * @returns {string} - Converted HTML string
+   */
+  var convertMarkdownHeadingsInHTML = useCallback(function (html) {
+    if (!html || !html.trim()) return html;
+    var escapeHTML = function escapeHTML(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
+
+    // Helper function to convert inline markdown (links, emphasis, strikethrough, code) in text
+    var convertInlineMarkdown = function convertInlineMarkdown(text) {
+      if (!text) return text;
+      var getAllowedTag = function getAllowedTag() {
+        for (var _len = arguments.length, tags = new Array(_len), _key = 0; _key < _len; _key++) {
+          tags[_key] = arguments[_key];
+        }
+        return tags.find(function (tag) {
+          return allowedTags.includes(tag);
+        });
+      };
+
+      // Convert strikethrough: ~~text~~
+      var strikeTag = getAllowedTag('s', 'del');
+      if (strikeTag) {
+        text = text.replace(/~~([\s\S]+?)~~/g, function (match, content) {
+          return "<".concat(strikeTag, ">").concat(content, "</").concat(strikeTag, ">");
+        });
+      }
+
+      // Convert bold: **text** or __text__   
+      var boldTag = getAllowedTag('strong', 'b');
+      if (boldTag) {
+        var wrapBold = function wrapBold(match, content) {
+          return "<".concat(boldTag, ">").concat(content, "</").concat(boldTag, ">");
+        };
+        text = text.replace(/\*\*([\s\S]+?)\*\*/g, wrapBold);
+        text = text.replace(/__([\s\S]+?)__/g, wrapBold);
+      }
+
+      // Convert italic: *text* or _text_ (ignore bold patterns which were already replaced)
+      var italicTag = getAllowedTag('em', 'i');
+      if (italicTag) {
+        var wrapItalicAsterisk = function wrapItalicAsterisk(match, prefix, content) {
+          return "".concat(prefix, "<").concat(italicTag, ">").concat(content, "</").concat(italicTag, ">");
+        };
+        var wrapItalicUnderscore = function wrapItalicUnderscore(match, prefix, content) {
+          return "".concat(prefix, "<").concat(italicTag, ">").concat(content, "</").concat(italicTag, ">");
+        };
+        text = text.replace(/(^|[^*])\*(?!\*)([^*\n][^*]*?)\*(?!\*)/g, wrapItalicAsterisk);
+        text = text.replace(/(^|[^_])_(?!_)([^_\n][^_]*?)_(?!_)/g, wrapItalicUnderscore);
+      }
+
+      // Convert inline code: `code`
+      var inlineCodeTag = getAllowedTag('code');
+      if (inlineCodeTag) {
+        text = text.replace(/`([^`\n]+)`/g, function (match, codeContent) {
+          return "<".concat(inlineCodeTag, ">").concat(escapeHTML(codeContent), "</").concat(inlineCodeTag, ">");
+        });
+      }
+
+      // Convert links: [Link](url)
+      text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (match, linkText, url) {
+        if (allowedTags.includes('a')) {
+          return "<a href=\"".concat(url.replace(/"/g, '&quot;'), "\" target=\"_blank\" rel=\"noopener noreferrer\">").concat(linkText, "</a>");
+        }
+        return match;
+      });
+      return text;
+    };
+
+    /**
+     * Checks if text matches markdown heading pattern and converts it.
+     * Pattern: # Heading (1-6 hashes followed by space and text)
+     * @param {string} text - Text to check
+     * @returns {Object|null} - {headingTag, headingText} or null if not a heading
+     */
+    var convertTextToHeading = function convertTextToHeading(text) {
+      if (!text || !text.trim()) return null;
+
+      // Clean the text - normalize whitespace but preserve the markdown pattern
+      var cleanedText = text.trim();
+      cleanedText = cleanedText.replace(/\r\n/g, ' ').replace(/\n/g, ' ').replace(/\r/g, ' ');
+      cleanedText = cleanedText.replace(/[ \t]+/g, ' ').trim();
+
+      // Match markdown heading pattern: # (1-6 hashes) followed by one or more spaces and text
+      var markdownHeadingRegex = /^(#{1,6})\s+(.+)$/;
+      var match = cleanedText.match(markdownHeadingRegex);
+      if (match) {
+        var hashCount = match[1].length;
+        var headingText = match[2].trim();
+        headingText = headingText.replace(/\s+$/, '').trim();
+        if (!headingText) return null;
+        var headingTag = "h".concat(Math.min(hashCount, 6));
+        if (allowedTags.includes(headingTag)) {
+          return {
+            headingTag: headingTag,
+            headingText: headingText
+          };
+        }
+      }
+      return null;
+    };
+
+    /**
+     * Checks if text matches markdown blockquote pattern and converts it.
+     * Pattern: > Quote text
+     * @param {string} text - Text to check
+     * @returns {string|null} - Quote text or null if not a blockquote
+     */
+    var convertTextToBlockquote = function convertTextToBlockquote(text) {
+      if (!text || !text.trim()) return null;
+      var trimmedText = text.trim();
+      // Match blockquote pattern: > followed by text
+      var blockquoteRegex = /^>\s*(.+)$/;
+      var match = trimmedText.match(blockquoteRegex);
+      if (match && allowedTags.includes('blockquote')) {
+        return match[1].trim();
+      }
+      return null;
+    };
+
+    /**
+     * Checks if text matches markdown list pattern and converts it.
+     * Patterns: - item (unordered) or 1. item (ordered)
+     * @param {string} text - Text to check
+     * @returns {Object|null} - {type: 'ul'|'ol', text} or null if not a list
+     */
+    var convertTextToList = function convertTextToList(text) {
+      if (!text || !text.trim()) return null;
+      var trimmedText = text.trim();
+      // Match unordered list: - or * followed by space and text
+      var ulRegex = /^[-*]\s+(.+)$/;
+      var ulMatch = trimmedText.match(ulRegex);
+      if (ulMatch && allowedTags.includes('ul') && allowedTags.includes('li')) {
+        return {
+          type: 'ul',
+          text: ulMatch[1].trim()
+        };
+      }
+
+      // Match ordered list: number. followed by space and text
+      var olRegex = /^(\d+)\.\s+(.+)$/;
+      var olMatch = trimmedText.match(olRegex);
+      if (olMatch && allowedTags.includes('ol') && allowedTags.includes('li')) {
+        return {
+          type: 'ol',
+          text: olMatch[2].trim()
+        };
+      }
+      return null;
+    };
+
+    /**
+     * Checks if text matches markdown code block pattern and converts it.
+     * Pattern: ```language\ncode```
+     * @param {string} text - Text to check
+     * @returns {Object|null} - {language, content} or null if not a code block
+     */
+    var convertTextToCodeBlock = function convertTextToCodeBlock(text) {
+      if (!text) return null;
+      var trimmedText = text.trim();
+      var codeBlockRegex = /^```(?:([\w+-]+)\s*)?([\s\S]+?)```$/;
+      var match = trimmedText.match(codeBlockRegex);
+      if (match && allowedTags.includes('pre') && allowedTags.includes('code')) {
+        return {
+          language: match[1] || '',
+          content: match[2].replace(/\s+$/, '')
+        };
+      }
+      return null;
+    };
+
+    /**
+     * Checks if text matches markdown horizontal rule pattern.
+     * Pattern: --- (three or more dashes)
+     * @param {string} text - Text to check
+     * @returns {boolean|null} - true if HR, null otherwise
+     */
+    var convertTextToHR = function convertTextToHR(text) {
+      if (!text) return null;
+      var trimmedText = text.trim();
+      // Match horizontal rule: --- (three or more dashes, optionally with spaces)
+      var hrRegex = /^-{3,}\s*$/;
+
+      // Check if hr tag is allowed (if allowedTags is null, all tags are allowed)
+      var hrAllowed = allowedTags === null || allowedTags.includes('hr');
+      if (hrRegex.test(trimmedText) && hrAllowed) {
+        return true;
+      }
+      return null;
+    };
+
+    // If html is just plain text (no HTML tags), check if it's markdown and convert directly
+    var trimmedHtml = html.trim();
+    if (!trimmedHtml.includes('<')) {
+      // Check for different markdown patterns
+      var codeBlockInfo = convertTextToCodeBlock(trimmedHtml);
+      if (codeBlockInfo) {
+        var preElement = document.createElement('pre');
+        var codeElement = document.createElement('code');
+        if (codeBlockInfo.language) {
+          codeElement.setAttribute('data-language', codeBlockInfo.language);
+        }
+        codeElement.textContent = codeBlockInfo.content;
+        preElement.appendChild(codeElement);
+        return preElement.outerHTML;
+      }
+      var headingInfo = convertTextToHeading(trimmedHtml);
+      if (headingInfo) {
+        var headingElement = document.createElement(headingInfo.headingTag);
+        headingElement.textContent = headingInfo.headingText;
+        return headingElement.outerHTML;
+      }
+      var blockquoteText = convertTextToBlockquote(trimmedHtml);
+      if (blockquoteText) {
+        var blockquoteElement = document.createElement('blockquote');
+        blockquoteElement.innerHTML = convertInlineMarkdown(blockquoteText);
+        return blockquoteElement.outerHTML;
+      }
+
+      // Check for horizontal rule: ---
+      var isHR = convertTextToHR(trimmedHtml);
+      if (isHR) {
+        var hrElement = document.createElement('hr');
+        return hrElement.outerHTML;
+      }
+      var listInfo = convertTextToList(trimmedHtml);
+      if (listInfo) {
+        var listElement = document.createElement(listInfo.type);
+        var liElement = document.createElement('li');
+        liElement.innerHTML = convertInlineMarkdown(listInfo.text);
+        listElement.appendChild(liElement);
+        return listElement.outerHTML;
+      }
+      if (trimmedHtml) {
+        var inlineContent = convertInlineMarkdown(trimmedHtml);
+        var paragraph = document.createElement('p');
+        paragraph.innerHTML = inlineContent;
+        return paragraph.outerHTML;
+      }
+
+      // If conversion fails, return empty to avoid showing markdown
+      return '';
+    }
+
+    // Create a temporary container to parse and modify the HTML
+    var tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    // Collect all converted elements - we'll rebuild the content from scratch
+    var convertedElements = [];
+    var currentList = null; // Track current list for grouping consecutive list items
+    var codeBlockAllowed = allowedTags.includes('pre') && allowedTags.includes('code');
+    var currentCodeBlock = null;
+    var startCodeBlock = function startCodeBlock() {
+      var language = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+      if (!codeBlockAllowed) return false;
+      currentCodeBlock = {
+        language: language,
+        lines: []
+      };
+      return true;
+    };
+    var appendToCodeBlock = function appendToCodeBlock() {
+      var text = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+      if (!currentCodeBlock) return;
+      var normalized = (text || '').replace(/\r/g, '');
+      currentCodeBlock.lines.push(normalized);
+    };
+    var flushCodeBlock = function flushCodeBlock() {
+      if (!currentCodeBlock) return;
+      var preElement = document.createElement('pre');
+      var codeElement = document.createElement('code');
+      if (currentCodeBlock.language) {
+        codeElement.setAttribute('data-language', currentCodeBlock.language);
+      }
+      var content = currentCodeBlock.lines.join('\n').replace(/\s+$/, '');
+      codeElement.textContent = content;
+      preElement.appendChild(codeElement);
+      convertedElements.push(preElement);
+      currentCodeBlock = null;
+    };
+
+    // Process all nodes (text nodes and elements) in order
+    var processNode = function processNode(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        var rawText = node.textContent || '';
+        var trimmedText = rawText.trim();
+        if (currentCodeBlock) {
+          if (/^```/.test(trimmedText)) {
+            flushCodeBlock();
+          } else {
+            appendToCodeBlock(rawText);
+          }
+          return;
+        }
+        if (trimmedText) {
+          // Check for block-level markdown patterns first
+          var _codeBlockInfo = convertTextToCodeBlock(rawText);
+          if (_codeBlockInfo) {
+            if (currentList) {
+              convertedElements.push(currentList);
+              currentList = null;
+            }
+            var _preElement = document.createElement('pre');
+            var _codeElement = document.createElement('code');
+            if (_codeBlockInfo.language) {
+              _codeElement.setAttribute('data-language', _codeBlockInfo.language);
+            }
+            _codeElement.textContent = _codeBlockInfo.content;
+            _preElement.appendChild(_codeElement);
+            convertedElements.push(_preElement);
             return;
           }
+          if (codeBlockAllowed) {
+            var startMatch = trimmedText.match(/^```(?:([\w+-]+)\s*)?$/);
+            if (startMatch) {
+              if (currentList) {
+                convertedElements.push(currentList);
+                currentList = null;
+              }
+              startCodeBlock(startMatch[1] || '');
+              return;
+            }
+          }
+          var _headingInfo = convertTextToHeading(trimmedText);
+          if (_headingInfo) {
+            // Close any open list
+            if (currentList) {
+              convertedElements.push(currentList);
+              currentList = null;
+            }
+            var _headingElement = document.createElement(_headingInfo.headingTag);
+            _headingElement.textContent = _headingInfo.headingText;
+            convertedElements.push(_headingElement);
+            return;
+          }
+          var _blockquoteText = convertTextToBlockquote(trimmedText);
+          if (_blockquoteText) {
+            // Close any open list
+            if (currentList) {
+              convertedElements.push(currentList);
+              currentList = null;
+            }
+            var _blockquoteElement = document.createElement('blockquote');
+            _blockquoteElement.innerHTML = convertInlineMarkdown(_blockquoteText);
+            convertedElements.push(_blockquoteElement);
+            return;
+          }
+
+          // Check for horizontal rule: ---
+          var _isHR = convertTextToHR(trimmedText);
+          if (_isHR) {
+            // Close any open list
+            if (currentList) {
+              convertedElements.push(currentList);
+              currentList = null;
+            }
+            var _hrElement = document.createElement('hr');
+            convertedElements.push(_hrElement);
+            return;
+          }
+          var _listInfo = convertTextToList(trimmedText);
+          if (_listInfo) {
+            // If we have a list of the same type, add to it; otherwise start a new list
+            if (currentList && currentList.tagName.toLowerCase() === _listInfo.type) {
+              var _liElement = document.createElement('li');
+              _liElement.innerHTML = convertInlineMarkdown(_listInfo.text);
+              currentList.appendChild(_liElement);
+            } else {
+              // Close previous list if different type
+              if (currentList) {
+                convertedElements.push(currentList);
+              }
+              currentList = document.createElement(_listInfo.type);
+              var _liElement2 = document.createElement('li');
+              _liElement2.innerHTML = convertInlineMarkdown(_listInfo.text);
+              currentList.appendChild(_liElement2);
+            }
+            return;
+          }
+
+          // Close any open list before adding non-list content
+          if (currentList) {
+            convertedElements.push(currentList);
+            currentList = null;
+          }
+
+          // For non-markdown text, wrap it in a span and process inline markdown
+          var span = document.createElement('span');
+          span.innerHTML = convertInlineMarkdown(trimmedText);
+          convertedElements.push(span);
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        var rawElementText = node.textContent || '';
+        var trimmedElementText = rawElementText.trim();
+        if (currentCodeBlock) {
+          if (/^```/.test(trimmedElementText)) {
+            flushCodeBlock();
+          } else {
+            appendToCodeBlock(rawElementText);
+          }
+          return;
+        }
+        if (trimmedElementText) {
+          var elementBlockInfo = convertTextToCodeBlock(rawElementText);
+          if (elementBlockInfo) {
+            if (currentList) {
+              convertedElements.push(currentList);
+              currentList = null;
+            }
+            var _preElement2 = document.createElement('pre');
+            var _codeElement2 = document.createElement('code');
+            if (elementBlockInfo.language) {
+              _codeElement2.setAttribute('data-language', elementBlockInfo.language);
+            }
+            _codeElement2.textContent = elementBlockInfo.content;
+            _preElement2.appendChild(_codeElement2);
+            convertedElements.push(_preElement2);
+            return;
+          }
+          if (codeBlockAllowed) {
+            var _startMatch = trimmedElementText.match(/^```(?:([\w+-]+)\s*)?$/);
+            if (_startMatch) {
+              if (currentList) {
+                convertedElements.push(currentList);
+                currentList = null;
+              }
+              startCodeBlock(_startMatch[1] || '');
+              return;
+            }
+          }
         }
 
-        // Prevent default behavior
-        e.preventDefault();
+        // Close any open list before processing elements
+        if (currentList) {
+          convertedElements.push(currentList);
+          currentList = null;
+        }
 
-        // Get the current selection
-        var sel = window.getSelection();
-        if (sel.rangeCount === 0) return;
-        var range = sel.getRangeAt(0);
+        // Skip if already a heading, blockquote, or list
+        if (node.tagName && (node.tagName.match(/^H[1-6]$/) || node.tagName === 'BLOCKQUOTE' || node.tagName === 'UL' || node.tagName === 'OL')) {
+          convertedElements.push(node.cloneNode(true));
+          return;
+        }
 
-        // Create a new paragraph with a line break
-        var newParagraph = document.createElement('p');
+        // Check if it's a block element (p, div) that might contain markdown
+        if (node.tagName === 'P' || node.tagName === 'DIV') {
+          if (trimmedElementText) {
+            var _headingInfo2 = convertTextToHeading(trimmedElementText);
+            if (_headingInfo2) {
+              var _headingElement2 = document.createElement(_headingInfo2.headingTag);
+              _headingElement2.textContent = _headingInfo2.headingText;
+              convertedElements.push(_headingElement2);
+              return;
+            }
+            var _blockquoteText2 = convertTextToBlockquote(trimmedElementText);
+            if (_blockquoteText2) {
+              var _blockquoteElement2 = document.createElement('blockquote');
+              _blockquoteElement2.innerHTML = convertInlineMarkdown(_blockquoteText2);
+              convertedElements.push(_blockquoteElement2);
+              return;
+            }
+            var _listInfo2 = convertTextToList(trimmedElementText);
+            if (_listInfo2) {
+              if (currentList && currentList.tagName.toLowerCase() === _listInfo2.type) {
+                var _liElement3 = document.createElement('li');
+                _liElement3.innerHTML = convertInlineMarkdown(_listInfo2.text);
+                currentList.appendChild(_liElement3);
+              } else {
+                if (currentList) {
+                  convertedElements.push(currentList);
+                }
+                currentList = document.createElement(_listInfo2.type);
+                var _liElement4 = document.createElement('li');
+                _liElement4.innerHTML = convertInlineMarkdown(_listInfo2.text);
+                currentList.appendChild(_liElement4);
+              }
+              return;
+            }
+
+            // Check if it contains markdown pattern
+            var hasMarkdownPattern = /^(#{1,6}|>|[-*]|\d+\.|```)/.test(trimmedElementText);
+            if (!hasMarkdownPattern) {
+              // Not markdown - keep the element but process inline markdown
+              var clonedNode = node.cloneNode(true);
+              clonedNode.innerHTML = convertInlineMarkdown(clonedNode.innerHTML);
+              convertedElements.push(clonedNode);
+            }
+            // If it has markdown pattern but conversion failed, skip it
+          }
+        } else {
+          // Other elements (br, span, a, s, del, etc.) - keep them but process inline markdown
+          var _clonedNode = node.cloneNode(true);
+          if (_clonedNode.textContent && !_clonedNode.innerHTML.includes('<')) {
+            _clonedNode.innerHTML = convertInlineMarkdown(_clonedNode.textContent);
+          } else {
+            // Process inline markdown in text nodes within the element
+            var walker = document.createTreeWalker(_clonedNode, NodeFilter.SHOW_TEXT, null, false);
+            var textNodes = [];
+            var textNode;
+            while (textNode = walker.nextNode()) {
+              textNodes.push(textNode);
+            }
+            textNodes.forEach(function (tn) {
+              if (tn.textContent.trim()) {
+                var parent = tn.parentNode;
+                var _tempDiv = document.createElement('div');
+                _tempDiv.innerHTML = convertInlineMarkdown(tn.textContent);
+                while (_tempDiv.firstChild) {
+                  parent.insertBefore(_tempDiv.firstChild, tn);
+                }
+                parent.removeChild(tn);
+              }
+            });
+          }
+          convertedElements.push(_clonedNode);
+        }
+      }
+    };
+
+    // Process all child nodes and collect ONLY converted elements
+    // IMPORTANT: We process nodes but never add the original nodes - only converted elements
+    Array.from(tempDiv.childNodes).forEach(processNode);
+
+    // Don't forget to add any remaining list
+    if (currentList) {
+      convertedElements.push(currentList);
+    }
+    // Flush any pending code block
+    if (currentCodeBlock) {
+      flushCodeBlock();
+    }
+
+    // Create a COMPLETELY NEW container - start fresh with empty HTML
+    // We'll build the HTML string manually from only the elements we want
+    var newContainer = document.createElement('div');
+
+    // Add ONLY the converted elements (which are all ELEMENT_NODE types, never TEXT_NODE)
+    convertedElements.forEach(function (el) {
+      if (el && el.nodeType === Node.ELEMENT_NODE) {
+        newContainer.appendChild(el);
+      }
+    });
+
+    // CRITICAL: Remove ALL text nodes from newContainer before getting innerHTML
+    // This ensures the HTML string never contains text nodes
+    var containerNodes = Array.from(newContainer.childNodes);
+    for (var i = containerNodes.length - 1; i >= 0; i--) {
+      var node = containerNodes[i];
+      if (node.nodeType === Node.TEXT_NODE) {
+        // Remove ALL text nodes - we only want elements
+        node.remove();
+      }
+    }
+
+    // Get innerHTML - should now only contain HTML elements, no text nodes
+    var result = newContainer.innerHTML;
+
+    // Final verification: Parse the result and remove ANY remaining text nodes with markdown patterns
+    var verifyDiv = document.createElement('div');
+    verifyDiv.innerHTML = result;
+
+    // Remove ALL text nodes that contain markdown patterns
+    var verifyNodes = Array.from(verifyDiv.childNodes);
+    for (var _i = verifyNodes.length - 1; _i >= 0; _i--) {
+      var _node = verifyNodes[_i];
+      if (_node.nodeType === Node.TEXT_NODE) {
+        var text = _node.textContent.trim();
+        // Remove ANY text node that looks like markdown (heading, blockquote, list)
+        if (text && (/^(#{1,6}|>|[-*]|\d+\.)\s+/.test(text) || /^```/.test(text))) {
+          _node.remove();
+        }
+      }
+    }
+
+    // Return the verified HTML - should contain ONLY converted markdown, no raw markdown text
+    return verifyDiv.innerHTML;
+  }, [allowedTags]);
+
+  // ============================================================================
+  // KEYBOARD HANDLERS - Handle special keyboard interactions
+  // ============================================================================
+
+  /**
+   * Handler for Enter key to create new paragraphs.
+   * Creates a new paragraph when Enter is pressed (unless inside a list).
+   * In lists, lets the browser handle Enter natively.
+   * Preserves formatting and handles edge cases properly.
+   */
+  var handleEnterKey = useCallback(function (e) {
+    var _container;
+    // Only handle Enter key
+    if (e.key !== 'Enter' && e.keyCode !== 13) return;
+    var editor = editorRef.current;
+    if (!editor) return;
+    var selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    var range = selection.getRangeAt(0);
+    if (!range) return;
+
+    // Check if we're inside a list - let browser handle it
+    var container = range.commonAncestorContainer;
+    if (container.nodeType === 3) {
+      // Text node
+      container = container.parentElement;
+    }
+    var listItem = (_container = container) === null || _container === void 0 ? void 0 : _container.closest('li');
+    if (listItem) {
+      // Let browser handle Enter in lists (creates new list item)
+      return;
+    }
+
+    // Prevent default Enter behavior
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Use execCommand for paragraph insertion (most reliable and preserves formatting)
+    try {
+      var success = document.execCommand('insertParagraph', false, null);
+      if (success) {
+        handleChange();
+        return;
+      }
+    } catch (err) {
+      console.warn('execCommand insertParagraph failed, using fallback:', err);
+    }
+
+    // Fallback: manual paragraph insertion
+    try {
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) {
+        // No selection - create empty paragraph
+        var _newP = document.createElement('p');
         var br = document.createElement('br');
-        newParagraph.appendChild(br);
+        _newP.appendChild(br);
+        if (!editor.firstChild) {
+          editor.innerHTML = '';
+        }
+        editor.appendChild(_newP);
+        var _newRange = document.createRange();
+        _newRange.setStartBefore(br);
+        _newRange.collapse(true);
+        var newSel = window.getSelection();
+        if (newSel) {
+          newSel.removeAllRanges();
+          newSel.addRange(_newRange);
+        }
+        handleChange();
+        return;
+      }
+      var currentRange = sel.getRangeAt(0);
+      var startContainer = currentRange.startContainer;
+      var startOffset = currentRange.startOffset;
 
-        // Insert the new paragraph after the current block
-        var currentBlock = range.startContainer;
-        var parentBlock = currentBlock;
+      // Find parent block element
+      var parentBlock = startContainer;
+      if (parentBlock.nodeType === 3) {
+        // Text node
+        parentBlock = parentBlock.parentNode;
+      }
 
-        // Find the parent block element
-        while (parentBlock && parentBlock !== editorRef.current) {
-          if (parentBlock.nodeType === 1 && (parentBlock.tagName === 'P' || parentBlock.tagName === 'DIV')) {
+      // Find block-level element (P, DIV, H1-H6, BLOCKQUOTE, etc.)
+      while (parentBlock && parentBlock !== editor) {
+        if (parentBlock.nodeType === 1) {
+          var _tagName = parentBlock.tagName;
+          if (_tagName === 'P' || _tagName === 'DIV' || /^H[1-6]$/.test(_tagName) || _tagName === 'BLOCKQUOTE' || _tagName === 'PRE') {
             break;
           }
-          parentBlock = parentBlock.parentNode;
         }
+        parentBlock = parentBlock.parentNode;
+      }
 
-        // If we found a parent block, insert after it
-        if (parentBlock && parentBlock !== editorRef.current) {
-          parentBlock.parentNode.insertBefore(newParagraph, parentBlock.nextSibling);
-        } else {
-          // Otherwise, append to the editor
-          editorRef.current.appendChild(newParagraph);
+      // If no block found or editor is empty, create a paragraph
+      if (!parentBlock || parentBlock === editor) {
+        // Check if editor is completely empty
+        if (!editor.firstChild || editor.firstChild.nodeType === 1 && editor.firstChild.tagName === 'BR') {
+          editor.innerHTML = '';
         }
-
-        // Move cursor to the new paragraph
-        var newRange = document.createRange();
-        newRange.setStart(newParagraph, 0);
-        newRange.collapse(true);
+        var _newP2 = document.createElement('p');
+        var _br = document.createElement('br');
+        _newP2.appendChild(_br);
+        editor.appendChild(_newP2);
+        var _newRange2 = document.createRange();
+        _newRange2.setStartBefore(_br);
+        _newRange2.collapse(true);
         sel.removeAllRanges();
-        sel.addRange(newRange);
+        sel.addRange(_newRange2);
         handleChange();
+        return;
       }
-    };
-    if (editorRef.current) {
-      editorRef.current.addEventListener('keydown', handleKeyDown);
+
+      // Check if cursor is at the very start of the block
+      var isAtStart = false;
+      if (startContainer === parentBlock && startOffset === 0) {
+        isAtStart = true;
+      } else if (startContainer.nodeType === 3 && startContainer === parentBlock.firstChild && startOffset === 0) {
+        isAtStart = true;
+      } else if (startContainer.nodeType === 1 && startContainer === parentBlock.firstChild) {
+        // Check if we're before the first child
+        var testRange = document.createRange();
+        testRange.setStart(parentBlock, 0);
+        testRange.setEnd(startContainer, startOffset);
+        isAtStart = testRange.toString().trim().length === 0;
+      }
+
+      // Check if cursor is at the very end of the block
+      var isAtEnd = false;
+      if (!parentBlock.lastChild) {
+        isAtEnd = true;
+      } else {
+        var lastChild = parentBlock.lastChild;
+        if (lastChild.nodeType === 3) {
+          // Text node - check if at end of text
+          isAtEnd = startContainer === lastChild && startOffset >= lastChild.textContent.length;
+        } else if (startContainer === parentBlock) {
+          // Check if after last child
+          isAtEnd = startOffset >= parentBlock.childNodes.length;
+        } else {
+          // Check if we're at or after the last child
+          var _testRange = document.createRange();
+          _testRange.setStart(startContainer, startOffset);
+          _testRange.setEndAfter(lastChild);
+          isAtEnd = _testRange.toString().trim().length === 0;
+        }
+      }
+
+      // If at start, insert empty paragraph before
+      if (isAtStart) {
+        var _newP3 = document.createElement('p');
+        var _br2 = document.createElement('br');
+        _newP3.appendChild(_br2);
+        parentBlock.parentNode.insertBefore(_newP3, parentBlock);
+        var _newRange3 = document.createRange();
+        _newRange3.setStartBefore(_br2);
+        _newRange3.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(_newRange3);
+        handleChange();
+        return;
+      }
+
+      // If at end, create new paragraph after
+      if (isAtEnd) {
+        var _newP4 = document.createElement('p');
+        var _br3 = document.createElement('br');
+        _newP4.appendChild(_br3);
+        if (parentBlock.nextSibling) {
+          parentBlock.parentNode.insertBefore(_newP4, parentBlock.nextSibling);
+        } else {
+          parentBlock.parentNode.appendChild(_newP4);
+        }
+        var _newRange4 = document.createRange();
+        _newRange4.setStartBefore(_br3);
+        _newRange4.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(_newRange4);
+        handleChange();
+        return;
+      }
+
+      // Split the paragraph at cursor position
+      var splitRange = document.createRange();
+      splitRange.setStart(startContainer, startOffset);
+
+      // Set end to end of parent block
+      if (parentBlock.lastChild) {
+        var lastNode = parentBlock.lastChild;
+        if (lastNode.nodeType === 3) {
+          splitRange.setEnd(lastNode, lastNode.textContent.length);
+        } else {
+          splitRange.setEndAfter(lastNode);
+        }
+      } else {
+        splitRange.setEnd(startContainer, startOffset);
+      }
+
+      // Extract content after cursor (this preserves formatting)
+      var fragment = splitRange.extractContents();
+
+      // Create new paragraph with same tag name as parent (preserves heading levels, etc.)
+      var tagName = parentBlock.tagName;
+      var newP = tagName === 'P' || tagName === 'DIV' ? document.createElement('p') : document.createElement(tagName.toLowerCase());
+
+      // Copy styles from parent block to preserve formatting
+      if (parentBlock.style.cssText) {
+        newP.style.cssText = parentBlock.style.cssText;
+      }
+      if (fragment.childNodes.length > 0) {
+        // Move extracted content to new paragraph
+        newP.appendChild(fragment);
+      } else {
+        // Empty paragraph - add br for height
+        var _br4 = document.createElement('br');
+        newP.appendChild(_br4);
+      }
+
+      // Insert new paragraph after current one
+      if (parentBlock.nextSibling) {
+        parentBlock.parentNode.insertBefore(newP, parentBlock.nextSibling);
+      } else {
+        parentBlock.parentNode.appendChild(newP);
+      }
+
+      // Set cursor in new paragraph
+      var newRange = document.createRange();
+      if (newP.firstChild) {
+        if (newP.firstChild.nodeType === 3) {
+          // Text node - place cursor at start
+          newRange.setStart(newP.firstChild, 0);
+        } else {
+          // Other element - place at start of paragraph
+          newRange.setStart(newP, 0);
+        }
+      } else {
+        newRange.setStart(newP, 0);
+      }
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      handleChange();
+    } catch (error) {
+      console.error('Error handling Enter key:', error);
+      // Fallback: use execCommand
+      try {
+        var _success = document.execCommand('insertParagraph', false, null);
+        if (!_success) {
+          document.execCommand('insertLineBreak', false, null);
+        }
+        handleChange();
+      } catch (e) {
+        console.error('Failed to insert paragraph:', e);
+      }
     }
-    return function () {
-      if (editorRef.current) {
-        editorRef.current.removeEventListener('keydown', handleKeyDown);
-      }
-    };
-  }, [allowedTags]);
+  }, [handleChange]);
+
+  // ============================================================================
+  // IMAGE HANDLING - Image selection and editing
+  // ============================================================================
+
+  /**
+   * Effect to handle image clicks for selection and editing.
+   * When an image is clicked, it's selected and the image editor is opened.
+   * When clicking elsewhere in the editor, images are deselected.
+   */
   useEffect(function () {
     var editor = editorRef.current;
     if (!editor) return;
@@ -15315,16 +17010,21 @@ function Editor(_ref3) {
       if (e.target.tagName === 'IMG') {
         e.preventDefault();
         e.stopPropagation();
+
+        // Remove selection from all images
         document.querySelectorAll('.rte-editor img').forEach(function (img) {
           img.classList.remove('selected-image');
         });
+
+        // Select clicked image and open editor
         e.target.classList.add('selected-image');
         setSelectedImage(e.target);
         openImageEditor(e.target);
-        updateOverlay(e.target);
+        updateOverlay(e.target); // Show resize overlay
       }
     };
     var handleEditorClick = function handleEditorClick(e) {
+      // If clicking on editor background (not on an image), deselect all images
       if (e.target === editor) {
         document.querySelectorAll('.rte-editor img').forEach(function (img) {
           img.classList.remove('selected-image');
@@ -15334,20 +17034,49 @@ function Editor(_ref3) {
           return _objectSpread2(_objectSpread2({}, prev), {}, {
             display: 'none'
           });
-        });
+        }); // Hide overlay
+      }
+    };
+    var handleLinkClick = function handleLinkClick(e) {
+      // Check if the clicked element is a link or inside a link
+      var linkElement = e.target;
+
+      // Traverse up the DOM tree to find the anchor tag
+      while (linkElement && linkElement !== editor) {
+        if (linkElement.tagName === 'A') {
+          var href = linkElement.getAttribute('href');
+          if (href) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Open link in new tab
+            window.open(href, '_blank', 'noopener,noreferrer');
+          }
+          return;
+        }
+        linkElement = linkElement.parentElement;
       }
     };
     editor.addEventListener('click', handleImageClick);
     editor.addEventListener('click', handleEditorClick);
+    editor.addEventListener('click', handleLinkClick);
     return function () {
       if (editor) {
         editor.removeEventListener('click', handleImageClick);
         editor.removeEventListener('click', handleEditorClick);
+        editor.removeEventListener('click', handleLinkClick);
       }
     };
   }, []);
+
+  /**
+   * Updates the overlay position and size to match selected image.
+   * The overlay is used to show resize handles on selected images.
+   * @param {HTMLElement} img - The image element to match
+   */
   var updateOverlay = function updateOverlay(img) {
     if (!img || !editorContainerRef.current) return;
+
+    // Calculate position relative to editor container
     var imgRect = img.getBoundingClientRect();
     var containerRect = editorContainerRef.current.getBoundingClientRect();
     setOverlayStyle({
@@ -15358,27 +17087,46 @@ function Editor(_ref3) {
       height: imgRect.height
     });
   };
+
+  // ============================================================================
+  // IMAGE RESIZING - Handle mouse events for resizing images
+  // ============================================================================
+
+  /**
+   * Effect to handle mouse events for resizing images.
+   * Supports resizing from different handles (s, e, se, etc.) with optional aspect ratio locking.
+   */
   useEffect(function () {
     var handleMouseMove = function handleMouseMove(e) {
       if (!isResizing || !selectedImage) return;
+
+      // Calculate mouse movement delta
       var deltaX = e.clientX - resizeData.startX;
       var deltaY = e.clientY - resizeData.startY;
       var newWidth = resizeData.startWidth;
       var newHeight = resizeData.startHeight;
+
+      // Adjust width based on horizontal resize handles (e, se, ne)
       if (resizeData.handle === 'se' || resizeData.handle === 'e' || resizeData.handle === 'ne') {
-        newWidth = Math.max(20, resizeData.startWidth + deltaX);
+        newWidth = Math.max(20, resizeData.startWidth + deltaX); // Minimum 20px
       }
+      // Adjust height based on vertical resize handles (s, se, sw)
       if (resizeData.handle === 'se' || resizeData.handle === 's' || resizeData.handle === 'sw') {
-        newHeight = Math.max(20, resizeData.startHeight + deltaY);
+        newHeight = Math.max(20, resizeData.startHeight + deltaY); // Minimum 20px
       }
+
+      // If aspect ratio is locked, maintain original ratio
       if (imageProps.lockAspectRatio) {
         if (resizeData.handle === 'se' || resizeData.handle === 's' || resizeData.handle === 'e') {
           var ratio = resizeData.startWidth / resizeData.startHeight;
           if (resizeData.handle === 'e') {
+            // Only width changed, adjust height proportionally
             newHeight = newWidth / ratio;
           } else if (resizeData.handle === 's') {
+            // Only height changed, adjust width proportionally
             newWidth = newHeight * ratio;
           } else {
+            // Both changed (corner handle), use the larger delta
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
               newHeight = newWidth / ratio;
             } else {
@@ -15410,10 +17158,20 @@ function Editor(_ref3) {
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isResizing, selectedImage, resizeData, imageProps.lockAspectRatio]);
+
+  /**
+   * Opens the image editor modal and populates it with current image properties.
+   * Extracts all style properties from the image element.
+   * @param {HTMLImageElement} img - The image element to edit
+   */
   var openImageEditor = function openImageEditor(img) {
+    // Calculate and store original aspect ratio for proportional resizing
     var ratio = img.naturalWidth / img.naturalHeight;
     setAspectRatio(ratio);
     var computedStyle = window.getComputedStyle(img);
+
+    // Populate image editor with current image properties
+    // Use inline styles first, fall back to computed styles
     setImageProps({
       width: img.style.width || computedStyle.width,
       height: img.style.height || computedStyle.height,
@@ -15424,37 +17182,62 @@ function Editor(_ref3) {
       borderRadius: img.style.borderRadius || computedStyle.borderRadius,
       margin: img.style.margin || computedStyle.margin,
       altText: img.alt || '',
-      lockAspectRatio: true
+      lockAspectRatio: true // Default to locked
     });
     setShowImageEditor(true);
   };
+
+  /**
+   * Determines the alignment of an image based on its styles.
+   * @param {HTMLImageElement} img - The image element
+   * @returns {string} - 'left', 'right', 'center', or ''
+   */
   var getImageAlignment = function getImageAlignment(img) {
     if (img.style["float"] === 'left') return 'left';
     if (img.style["float"] === 'right') return 'right';
     if (img.style.display === 'block' && img.style.margin === '0 auto') return 'center';
     return '';
   };
+
+  /**
+   * Converts RGB color string to hex color string.
+   * @param {string} rgb - RGB color string like 'rgb(255, 0, 0)'
+   * @returns {string} - Hex color string like '#ff0000'
+   */
   var rgbToHex = function rgbToHex(rgb) {
     if (!rgb || rgb.indexOf('rgb') !== 0) return '#000000';
     var values = rgb.match(/\d+/g);
     if (!values || values.length < 3) return '#000000';
+
+    // Convert each RGB value to hex and pad if needed
     return '#' + values.slice(0, 3).map(function (x) {
       var hex = parseInt(x).toString(16);
       return hex.length === 1 ? '0' + hex : hex;
     }).join('');
   };
+
+  /**
+   * Handles changes to image properties in the editor modal.
+   * If aspect ratio is locked and width/height changes, adjusts the other dimension.
+   * @param {string} prop - Property name being changed
+   * @param {*} value - New value for the property
+   */
   var handleImagePropChange = function handleImagePropChange(prop, value) {
     setImageProps(function (prev) {
       var newProps = _objectSpread2(_objectSpread2({}, prev), {}, _defineProperty$1({}, prop, value));
+
+      // If aspect ratio is locked, maintain it when width or height changes
       if (prop === 'width' && prev.lockAspectRatio) {
         var _width = parseInt(value) || 0;
         if (_width > 0) {
+          // Calculate new height to maintain aspect ratio
           var _height = Math.round(_width / aspectRatio);
           newProps.height = "".concat(_height, "px");
         }
       } else if (prop === 'height' && prev.lockAspectRatio) {
         var _height2 = parseInt(value) || 0;
         if (_height2 > 0) {
+          // Calculate new width to maintain aspect ratio
           var _width2 = Math.round(_height2 * aspectRatio);
           newProps.width = "".concat(_width2, "px");
         }
@@ -15462,8 +17245,15 @@ function Editor(_ref3) {
       return newProps;
     });
   };
+
+  /**
+   * Applies the image property changes to the selected image element.
+   * Updates all styles and attributes, then closes the editor.
+   */
   var applyImageChanges = function applyImageChanges() {
     if (!selectedImage) return;
+
+    // Apply all style properties
     selectedImage.style.width = imageProps.width;
     selectedImage.style.height = imageProps.height;
     selectedImage.style.borderWidth = imageProps.borderWidth;
@@ -15472,6 +17262,8 @@ function Editor(_ref3) {
     selectedImage.style.borderRadius = imageProps.borderRadius;
     selectedImage.style.margin = imageProps.margin;
     selectedImage.alt = imageProps.altText;
+
+    // Apply alignment styles (float and margin for positioning)
     if (imageProps.alignment === 'left') {
       selectedImage.style["float"] = 'left';
       selectedImage.style.display = '';
@@ -15485,14 +17277,22 @@ function Editor(_ref3) {
       selectedImage.style.display = 'block';
       selectedImage.style.margin = imageProps.margin || '10px auto';
     } else {
+      // No alignment - reset float and use default margin
       selectedImage.style["float"] = '';
       selectedImage.style.display = '';
       selectedImage.style.margin = imageProps.margin || '10px 0';
     }
+
+    // Update overlay to match new image size and trigger change event
     updateOverlay(selectedImage);
     handleChange();
     setShowImageEditor(false);
   };
+
+  /**
+   * Removes the selected image from the editor.
+   * Also hides the overlay and closes the editor modal.
+   */
   var removeImage = function removeImage() {
     if (selectedImage) {
       selectedImage.remove();
@@ -15501,17 +17301,33 @@ function Editor(_ref3) {
         return _objectSpread2(_objectSpread2({}, prev), {}, {
           display: 'none'
         });
-      });
+      }); // Hide overlay
     }
     setShowImageEditor(false);
   };
+
+  // ============================================================================
+  // PASTE HANDLING - Clean HTML from external sources (especially Microsoft Word)
+  // ============================================================================
+
+  /**
+   * Cleans HTML pasted from Microsoft Word.
+   * Removes Word-specific tags and attributes, converts Word headings to HTML headings,
+   * and removes unnecessary empty spans and styles.
+   * @param {string} html - HTML string pasted from Word
+   * @returns {string} - Cleaned HTML string
+   */
   var cleanWordHTML = function cleanWordHTML(html) {
     var tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
+
+    // Remove Word-specific namespace elements (o:p, o:smarttagtype, etc.)
     var wordElements = tempDiv.querySelectorAll('o\\:p, o\\:smarttagtype, o\\:is, o\\:link, o\\:lock, o\\:release, o\\:OLEObjectShape, o\\:OLEObjectElement, o\\:OLEObjectEmbed, o\\:OLEObjectLink, o\\:OLEObjectInk, o\\:OLEObjectScript, o\\:OLEObjectUnknown, o\\:OLEObjectControl, o\\:OLEObject');
     wordElements.forEach(function (el) {
       return el.remove();
     });
+
+    // Convert Word heading styles to HTML heading tags
     var wordHeadings = tempDiv.querySelectorAll('[style*="mso-heading"]');
     wordHeadings.forEach(function (el) {
       var level = el.style['mso-heading'] || el.getAttribute('mso-heading');
@@ -15522,6 +17338,8 @@ function Editor(_ref3) {
           headingTag = "h".concat(levelNum);
         }
       }
+
+      // Replace element with proper heading tag
       var newHeading = document.createElement(headingTag);
       newHeading.innerHTML = el.innerHTML;
       newHeading.className = el.className;
@@ -15558,18 +17376,28 @@ function Editor(_ref3) {
     });
     return tempDiv.innerHTML;
   };
+
+  /**
+   * Effect to handle paste events.
+   * Cleans pasted HTML (especially from Word) and sanitizes based on allowed tags.
+   * Falls back to plain text if no HTML is available.
+   */
   useEffect(function () {
     if (!editorRef.current) return;
     var handlePaste = function handlePaste(e) {
-      e.preventDefault();
+      e.preventDefault(); // Prevent default paste behavior
       var clipboardData = e.clipboardData || window.clipboardData;
       var pastedData = clipboardData.getData('text/html');
       if (pastedData) {
+        // Clean Word-specific HTML and sanitize
         var cleanedData = cleanWordHTML(pastedData);
         cleanedData = sanitizeHTML(cleanedData, allowedTags);
         document.execCommand('insertHTML', false, cleanedData);
+        // Ensure all pasted links have target="_blank"
+        ensureLinksOpenInNewTab();
         handleChange();
       } else {
+        // Fall back to plain text if no HTML available
         var text = clipboardData.getData('text/plain');
         document.execCommand('insertText', false, text);
         handleChange();
@@ -15584,8 +17412,20 @@ function Editor(_ref3) {
       }
     };
   }, [allowedTags]);
+
+  // ============================================================================
+  // SEARCH FUNCTIONALITY - Search and highlight text in the editor
+  // ============================================================================
+
+  /**
+   * Handles search query and highlights matching text.
+   * Wraps matches in spans for highlighting and scrolling to first match.
+   * @param {string} query - Search query string
+   */
   var handleSearch = function handleSearch(query) {
     setSearchQuery(query);
+
+    // Clear search if query is empty
     if (!query || !editorRef.current) {
       clearHighlights();
       setSearchResults([]);
@@ -15593,17 +17433,26 @@ function Editor(_ref3) {
       setSearchCount(0);
       return;
     }
+
+    // Clear previous highlights before searching
     clearHighlights();
+
+    // Escape special regex characters in query to treat as literal text
     var escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     var editorContent = editorRef.current.innerHTML;
-    var regex = new RegExp(escapedQuery, 'gi');
+    var regex = new RegExp(escapedQuery, 'gi'); // Global, case-insensitive
+
+    // Wrap all matches in highlight spans
     var highlightedHTML = editorContent.replace(regex, '<span class="search-highlight">$&</span>');
     editorRef.current.innerHTML = highlightedHTML;
+
+    // Get all highlighted elements and update state
     var highlightedElements = editorRef.current.querySelectorAll('.search-highlight');
     var count = highlightedElements.length;
     setSearchCount(count);
     setSearchResults(Array.from(highlightedElements));
     if (count > 0) {
+      // Highlight first match and scroll to it
       setCurrentSearchIndex(0);
       highlightedElements[0].classList.add('search-highlight-current');
       setTimeout(function () {
@@ -15617,31 +17466,52 @@ function Editor(_ref3) {
     }
     handleChange();
   };
+
+  /**
+   * Clears all search highlights from the editor.
+   * Removes highlight spans and restores normal text nodes.
+   */
   var clearHighlights = function clearHighlights() {
     if (!editorRef.current) return;
     var highlights = editorRef.current.querySelectorAll('.search-highlight, .search-highlight-current');
     if (highlights.length === 0) return;
+
+    // Replace each highlight span with its text content
     highlights.forEach(function (highlight) {
       if (!highlight || !highlight.parentNode) return;
       var textNode = document.createTextNode(highlight.textContent);
       highlight.parentNode.replaceChild(textNode, highlight);
     });
+
+    // Normalize adjacent text nodes after removing spans
     editorRef.current.normalize();
     handleChange();
   };
+
+  /**
+   * Highlights the match at the given index and scrolls to it.
+   * Removes previous current highlight and adds it to the new match.
+   * @param {number} index - Index of match to highlight
+   */
   var highlightCurrentMatch = function highlightCurrentMatch(index) {
     if (!editorRef.current) return;
     var allHighlights = editorRef.current.querySelectorAll('.search-highlight');
     if (allHighlights.length === 0) return;
+
+    // Remove current highlight from all matches
     allHighlights.forEach(function (el) {
       if (el && el.classList) {
         el.classList.remove('search-highlight-current');
       }
     });
+
+    // Add current highlight to the specified match
     if (index >= 0 && index < allHighlights.length) {
       var currentHighlight = allHighlights[index];
       if (currentHighlight && currentHighlight.classList) {
         currentHighlight.classList.add('search-highlight-current');
+
+        // Scroll to the highlighted match after a short delay
         setTimeout(function () {
           if (currentHighlight) {
             currentHighlight.scrollIntoView({
@@ -15653,26 +17523,45 @@ function Editor(_ref3) {
       }
     }
   };
+
+  /**
+   * Navigates to the next search match (wraps to first if at end).
+   */
   var goToNextMatch = function goToNextMatch() {
     if (searchResults.length === 0) return;
+
+    // Use modulo to wrap around to first match if at end
     var nextIndex = (currentSearchIndex + 1) % searchResults.length;
     setCurrentSearchIndex(nextIndex);
     highlightCurrentMatch(nextIndex);
   };
+
+  /**
+   * Navigates to the previous search match (wraps to last if at beginning).
+   */
   var goToPrevMatch = function goToPrevMatch() {
     if (searchResults.length === 0) return;
+
+    // Add length before subtracting to handle negative index
     var prevIndex = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
     setCurrentSearchIndex(prevIndex);
     highlightCurrentMatch(prevIndex);
   };
+
+  /**
+   * Toggles the search bar visibility.
+   * When opening, focuses the search input. When closing, clears search state.
+   */
   var toggleSearch = function toggleSearch() {
     setShowSearch(!showSearch);
     if (!showSearch) {
+      // Focus search input after opening (with delay for animation)
       setTimeout(function () {
         var searchInput = document.querySelector('.search-input');
         if (searchInput) searchInput.focus();
       }, 100);
     } else {
+      // Clear all search state when closing
       setSearchQuery("");
       setSearchResults([]);
       setCurrentSearchIndex(-1);
@@ -15680,56 +17569,29 @@ function Editor(_ref3) {
       clearHighlights();
     }
   };
-  var applyFontFamily = function applyFontFamily(fontFamily) {
-    var selection = window.getSelection();
-    if (selection.rangeCount === 0) {
-      var range = document.createRange();
-      var editor = editorRef.current;
-      if (editor) {
-        range.selectNodeContents(editor);
-        range.collapse(false);
-        var span = document.createElement('span');
-        span.style.fontFamily = fontFamily;
-        span.innerHTML = "\u200B";
-        range.insertNode(span);
-        range.setStart(span, 1);
-        range.setEnd(span, 1);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-    } else {
-      var _range2 = selection.getRangeAt(0);
-      var selectedText = _range2.toString();
-      if (selectedText) {
-        var _span = document.createElement('span');
-        _span.style.fontFamily = fontFamily;
-        try {
-          _range2.surroundContents(_span);
-        } catch (e) {
-          var contents = _range2.extractContents();
-          _span.appendChild(contents);
-          _range2.insertNode(_span);
-        }
-      } else {
-        var _span2 = document.createElement('span');
-        _span2.style.fontFamily = fontFamily;
-        _span2.innerHTML = "\u200B";
-        _range2.insertNode(_span2);
-        _range2.setStart(_span2, 1);
-        _range2.setEnd(_span2, 1);
-        selection.removeAllRanges();
-        selection.addRange(_range2);
-      }
-    }
-    handleChange();
-  };
+
+  // ============================================================================
+  // SELECTION MANAGEMENT - Save and restore cursor/selection position
+  // ============================================================================
+
+  /**
+   * Saves the current text selection/range.
+   * Used to preserve cursor position during operations that might lose focus.
+   * @returns {Range|null} - Cloned range of current selection, or null if no selection
+   */
   var saveSelection = function saveSelection() {
     var selection = window.getSelection();
     if (selection.rangeCount > 0) {
-      return selection.getRangeAt(0).cloneRange();
+      return selection.getRangeAt(0).cloneRange(); // Clone to avoid mutations
     }
     return null;
   };
+
+  /**
+   * Restores a previously saved selection/range.
+   * Used to restore cursor position after operations.
+   * @param {Range} savedRange - The range to restore
+   */
   var restoreSelection = function restoreSelection(savedRange) {
     if (savedRange) {
       var selection = window.getSelection();
@@ -15737,29 +17599,84 @@ function Editor(_ref3) {
       selection.addRange(savedRange);
     }
   };
+
+  /**
+   * Ensures the editor has focus while preserving current selection.
+   * Saves selection before focusing and restores it after.
+   */
   var ensureEditorFocused = function ensureEditorFocused() {
     var savedSelection = saveSelection();
     var isFocused = document.activeElement === editorRef.current;
     if (!isFocused) {
       editorRef.current.focus();
-      restoreSelection(savedSelection);
+      restoreSelection(savedSelection); // Restore selection after focus
     }
   };
+
+  // ============================================================================
+  // BLOCK FORMATTING - Code blocks, blockquotes, etc.
+  // ============================================================================
+
+  /**
+   * Inserts a code block (<pre><code>) at the current selection.
+   * If text is selected, wraps it in the code block. Otherwise, creates empty block.
+   */
+  var insertCodeBlock = function insertCodeBlock() {
+    // Check if code blocks are allowed
+    if (!allowedTags.includes('pre') || !allowedTags.includes('code')) {
+      return;
+    }
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    var range = selection.getRangeAt(0);
+    var selectedText = range.toString();
+
+    // Create code block structure
+    var preElement = document.createElement('pre');
+    var codeElement = document.createElement('code');
+
+    // Insert selected text or empty code element
+    if (selectedText) {
+      codeElement.textContent = selectedText; // Use textContent to escape HTML
+    } else {
+      codeElement.textContent = '';
+    }
+    preElement.appendChild(codeElement);
+    range.deleteContents(); // Remove selected text
+    range.insertNode(preElement); // Insert code block
+
+    // Place cursor inside the code element (at the end)
+    var newRange = document.createRange();
+    newRange.selectNodeContents(codeElement);
+    newRange.collapse(false); // Collapse to end
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+    handleChange();
+  };
+
+  /**
+   * Toggles blockquote formatting at the current selection.
+   * If inside a blockquote, removes it. Otherwise, creates a new blockquote.
+   */
   var applyBlockquote = function applyBlockquote() {
     var selection = window.getSelection();
     if (!selection.rangeCount) return;
     var range = selection.getRangeAt(0);
     var selectedText = range.toString();
+
+    // Find if we're already inside a blockquote
     var container = range.commonAncestorContainer;
     var element = container.nodeType === 3 ? container.parentNode : container;
     var existingBlockquote = element.closest('blockquote');
     if (existingBlockquote) {
+      // Remove blockquote by unwrapping its children
       var parent = existingBlockquote.parentNode;
       while (existingBlockquote.firstChild) {
         parent.insertBefore(existingBlockquote.firstChild, existingBlockquote);
       }
       parent.removeChild(existingBlockquote);
     } else {
+      // Create new blockquote
       var newBlockquote = document.createElement('blockquote');
       if (selectedText) {
         var quote = document.createElement('p');
@@ -15794,24 +17711,295 @@ function Editor(_ref3) {
         _citationElement.style.color = '#888';
         newBlockquote.appendChild(_citationElement);
         range.insertNode(newBlockquote);
-        var _newRange = document.createRange();
-        _newRange.selectNodeContents(_quote);
-        _newRange.collapse(true);
+        var _newRange5 = document.createRange();
+        _newRange5.selectNodeContents(_quote);
+        _newRange5.collapse(true);
         selection.removeAllRanges();
-        selection.addRange(_newRange);
+        selection.addRange(_newRange5);
       }
     }
     handleChange();
   };
+
+  /**
+   * Applies heading formatting to the current block element.
+   * Converts the current block (p, h1-h6, div, etc.) to the specified heading tag.
+   * @param {string} tagName - The tag name to apply ('p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6')
+   */
+  var applyHeading = function applyHeading(tagName) {
+    if (!editorRef.current) {
+      console.warn('applyHeading: editorRef.current is null');
+      return;
+    }
+
+    // Check if the tag is allowed
+    if (tagName !== 'p' && !allowedTags.includes(tagName)) {
+      console.warn('applyHeading: tag not allowed', tagName);
+      return;
+    }
+
+    // Ensure editor has focus
+    editorRef.current.focus();
+    var selection = window.getSelection();
+
+    // Get current selection or create one
+    var range;
+    if (selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
+    } else {
+      range = document.createRange();
+      if (editorRef.current.childNodes.length > 0) {
+        var lastNode = editorRef.current.childNodes[editorRef.current.childNodes.length - 1];
+        if (lastNode.nodeType === 3) {
+          range.setStart(lastNode, lastNode.textContent.length);
+          range.setEnd(lastNode, lastNode.textContent.length);
+        } else {
+          range.setStartAfter(lastNode);
+          range.collapse(true);
+        }
+      } else {
+        range.setStart(editorRef.current, 0);
+        range.collapse(true);
+      }
+      selection.addRange(range);
+    }
+    var container = range.commonAncestorContainer;
+
+    // Ensure container is within the editor
+    if (!editorRef.current.contains(container)) {
+      console.warn('applyHeading: container not in editor');
+      return;
+    }
+
+    // Get the block element (p, h1-h6, div, etc.)
+    var blockElement = container.nodeType === 3 ? container.parentElement : container;
+
+    // Find the closest block-level element
+    while (blockElement && blockElement !== editorRef.current) {
+      var _blockElement$tagName;
+      var tag = (_blockElement$tagName = blockElement.tagName) === null || _blockElement$tagName === void 0 ? void 0 : _blockElement$tagName.toLowerCase();
+      if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'blockquote', 'li'].includes(tag)) {
+        break;
+      }
+      blockElement = blockElement.parentElement;
+    }
+
+    // If no block element found, create or wrap one
+    if (!blockElement || blockElement === editorRef.current) {
+      // Try to use formatBlock command first as it handles edge cases better
+      try {
+        var success = document.execCommand('formatBlock', false, "<".concat(tagName, ">"));
+        if (success) {
+          handleChange();
+          return;
+        }
+      } catch (e) {
+        // Continue with manual approach
+      }
+
+      // Manual approach: wrap or create
+      if (editorRef.current.childNodes.length > 0) {
+        // Try to wrap existing content
+        var firstChild = editorRef.current.firstChild;
+        if (firstChild.nodeType === 3 || firstChild.nodeType === 1 && firstChild.tagName === 'BR') {
+          var _newElement = document.createElement(tagName);
+          var wrapRange = document.createRange();
+          wrapRange.selectNodeContents(editorRef.current);
+          try {
+            wrapRange.surroundContents(_newElement);
+          } catch (e) {
+            // If surroundContents fails, manually wrap
+            while (editorRef.current.firstChild) {
+              _newElement.appendChild(editorRef.current.firstChild);
+            }
+            editorRef.current.appendChild(_newElement);
+          }
+          blockElement = _newElement;
+        } else {
+          // Create new element
+          var _newElement2 = document.createElement(tagName);
+          _newElement2.innerHTML = '&nbsp;';
+          editorRef.current.appendChild(_newElement2);
+          blockElement = _newElement2;
+        }
+      } else {
+        // Create new empty element
+        var _newElement3 = document.createElement(tagName);
+        _newElement3.innerHTML = '&nbsp;';
+        editorRef.current.appendChild(_newElement3);
+        blockElement = _newElement3;
+      }
+
+      // Set cursor in the new element
+      var _newRange6 = document.createRange();
+      _newRange6.selectNodeContents(blockElement);
+      _newRange6.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(_newRange6);
+      handleChange();
+      return;
+    }
+
+    // If already the correct tag, do nothing
+    if (blockElement.tagName.toLowerCase() === tagName.toLowerCase()) {
+      return;
+    }
+
+    // Create new element with the desired tag
+    var newElement = document.createElement(tagName);
+
+    // Preserve all child nodes and their formatting
+    var fragment = document.createDocumentFragment();
+    while (blockElement.firstChild) {
+      fragment.appendChild(blockElement.firstChild);
+    }
+    newElement.appendChild(fragment);
+
+    // Preserve attributes like style, class, etc.
+    Array.from(blockElement.attributes).forEach(function (attr) {
+      if (attr.name !== 'contenteditable') {
+        newElement.setAttribute(attr.name, attr.value);
+      }
+    });
+
+    // Replace the old element with the new one
+    blockElement.parentNode.replaceChild(newElement, blockElement);
+
+    // Restore cursor position at the end of the new element
+    var newRange = document.createRange();
+    if (newElement.childNodes.length > 0) {
+      var _lastNode = newElement.childNodes[newElement.childNodes.length - 1];
+      if (_lastNode.nodeType === 3) {
+        newRange.setStart(_lastNode, _lastNode.textContent.length);
+        newRange.setEnd(_lastNode, _lastNode.textContent.length);
+      } else {
+        newRange.setStartAfter(_lastNode);
+        newRange.collapse(true);
+      }
+    } else {
+      newElement.innerHTML = '&nbsp;';
+      newRange.selectNodeContents(newElement);
+      newRange.collapse(true);
+    }
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+    handleChange();
+  };
+
+  // ============================================================================
+  // TEXT FORMATTING - Color, font family, font size
+  // ============================================================================
+
+  /**
+   * Applies text color to the current selection.
+   * Wraps selected text in a span with color style.
+   * If no text is selected, creates a zero-width space with color for typing.
+   * @param {string} color - Color value (hex, rgb, etc.)
+   */
   var applyTextColor = function applyTextColor(color) {
     var selection = window.getSelection();
     if (!selection.rangeCount) return;
     var range = selection.getRangeAt(0);
     var selectedText = range.toString();
     if (selectedText) {
+      // Apply color to selected text
       var span = document.createElement('span');
       span.style.color = color;
-      span.textContent = selectedText;
+      span.textContent = selectedText; // Use textContent to prevent HTML injection
+
+      range.deleteContents(); // Remove selected text
+      range.insertNode(span); // Insert colored span
+
+      // Move cursor after the colored text
+      range.setStartAfter(span);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else {
+      // No selection - create invisible marker with color for next typed text
+      var _span = document.createElement('span');
+      _span.style.color = color;
+      _span.innerHTML = "\u200B"; // Zero-width space (invisible character)
+
+      range.insertNode(_span);
+
+      // Place cursor inside the span (at position 1, after zero-width space)
+      range.setStart(_span, 1);
+      range.setEnd(_span, 1);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    handleChange();
+  };
+
+  /**
+   * Applies font family to the current selection.
+   * Wraps selected text in a span with font-family style.
+   * If no text is selected, creates a zero-width space with font-family for typing.
+   * @param {string} fontFamily - Font family value (e.g., 'Arial', 'Times New Roman')
+   */
+  var applyFontFamily = function applyFontFamily(fontFamily) {
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    var range = selection.getRangeAt(0);
+    var selectedText = range.toString();
+    if (selectedText) {
+      // Apply font family to selected text
+      var span = document.createElement('span');
+      if (fontFamily && fontFamily.trim() !== '') {
+        span.style.fontFamily = fontFamily;
+      } else {
+        // If empty font family (Default), ensure no font-family style is set
+        span.style.fontFamily = '';
+      }
+      span.textContent = selectedText; // Use textContent to prevent HTML injection
+
+      range.deleteContents();
+      range.insertNode(span);
+      range.setStartAfter(span);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else {
+      var _span2 = document.createElement('span');
+      if (fontFamily && fontFamily.trim() !== '') {
+        _span2.style.fontFamily = fontFamily;
+      } else {
+        // If empty font family (Default), ensure no font-family style is set
+        _span2.style.fontFamily = '';
+      }
+      _span2.innerHTML = "\u200B";
+      range.insertNode(_span2);
+      range.setStart(_span2, 1);
+      range.setEnd(_span2, 1);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    handleChange();
+  };
+
+  /**
+   * Applies font size to the current selection.
+   * Wraps selected text in a span with font-size style.
+   * If no text is selected, creates a zero-width space with font-size for typing.
+   * @param {string} fontSize - Font size value (e.g., '16px', '12pt')
+   */
+  var applyFontSize = function applyFontSize(fontSize) {
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    var range = selection.getRangeAt(0);
+    var selectedText = range.toString();
+    if (selectedText) {
+      // Apply font size to selected text
+      var span = document.createElement('span');
+      if (fontSize && fontSize.trim() !== '') {
+        span.style.fontSize = fontSize;
+      } else {
+        // If empty font size, ensure no font-size style is set
+        span.style.fontSize = '';
+      }
+      span.textContent = selectedText; // Use textContent to prevent HTML injection
+
       range.deleteContents();
       range.insertNode(span);
       range.setStartAfter(span);
@@ -15820,7 +18008,12 @@ function Editor(_ref3) {
       selection.addRange(range);
     } else {
       var _span3 = document.createElement('span');
-      _span3.style.color = color;
+      if (fontSize && fontSize.trim() !== '') {
+        _span3.style.fontSize = fontSize;
+      } else {
+        // If empty font size, ensure no font-size style is set
+        _span3.style.fontSize = '';
+      }
       _span3.innerHTML = "\u200B";
       range.insertNode(_span3);
       range.setStart(_span3, 1);
@@ -15830,6 +18023,18 @@ function Editor(_ref3) {
     }
     handleChange();
   };
+
+  // ============================================================================
+  // FORMATTING TOGGLE - Toggle inline formatting (bold, italic, etc.)
+  // ============================================================================
+
+  /**
+   * Toggles inline formatting (bold, italic, underline, strikethrough).
+   * If formatting is already applied, removes it. Otherwise, applies it.
+   * Handles selections spanning multiple blocks separately.
+   * @param {string} command - Command name (e.g., 'bold', 'italic')
+   * @param {string} tagName - HTML tag name (e.g., 'STRONG', 'EM')
+   */
   var toggleFormatting = function toggleFormatting(command, tagName) {
     var selection = window.getSelection();
     if (!selection.rangeCount) return;
@@ -15840,7 +18045,10 @@ function Editor(_ref3) {
     var startContainer = range.startContainer;
     var endContainer = range.endContainer;
 
-    // Find the closest block-level elements for both start and end
+    /**
+     * Helper to find the closest block-level parent element.
+     * Block elements: P, DIV, H1-H6, BLOCKQUOTE, LI
+     */
     var getBlockParent = function getBlockParent(node) {
       var parent = node.nodeType === 3 ? node.parentNode : node;
       while (parent && parent !== editorRef.current) {
@@ -15855,6 +18063,7 @@ function Editor(_ref3) {
     var endBlock = getBlockParent(endContainer);
 
     // If selection spans multiple blocks, handle each block separately
+    // This ensures formatting is applied correctly across paragraph boundaries
     if (startBlock !== endBlock) {
       // Save the current selection
       var savedRange = range.cloneRange();
@@ -15946,14 +18155,32 @@ function Editor(_ref3) {
   var toggleStrikethrough = function toggleStrikethrough() {
     toggleFormatting('strikeThrough', 'S');
   };
+
+  // ============================================================================
+  // COMMAND EXECUTION - Main dispatcher for toolbar commands
+  // ============================================================================
+
+  /**
+   * Main command execution function.
+   * Dispatches formatting commands and special operations.
+   * Ensures editor has focus before executing commands.
+   * @param {string} cmd - Command name (e.g., 'bold', 'italic', 'insertImage')
+   * @param {*} arg - Optional argument for the command
+   */
   var exec = function exec(cmd) {
     var arg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     if (!editorRef.current) return;
+
+    // Save current selection and ensure editor has focus
     var savedSelection = saveSelection();
     var isCurrentlyFocused = document.activeElement === editorRef.current;
     if (!isCurrentlyFocused) {
       editorRef.current.focus();
-      restoreSelection(savedSelection);
+      restoreSelection(savedSelection); // Restore selection after focus
+    }
+    if (cmd === "insertCodeBlock") {
+      insertCodeBlock();
+      return;
     }
     if (cmd === "formatBlock" && arg === "blockquote") {
       applyBlockquote();
@@ -15961,8 +18188,30 @@ function Editor(_ref3) {
     }
     if (cmd === "formatBlock") {
       var cleanArg = arg ? arg.replace(/[<>]/g, '') : arg;
-      document.execCommand(cmd, false, cleanArg);
-      handleChange();
+      // Check if it's a heading tag (h1-h6) or paragraph
+      if (cleanArg && ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(cleanArg.toLowerCase())) {
+        // Use custom function for headings
+        try {
+          applyHeading(cleanArg.toLowerCase());
+        } catch (e) {
+          // Fallback to execCommand if custom function fails
+          console.warn('applyHeading failed, using execCommand fallback:', e);
+          try {
+            document.execCommand('formatBlock', false, "<".concat(cleanArg, ">"));
+            handleChange();
+          } catch (e2) {
+            console.error('formatBlock execCommand also failed:', e2);
+          }
+        }
+      } else {
+        // For other formatBlock commands, use execCommand as fallback
+        try {
+          document.execCommand(cmd, false, cleanArg);
+          handleChange();
+        } catch (e) {
+          console.warn('formatBlock execCommand failed:', e);
+        }
+      }
       return;
     }
     if (cmd === "bold") {
@@ -16010,18 +18259,30 @@ function Editor(_ref3) {
       return;
     }
     if (cmd === "toggleHTML") {
-      var isCodeView = editorRef.current.getAttribute("data-code-view") === "true";
-      if (isCodeView) {
+      var currentlyCodeView = editorRef.current.getAttribute("data-code-view") === "true";
+      if (currentlyCodeView) {
         var code = editorRef.current.innerText;
         var sanitizedCode = sanitizeHTML(code, allowedTags);
         editorRef.current.innerHTML = sanitizedCode;
         editorRef.current.setAttribute("data-code-view", "false");
         editorRef.current.contentEditable = true;
+        setIsCodeView(false);
+        setActiveFormatting(function (prev) {
+          return _objectSpread2(_objectSpread2({}, prev), {}, {
+            toggleHTML: false
+          });
+        });
       } else {
         var html = editorRef.current.innerHTML;
         editorRef.current.innerText = html;
         editorRef.current.setAttribute("data-code-view", "true");
         editorRef.current.contentEditable = true;
+        setIsCodeView(true);
+        setActiveFormatting(function (prev) {
+          return _objectSpread2(_objectSpread2({}, prev), {}, {
+            toggleHTML: true
+          });
+        });
       }
       handleChange();
       return;
@@ -16080,6 +18341,32 @@ function Editor(_ref3) {
     if (cmd === "highlight") {
       savedSelectionRef.current = savedSelection;
       highlightColorRef.current.click();
+      return;
+    }
+    if (cmd === "fontFamily") {
+      savedSelectionRef.current = savedSelection;
+      if (arg !== undefined) {
+        if (savedSelectionRef.current) {
+          restoreSelection(savedSelectionRef.current);
+          savedSelectionRef.current = null;
+        }
+        applyFontFamily(arg);
+        // Set the current font family to match the selected value
+        setCurrentFontFamily(arg || '');
+      }
+      return;
+    }
+    if (cmd === "fontSize") {
+      savedSelectionRef.current = savedSelection;
+      if (arg !== undefined) {
+        if (savedSelectionRef.current) {
+          restoreSelection(savedSelectionRef.current);
+          savedSelectionRef.current = null;
+        }
+        applyFontSize(arg);
+        // Set the current font size to match the selected value
+        setCurrentFontSize(arg || '16px');
+      }
       return;
     }
     if (cmd === "insertTableGrid") {
@@ -16197,9 +18484,9 @@ function Editor(_ref3) {
       if (!insideUL) {
         document.execCommand("insertUnorderedList");
         setTimeout(function () {
-          var _newEl$closest, _editorRef$current;
+          var _newEl$closest, _editorRef$current2;
           var newEl = selectionElement();
-          var list = (newEl === null || newEl === void 0 || (_newEl$closest = newEl.closest) === null || _newEl$closest === void 0 ? void 0 : _newEl$closest.call(newEl, "ul")) || ((_editorRef$current = editorRef.current) === null || _editorRef$current === void 0 ? void 0 : _editorRef$current.querySelector("ul"));
+          var list = (newEl === null || newEl === void 0 || (_newEl$closest = newEl.closest) === null || _newEl$closest === void 0 ? void 0 : _newEl$closest.call(newEl, "ul")) || ((_editorRef$current2 = editorRef.current) === null || _editorRef$current2 === void 0 ? void 0 : _editorRef$current2.querySelector("ul"));
           if (list) {
             list.style.listStyleType = style || "disc";
             list.style.paddingLeft = "1.5rem";
@@ -16222,9 +18509,9 @@ function Editor(_ref3) {
       if (!insideOL) {
         document.execCommand("insertOrderedList");
         setTimeout(function () {
-          var _newEl$closest2, _editorRef$current2;
+          var _newEl$closest2, _editorRef$current3;
           var newEl = selectionElement();
-          var list = (newEl === null || newEl === void 0 || (_newEl$closest2 = newEl.closest) === null || _newEl$closest2 === void 0 ? void 0 : _newEl$closest2.call(newEl, "ol")) || ((_editorRef$current2 = editorRef.current) === null || _editorRef$current2 === void 0 ? void 0 : _editorRef$current2.querySelector("ol"));
+          var list = (newEl === null || newEl === void 0 || (_newEl$closest2 = newEl.closest) === null || _newEl$closest2 === void 0 ? void 0 : _newEl$closest2.call(newEl, "ol")) || ((_editorRef$current3 = editorRef.current) === null || _editorRef$current3 === void 0 ? void 0 : _editorRef$current3.querySelector("ol"));
           if (list) {
             list.style.listStyleType = style || "decimal";
             list.style.paddingLeft = "1.5rem";
@@ -16239,6 +18526,11 @@ function Editor(_ref3) {
       console.error("Error changing ordered list style:", error);
     }
   };
+
+  // ============================================================================
+  // RENDER - JSX markup for the editor component
+  // ============================================================================
+
   return /*#__PURE__*/React.createElement("div", {
     ref: editorContainerRef,
     className: "rte-container ".concat(focused ? "rte-focused" : "", " ").concat(height === "auto" ? "" : height === "responsive" ? "" : typeof height === "number" ? "fixed-height" : "", " ").concat(width === "auto" ? "" : width === "responsive" ? "" : typeof width === "number" ? "fixed-width" : "", " ").concat(className, " rte-theme-").concat(theme),
@@ -16379,39 +18671,94 @@ function Editor(_ref3) {
     className: "remove-btn"
   }, "Remove Image")))), /*#__PURE__*/React.createElement("div", {
     className: "rte-toolbar"
-  }, toolbarButtons.map(function (b, i) {
-    if (b.type === "dropdown") {
-      var filteredOptions = b.options.filter(function (opt) {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rte-toolbar-primary"
+  }, /*#__PURE__*/React.createElement("fieldset", {
+    className: "rte-toolbar-main",
+    disabled: isPreview
+  }, TOOLBAR_BUTTONS.map(function (button) {
+    if (button.type === "dropdown") {
+      if (button.cmd === "fontFamily") {
+        if (!button.options || !Array.isArray(button.options)) {
+          return null;
+        }
+        // Ensure the current font family value matches one of the options
+        var validValue = button.options.find(function (opt) {
+          return opt.value === currentFontFamily;
+        }) ? currentFontFamily : '';
+        return /*#__PURE__*/React.createElement("select", {
+          key: "dropdown-".concat(button.cmd),
+          className: "list-style-dropdown rte-btn",
+          title: button.tooltip || "Font Family",
+          onChange: function onChange(e) {
+            return exec(button.cmd, e.target.value);
+          },
+          value: validValue
+        }, button.options.map(function (opt) {
+          return /*#__PURE__*/React.createElement("option", {
+            key: opt.value,
+            value: opt.value
+          }, opt.label);
+        }));
+      }
+      if (button.cmd === "fontSize") {
+        if (!button.options || !Array.isArray(button.options)) {
+          return null;
+        }
+        // Ensure the current font size value matches one of the options
+        var _validValue = button.options.find(function (opt) {
+          return opt.value === currentFontSize;
+        }) ? currentFontSize : '16pt';
+        return /*#__PURE__*/React.createElement("select", {
+          key: "dropdown-".concat(button.cmd),
+          className: "list-style-dropdown rte-btn",
+          title: button.tooltip || "Font Size",
+          onChange: function onChange(e) {
+            return exec(button.cmd, e.target.value);
+          },
+          value: _validValue
+        }, button.options.map(function (opt) {
+          return /*#__PURE__*/React.createElement("option", {
+            key: opt.value,
+            value: opt.value
+          }, opt.label);
+        }));
+      }
+      if (!button.options || !Array.isArray(button.options)) {
+        return null;
+      }
+      var filteredOptions = button.options.filter(function (opt) {
         return opt.value === 'p' || allowedTags.includes(opt.value);
       });
       return /*#__PURE__*/React.createElement("select", {
-        key: i,
-        className: "list-style-dropdown rte-btn",
-        title: b.cmd,
+        key: "dropdown-".concat(button.cmd),
+        className: "list-style-dropdown rte-btn ".concat(currentHeading !== 'p' ? 'active' : ''),
+        title: button.cmd,
         onChange: function onChange(e) {
-          return exec(b.cmd, e.target.value);
+          return exec(button.cmd, e.target.value);
         },
         value: currentHeading
-      }, filteredOptions.map(function (opt, j) {
+      }, filteredOptions.map(function (opt) {
         return /*#__PURE__*/React.createElement("option", {
-          key: j,
+          key: opt.value,
           value: opt.value
         }, opt.label);
       }));
     }
-    if (!shouldShowButton(b.cmd, allowedTags)) return null;
-    if (b.cmd === "insertTableGrid") {
+    if (!shouldShowButton(button.cmd, allowedTags)) return null;
+    var Icon = button.Icon;
+    if (button.cmd === "insertTableGrid") {
       return /*#__PURE__*/React.createElement("div", {
-        key: i,
+        key: button.cmd,
         className: "table-grid-wrapper"
       }, /*#__PURE__*/React.createElement("button", {
         type: "button",
-        className: "rte-btn ".concat(activeFormatting[b.cmd] ? 'active' : ''),
+        className: "rte-btn ".concat(showTableGrid ? 'active' : ''),
         onClick: function onClick() {
-          return exec(b.cmd, b.arg);
+          return exec(button.cmd, button.arg);
         },
-        title: b.tooltip
-      }, b.icon), showTableGrid && /*#__PURE__*/React.createElement("div", {
+        title: button.tooltip
+      }, Icon && /*#__PURE__*/React.createElement(Icon, null)), showTableGrid && /*#__PURE__*/React.createElement("div", {
         className: "table-grid-popup",
         onMouseLeave: function onMouseLeave() {
           return setShowTableGrid(false);
@@ -16447,21 +18794,21 @@ function Editor(_ref3) {
         className: "grid-size-label"
       }, gridSize.rows, " \xD7 ", gridSize.cols)));
     }
-    if (b.cmd === "insertEmoji") {
+    if (button.cmd === "insertEmoji") {
       return /*#__PURE__*/React.createElement("div", {
-        key: i,
+        key: button.cmd,
         className: "emoji-wrapper",
         onMouseLeave: function onMouseLeave() {
           return setShowEmojiPicker(false);
         }
       }, /*#__PURE__*/React.createElement("button", {
         type: "button",
-        className: "rte-btn ".concat(activeFormatting[b.cmd] ? 'active' : ''),
+        className: "rte-btn ".concat(showEmojiPicker ? 'active' : ''),
         onClick: function onClick() {
-          return exec(b.cmd, b.arg);
+          return exec(button.cmd, button.arg);
         },
-        title: b.tooltip
-      }, b.icon), showEmojiPicker && /*#__PURE__*/React.createElement("div", {
+        title: button.tooltip
+      }, Icon && /*#__PURE__*/React.createElement(Icon, null)), showEmojiPicker && /*#__PURE__*/React.createElement("div", {
         className: "emoji-picker-popup"
       }, /*#__PURE__*/React.createElement(EmojiPicker$1, {
         theme: theme === 'dark' ? 'dark' : 'light',
@@ -16478,27 +18825,40 @@ function Editor(_ref3) {
         }
       })));
     }
-    if (b.cmd === "search") {
+    if (button.cmd === "search") {
       return /*#__PURE__*/React.createElement("button", {
-        key: i,
+        key: button.cmd,
         type: "button",
-        className: "rte-btn",
-        title: b.tooltip,
+        className: "rte-btn ".concat(showSearch ? 'active' : ''),
+        title: button.tooltip,
         onClick: toggleSearch
-      }, b.icon);
+      }, Icon && /*#__PURE__*/React.createElement(Icon, null));
+    }
+
+    // Determine if button should be active
+    // Special cases: toggleHTML uses isCodeView state
+    // formatBlock with blockquote arg uses formatBlock state
+    var isButtonActive = false;
+    if (button.cmd === "toggleHTML") {
+      isButtonActive = isCodeView;
+    } else if (button.cmd === "formatBlock" && button.arg === "blockquote") {
+      isButtonActive = activeFormatting.formatBlock;
+    } else {
+      // strikeThrough button uses strikeThrough state key
+      isButtonActive = Boolean(activeFormatting[button.cmd]);
     }
     return /*#__PURE__*/React.createElement("button", {
-      key: i,
+      key: button.cmd,
       type: "button",
-      className: "rte-btn ".concat(activeFormatting[b.cmd] ? 'active' : ''),
-      title: b.tooltip,
+      className: "rte-btn ".concat(isButtonActive ? 'active' : ''),
+      title: button.tooltip,
       onMouseDown: function onMouseDown(e) {
         return e.preventDefault();
       },
       onClick: function onClick() {
-        return exec(b.cmd, b.arg);
+        return exec(button.cmd, button.arg);
       }
-    }, b.icon);
+    }, Icon && /*#__PURE__*/React.createElement(Icon, null));
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rte-btn",
@@ -16509,7 +18869,6 @@ function Editor(_ref3) {
     setAllowedTags: setAllowedTags,
     showTagSelector: showTagSelector,
     setShowTagSelector: setShowTagSelector,
-    theme: theme,
     allTags: allTags
   }), allowedTags.includes('ul') && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -16525,14 +18884,13 @@ function Editor(_ref3) {
     },
     title: "insert unordered list"
   }, /*#__PURE__*/React.createElement(FaListUl, null)), /*#__PURE__*/React.createElement(Dropdown, {
-    options: unorderedListOptions,
+    options: UNORDERED_LIST_OPTIONS,
     value: null,
     onChange: function onChange(value) {
       return changeUnorderedListStyle(value);
     },
     placeholder: "",
-    width: "100px",
-    theme: theme
+    width: "100px"
   })), allowedTags.includes('ol') && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rte-btn ".concat(activeFormatting.insertOrderedList ? 'active' : ''),
@@ -16547,14 +18905,13 @@ function Editor(_ref3) {
     },
     title: "insert ordered list"
   }, /*#__PURE__*/React.createElement(FaListOl, null)), /*#__PURE__*/React.createElement(Dropdown, {
-    options: orderedListOptions,
+    options: ORDERED_LIST_OPTIONS,
     value: null,
     onChange: function onChange(value) {
       return changeOrderedListStyle(value);
     },
     placeholder: "",
-    width: "100px",
-    theme: theme
+    width: "100px"
   })), /*#__PURE__*/React.createElement("input", {
     ref: colorInputRef,
     type: "color",
@@ -16578,9 +18935,9 @@ function Editor(_ref3) {
       document.execCommand("backColor", false, e.target.value);
       handleChange();
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "rte-btn",
+    className: "rte-btn ".concat(isPreview ? 'active' : ''),
     onClick: function onClick(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -16589,9 +18946,12 @@ function Editor(_ref3) {
       });
     },
     title: isPreview ? "Switch to Edit Mode" : "Switch to Preview Mode"
-  }, isPreview ? /*#__PURE__*/React.createElement(FaEdit, null) : /*#__PURE__*/React.createElement(FaEye, null))), plugins.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, isPreview ? /*#__PURE__*/React.createElement(FaEdit, null) : /*#__PURE__*/React.createElement(FaEye, null)))), (normalizedPlugins === null || normalizedPlugins === void 0 ? void 0 : normalizedPlugins.length) > 0 && /*#__PURE__*/React.createElement("div", {
     className: "rte-toolbar rte-toolbar-plugins"
-  }, plugins.map(function (plugin, index) {
+  }, /*#__PURE__*/React.createElement("fieldset", {
+    className: "rte-toolbar-plugins-group",
+    disabled: isPreview
+  }, normalizedPlugins === null || normalizedPlugins === void 0 ? void 0 : normalizedPlugins.map(function (plugin, index) {
     if (!shouldShowPlugin(plugin)) {
       return null;
     }
@@ -16607,7 +18967,7 @@ function Editor(_ref3) {
         return handlePluginAction(plugin);
       }
     }, typeof plugin.icon === 'string' ? plugin.icon : plugin.icon);
-  })), showSearch && /*#__PURE__*/React.createElement("div", {
+  }))), showSearch && /*#__PURE__*/React.createElement("div", {
     className: "search-bar"
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
@@ -16646,9 +19006,12 @@ function Editor(_ref3) {
   }), !isPreview ? /*#__PURE__*/React.createElement("div", {
     ref: editorRef,
     className: "rte-editor",
+    lang: currentLanguage,
+    "data-lang": currentLanguage,
     contentEditable: true,
     suppressContentEditableWarning: true,
     onInput: handleChange,
+    onKeyDown: handleEnterKey,
     onFocus: function onFocus() {
       return setFocused(true);
     },
@@ -16656,12 +19019,13 @@ function Editor(_ref3) {
       return setFocused(false);
     }
   }) : /*#__PURE__*/React.createElement("div", {
-    className: "rte-preview"
-  }, /*#__PURE__*/React.createElement("div", {
+    className: "rte-preview",
+    lang: currentLanguage,
+    "data-lang": currentLanguage,
     dangerouslySetInnerHTML: {
       __html: previewContent ? sanitizeHTML(previewContent, allowedTags) : ""
     }
-  })));
+  }));
 }
 
 export { Editor, Editor as default };

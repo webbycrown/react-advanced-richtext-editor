@@ -1,8 +1,40 @@
-
 # 📦 React Advanced Richtext Editor - React Component
 
-A powerful, feature-rich, and customizable react richtext editor built for React applications. This editor provides a wide range of formatting options, plugin support, and security features including HTML sanitization.
+A production-ready, sanitised, and highly extensible rich text editor for React (and Next.js) projects. It ships with a polished UI, sensible defaults, powerful formatting tools, and a plugin system that lets you tailor the editing experience for any product surface.
 
+- ⚛️ React 16.8+ (hooks) compatible & Next.js friendly
+- 🔒 DOMPurify-powered sanitisation and tag whitelisting
+- 🧩 Pluggable toolbar with custom commands, tags, and actions
+- 🎨 Built-in theming, responsive layout, and extensive styling hooks
+- 🧑‍💻 Fully controlled component with localStorage persistence
+
+
+## 🎥 Demo Video
+
+Watch the React Advanced Richtext Editor in action on YouTube:
+
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=ejRuLu6furw" target="_blank" rel="noopener noreferrer" style="position:relative;display:inline-block;">
+    <img src="https://img.youtube.com/vi/ejRuLu6furw/maxresdefault.jpg" alt="React Advanced Richtext Editor Demo" style="width:100%;max-width:640px;border-radius:8px;display:block;">
+    <!-- Play Button Overlay -->
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);background-color:#FF0000;border-radius:20%;width:80px;height:50px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,0,0,0.3);cursor:pointer;">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" style="margin-left:3px;">
+        <path d="M8 5v14l11-7z"/>
+      </svg>
+    </div>
+    <!-- YouTube Badge -->
+    <div style="position:absolute;bottom:15px;right:15px;background-color:#FF0000;padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/youtube.svg" alt="YouTube" width="20" height="20" style="filter:brightness(0) invert(1);">
+      <span style="color:white;font-weight:bold;font-size:14px;">YouTube</span>
+    </div>
+  </a>
+  <p style="margin-top:15px;">
+    <a href="https://www.youtube.com/watch?v=ejRuLu6furw" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/youtube.svg" alt="YouTube" width="24" height="24" style="vertical-align:middle;">
+      <strong style="font-size:16px;">Watch on YouTube: React Advanced Richtext Editor Demo</strong>
+    </a>
+  </p>
+</div>
 
 
 ## 📦 Installation
@@ -18,6 +50,21 @@ or
 ```bash
 yarn add @webbycrown/react-advanced-richtext-editor
 ```
+
+---
+
+## Compatibility Matrix
+
+ Framework / Runtime | React Version | Notes |
+| ------------------- | ------------- | ----- |
+| Next.js 10.x – 12.x | 16.8 – 17.x   | Use `--legacy-peer-deps` or `--force` if needed |
+| Next.js 13.x – 16.x | 18.x – 19.x   | Fully supported (App Router + Client Components) |
+| React (CRA/Vite/etc.) | 16.8+ | Works anywhere `contentEditable` is supported |
+
+**Requirements**
+
+- React & ReactDOM ≥ 16.8
+- Browser with modern `contentEditable`, `localStorage`, and ES2018 support
 
 ---
 
@@ -142,10 +189,61 @@ The Editor component accepts the following props:
   - Text alignment (left, center, right)
   - Blockquotes with citation support
 
-- **Lists**
-  - Ordered lists (1, 2, 3 / a, b, c / I, II, III / etc.)
-  - Unordered lists (disc, circle, square)
-  - Nested list support
+### List Styles
+
+- **Unordered Lists**
+  - Disc (•)
+  - Circle (○)
+  - Square (■)
+
+- **Ordered Lists**
+  - Decimal (1, 2, 3)
+  - Lower Alpha (a, b, c)
+  - Upper Alpha (A, B, C)
+  - Upper Roman (I, II, III)
+  - Lower Roman (i, ii, iii)
+
+### Font Families
+
+The editor includes 17 font families:
+
+  - Default (system default)
+  - Arial
+  - Courier New
+  - Georgia
+  - Impact
+  - Lucida Console
+  - Palatino
+  - Tahoma
+  - Times New Roman
+  - Trebuchet MS
+  - Verdana
+  - Comic Sans MS
+  - Helvetica
+  - Roboto
+  - Open Sans
+  - Lato
+  - Montserrat
+  - Poppins
+
+### Font Sizes
+
+Available font sizes: 8pt, 9pt, 10pt, 11pt, 12pt, 14pt, 16pt, 18pt, 20pt, 22pt, 24pt, 26pt, 28pt, 36pt, 48pt, 72pt
+
+### Markdown Support
+
+The editor supports markdown syntax in preview mode:
+
+- **Headings**: `# H1`, `## H2`, `### H3`, etc.
+- **Bold**: `**text**` or `__text__`
+- **Italic**: `*text*` or `_text_`
+- **Strikethrough**: `~~text~~`
+- **Links**: `[Link Text](URL)`
+- **Code**: `` `code` ``
+- **Code Blocks**: ` ```language\ncode\n``` `
+- **Blockquotes**: `> quote text`
+- **Lists**: `- item` or `1. item`
+- **Horizontal Rule**: `---` (converts to `<hr>`)
 
 - **Media & Links**
   - Insert and edit images with customizable properties
@@ -566,6 +664,19 @@ This project is open source and available under the MIT License.
 
 
 ## 🔖 Changelog
+
+[1.0.1] - 2025-12-03
+
+- 🔤 **Font family control**: Choose from multiple font families directly from the toolbar
+- 🔠 **Font size control**: Increase, decrease, and set explicit font sizes for selected text
+- 🎛️ **Improved toolbar UX**: Grouped typography controls for a cleaner, more intuitive editing experience
+- 🧹 **Minor improvements**: Small UI polish and internal refactors to keep the editor fast and stable
+- 📚 **Documentation**: Comprehensive documentation updates including detailed usage guides, complete API reference, plugin system documentation, theming guide, security best practices, and demo video creation guide.
+- 📝 **Examples**: Added multiple real-world integration and configuration examples to the documentation.
+
+---
+
+
 [1.0.0] - 2025-11-18
 
 Initial Release ✨
@@ -587,6 +698,7 @@ Initial Release ✨
 - 🌐 **Browser support**: Modern browsers with contentEditable & ES6+ features
 
 ---
+
 
 <div align="center">
 <strong>Made with ❤️ by <a href="https://webbycrown.com">WebbyCrown</a></strong>

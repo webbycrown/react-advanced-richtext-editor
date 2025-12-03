@@ -1,7 +1,7 @@
 {
   "name": "@webbycrown/react-advanced-richtext-editor",
-  "version": "1.0.0",
-  "description": "A powerful, feature-rich, and customizable rich text editor built for React applications with plugin support and security features.",
+  "version": "1.0.1",
+  "description": "Create professional content with this secure, customizable React rich text editor featuring plugin extensibility and modern editing capabilities.",
   "main": "dist/react-advanced-richtext-editor.cjs.js",
   "module": "dist/react-advanced-richtext-editor.esm.js",
   "files": [
@@ -43,8 +43,16 @@
     "access": "public"
   },
   "peerDependencies": {
-    "react": "^18.3.1 || ^19.0.0",
-    "react-dom": "^18.3.1 || ^19.0.0"
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
