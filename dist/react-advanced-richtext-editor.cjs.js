@@ -19,27 +19,6 @@ function _arrayWithHoles(r) {
 function _arrayWithoutHoles(r) {
   if (Array.isArray(r)) return _arrayLikeToArray$1(r);
 }
-function _classCallCheck(a, n) {
-  if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
-}
-function _construct(t, e, r) {
-  if (_isNativeReflectConstruct()) return Reflect.construct.apply(null, arguments);
-  var o = [null];
-  o.push.apply(o, e);
-  var p = new (t.bind.apply(t, o))();
-  return r && _setPrototypeOf$1(p, r.prototype), p;
-}
-function _defineProperties(e, r) {
-  for (var t = 0; t < r.length; t++) {
-    var o = r[t];
-    o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey$1(o.key), o);
-  }
-}
-function _createClass(e, r, t) {
-  return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
-    writable: !1
-  }), e;
-}
 function _createForOfIteratorHelper(r, e) {
   var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
   if (!t) {
@@ -95,14 +74,6 @@ function _defineProperty$1(e, r, t) {
     configurable: !0,
     writable: !0
   }) : e[r] = t, e;
-}
-function _isNativeReflectConstruct() {
-  try {
-    var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-  } catch (t) {}
-  return (_isNativeReflectConstruct = function () {
-    return !!t;
-  })();
 }
 function _iterableToArray(r) {
   if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r);
@@ -161,11 +132,6 @@ function _objectSpread2(e) {
   }
   return e;
 }
-function _setPrototypeOf$1(t, e) {
-  return _setPrototypeOf$1 = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) {
-    return t.__proto__ = e, t;
-  }, _setPrototypeOf$1(t, e);
-}
 function _slicedToArray(r, e) {
   return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray$1(r, e) || _nonIterableRest();
 }
@@ -185,15 +151,6 @@ function _toPrimitive$1(t, r) {
 function _toPropertyKey$1(t) {
   var i = _toPrimitive$1(t, "string");
   return "symbol" == typeof i ? i : i + "";
-}
-function _typeof(o) {
-  "@babel/helpers - typeof";
-
-  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
-    return typeof o;
-  } : function (o) {
-    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
-  }, _typeof(o);
 }
 function _unsupportedIterableToArray$1(r, a) {
   if (r) {
@@ -235,27 +192,27 @@ function isImmediatePostcondition(value) {
 }
 
 // src/utils/joinTruthy.ts
-function joinTruthy(arr) {
-  var delimiter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "";
+function joinTruthy(arr, delimiter = "") {
   return arr.filter(Boolean).join(delimiter);
 }
 
 // src/utils/stableHash.ts
 function stableHash(prefix, seed) {
-  var hash = 0;
-  if (seed.length === 0) return hash.toString();
-  for (var i = 0; i < seed.length; i++) {
-    var _char = seed.charCodeAt(i);
-    hash = (hash << 5) - hash + _char;
+  let hash = 0;
+  if (seed.length === 0)
+    return hash.toString();
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
-  return "".concat(prefix !== null && prefix !== void 0 ? prefix : "cl", "_").concat(hash.toString(36));
+  return `${prefix ?? "cl"}_${hash.toString(36)}`;
 }
 
 // src/utils/stringManipulators.ts
 function handlePropertyValue(property, value) {
   if (property === "content") {
-    return "\"".concat(value, "\"");
+    return `"${value}"`;
   }
   return value;
 }
@@ -263,19 +220,19 @@ function camelCaseToDash(str) {
   return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 }
 function joinedProperty(property, value) {
-  return "".concat(property, ":").concat(value);
+  return `${property}:${value}`;
 }
 function toClass(str) {
-  return str ? ".".concat(str) : "";
+  return str ? `.${str}` : "";
 }
 function appendString(base, line) {
-  return base ? "".concat(base, "\n").concat(line) : line;
+  return base ? `${base}
+${line}` : line;
 }
 
 // src/Rule.ts
-var Rule = /*#__PURE__*/function () {
-  function _Rule(sheet, property, value, selector) {
-    _classCallCheck(this, _Rule);
+var Rule = class _Rule {
+  constructor(sheet, property, value, selector) {
     this.sheet = sheet;
     this.property = property;
     this.value = value;
@@ -283,36 +240,31 @@ var Rule = /*#__PURE__*/function () {
     this.property = property;
     this.value = value;
     this.joined = joinedProperty(property, value);
-    var joinedConditions = this.selector.preconditions.concat(this.selector.postconditions);
+    const joinedConditions = this.selector.preconditions.concat(
+      this.selector.postconditions
+    );
     this.hash = this.selector.hasConditions ? this.selector.scopeClassName : stableHash(this.sheet.name, this.joined);
     this.key = joinTruthy([this.joined, joinedConditions, this.hash]);
   }
-  return _createClass(_Rule, [{
-    key: "toString",
-    value: function toString() {
-      var selectors = mergeSelectors(this.selector.preconditions, {
-        right: this.hash
-      });
-      selectors = mergeSelectors(this.selector.postconditions, {
-        left: selectors
-      });
-      return "".concat(selectors, " {").concat(_Rule.genRule(this.property, this.value), "}");
-    }
-  }], [{
-    key: "genRule",
-    value: function genRule(property, value) {
-      var transformedProperty = camelCaseToDash(property);
-      return joinedProperty(transformedProperty, handlePropertyValue(property, value)) + ";";
-    }
-  }]);
-}();
-function mergeSelectors(selectors) {
-  var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-    _ref$left = _ref.left,
-    left = _ref$left === void 0 ? "" : _ref$left,
-    _ref$right = _ref.right,
-    right = _ref$right === void 0 ? "" : _ref$right;
-  var output = selectors.reduce(function (selectors2, current) {
+  toString() {
+    let selectors = mergeSelectors(this.selector.preconditions, {
+      right: this.hash
+    });
+    selectors = mergeSelectors(this.selector.postconditions, {
+      left: selectors
+    });
+    return `${selectors} {${_Rule.genRule(this.property, this.value)}}`;
+  }
+  static genRule(property, value) {
+    const transformedProperty = camelCaseToDash(property);
+    return joinedProperty(
+      transformedProperty,
+      handlePropertyValue(property, value)
+    ) + ";";
+  }
+};
+function mergeSelectors(selectors, { left = "", right = "" } = {}) {
+  const output = selectors.reduce((selectors2, current) => {
     if (isPsuedoSelector(current)) {
       return selectors2 + current;
     }
@@ -323,13 +275,11 @@ function mergeSelectors(selectors) {
   }, left);
   return joinTruthy([output, toClass(right)], " ");
 }
-var Selector = /*#__PURE__*/function () {
-  function _Selector(sheet) {
-    var scopeName = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var _ref2 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-      preconditions = _ref2.preconditions,
-      postconditions = _ref2.postconditions;
-    _classCallCheck(this, _Selector);
+var Selector = class _Selector {
+  constructor(sheet, scopeName = null, {
+    preconditions,
+    postconditions
+  } = {}) {
     this.sheet = sheet;
     this.preconditions = [];
     this.scopeClassName = null;
@@ -339,61 +289,49 @@ var Selector = /*#__PURE__*/function () {
     this.postconditions = postconditions ? asArray(postconditions) : [];
     this.setScope(scopeName);
   }
-  return _createClass(_Selector, [{
-    key: "setScope",
-    value: function setScope(scopeName) {
-      if (!scopeName) {
-        return this;
-      }
-      if (!this.scopeClassName) {
-        this.scopeName = scopeName;
-        this.scopeClassName = stableHash(this.sheet.name,
-        // adding the count guarantees uniqueness across style.create calls
-        scopeName + this.sheet.count);
-      }
+  setScope(scopeName) {
+    if (!scopeName) {
       return this;
     }
-  }, {
-    key: "hasConditions",
-    get: function get() {
-      return this.preconditions.length > 0 || this.postconditions.length > 0;
+    if (!this.scopeClassName) {
+      this.scopeName = scopeName;
+      this.scopeClassName = stableHash(
+        this.sheet.name,
+        // adding the count guarantees uniqueness across style.create calls
+        scopeName + this.sheet.count
+      );
     }
-  }, {
-    key: "addScope",
-    value: function addScope(scopeName) {
-      return new _Selector(this.sheet, scopeName, {
-        preconditions: this.preconditions,
-        postconditions: this.postconditions
-      });
-    }
-  }, {
-    key: "addPrecondition",
-    value: function addPrecondition(precondition) {
-      return new _Selector(this.sheet, this.scopeClassName, {
-        postconditions: this.postconditions,
-        preconditions: this.preconditions.concat(precondition)
-      });
-    }
-  }, {
-    key: "addPostcondition",
-    value: function addPostcondition(postcondition) {
-      return new _Selector(this.sheet, this.scopeClassName, {
-        preconditions: this.preconditions,
-        postconditions: this.postconditions.concat(postcondition)
-      });
-    }
-  }, {
-    key: "createRule",
-    value: function createRule(property, value) {
-      return new Rule(this.sheet, property, value, this);
-    }
-  }]);
-}();
+    return this;
+  }
+  get hasConditions() {
+    return this.preconditions.length > 0 || this.postconditions.length > 0;
+  }
+  addScope(scopeName) {
+    return new _Selector(this.sheet, scopeName, {
+      preconditions: this.preconditions,
+      postconditions: this.postconditions
+    });
+  }
+  addPrecondition(precondition) {
+    return new _Selector(this.sheet, this.scopeClassName, {
+      postconditions: this.postconditions,
+      preconditions: this.preconditions.concat(precondition)
+    });
+  }
+  addPostcondition(postcondition) {
+    return new _Selector(this.sheet, this.scopeClassName, {
+      preconditions: this.preconditions,
+      postconditions: this.postconditions.concat(postcondition)
+    });
+  }
+  createRule(property, value) {
+    return new Rule(this.sheet, property, value, this);
+  }
+};
 
 // src/Sheet.ts
-var Sheet = /*#__PURE__*/function () {
-  function Sheet(name, rootNode) {
-    _classCallCheck(this, Sheet);
+var Sheet = class {
+  constructor(name, rootNode) {
     this.name = name;
     this.rootNode = rootNode;
     // Hash->css
@@ -402,87 +340,66 @@ var Sheet = /*#__PURE__*/function () {
     this.storedClasses = {};
     this.style = "";
     this.count = 0;
-    this.id = "flairup-".concat(name);
+    this.id = `flairup-${name}`;
     this.styleTag = this.createStyleTag();
   }
-  return _createClass(Sheet, [{
-    key: "getStyle",
-    value: function getStyle() {
-      return this.style;
+  getStyle() {
+    return this.style;
+  }
+  append(css) {
+    this.style = appendString(this.style, css);
+  }
+  apply() {
+    this.count++;
+    if (!this.styleTag) {
+      return;
     }
-  }, {
-    key: "append",
-    value: function append(css) {
-      this.style = appendString(this.style, css);
+    this.styleTag.innerHTML = this.style;
+  }
+  isApplied() {
+    return !!this.styleTag;
+  }
+  createStyleTag() {
+    if (typeof document === "undefined" || this.isApplied() || // Explicitly disallow mounting to the DOM
+    this.rootNode === null) {
+      return this.styleTag;
     }
-  }, {
-    key: "apply",
-    value: function apply() {
-      this.count++;
-      if (!this.styleTag) {
-        return;
-      }
-      this.styleTag.innerHTML = this.style;
+    const styleTag = document.createElement("style");
+    styleTag.type = "text/css";
+    styleTag.id = this.id;
+    (this.rootNode ?? document.head).appendChild(styleTag);
+    return styleTag;
+  }
+  addRule(rule) {
+    const storedClass = this.storedClasses[rule.key];
+    if (isString(storedClass)) {
+      return storedClass;
     }
-  }, {
-    key: "isApplied",
-    value: function isApplied() {
-      return !!this.styleTag;
-    }
-  }, {
-    key: "createStyleTag",
-    value: function createStyleTag() {
-      var _this$rootNode;
-      if (typeof document === "undefined" || this.isApplied() ||
-      // Explicitly disallow mounting to the DOM
-      this.rootNode === null) {
-        return this.styleTag;
-      }
-      var styleTag = document.createElement("style");
-      styleTag.type = "text/css";
-      styleTag.id = this.id;
-      ((_this$rootNode = this.rootNode) !== null && _this$rootNode !== void 0 ? _this$rootNode : document.head).appendChild(styleTag);
-      return styleTag;
-    }
-  }, {
-    key: "addRule",
-    value: function addRule(rule) {
-      var storedClass = this.storedClasses[rule.key];
-      if (isString(storedClass)) {
-        return storedClass;
-      }
-      this.storedClasses[rule.key] = rule.hash;
-      this.storedStyles[rule.hash] = [rule.property, rule.value];
-      this.append(rule.toString());
-      return rule.hash;
-    }
-  }]);
-}();
+    this.storedClasses[rule.key] = rule.hash;
+    this.storedStyles[rule.hash] = [rule.property, rule.value];
+    this.append(rule.toString());
+    return rule.hash;
+  }
+};
 
 // src/utils/forIn.ts
 function forIn(obj, fn) {
-  for (var key in obj) {
+  for (const key in obj) {
     fn(key.trim(), obj[key]);
   }
 }
 
 // src/cx.ts
-function cx() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-  var classes = args.reduce(function (classes2, arg) {
+function cx(...args) {
+  const classes = args.reduce((classes2, arg) => {
     if (arg instanceof Set) {
-      classes2.push.apply(classes2, _toConsumableArray(arg));
+      classes2.push(...arg);
     } else if (typeof arg === "string") {
       classes2.push(arg);
     } else if (Array.isArray(arg)) {
-      classes2.push(cx.apply(void 0, _toConsumableArray(arg)));
-    } else if (_typeof(arg) === "object") {
-      Object.entries(arg).forEach(function (_ref3) {
-        var _ref4 = _slicedToArray(_ref3, 2),
-          key = _ref4[0],
-          value = _ref4[1];
+      classes2.push(cx(...arg));
+    } else if (typeof arg === "object") {
+      Object.entries(arg).forEach(([key, value]) => {
         if (value) {
           classes2.push(key);
         }
@@ -495,50 +412,55 @@ function cx() {
 
 // src/index.ts
 function createSheet(name, rootNode) {
-  var sheet = new Sheet(name, rootNode);
+  const sheet = new Sheet(name, rootNode);
   return {
-    create: create,
+    create,
     getStyle: sheet.getStyle.bind(sheet),
     isApplied: sheet.isApplied.bind(sheet)
   };
   function create(styles) {
-    var scopedStyles = {};
-    iteratePreconditions(sheet, styles, new Selector(sheet)).forEach(function (_ref5) {
-      var _ref6 = _slicedToArray(_ref5, 3),
-        scopeName = _ref6[0],
-        styles2 = _ref6[1],
-        selector = _ref6[2];
-      iterateStyles(sheet, styles2, selector).forEach(function (className) {
-        addScopedStyle(scopeName, className);
-      });
-    });
+    const scopedStyles = {};
+    iteratePreconditions(sheet, styles, new Selector(sheet)).forEach(
+      ([scopeName, styles2, selector]) => {
+        iterateStyles(sheet, styles2, selector).forEach(
+          (className) => {
+            addScopedStyle(scopeName, className);
+          }
+        );
+      }
+    );
     sheet.apply();
     return scopedStyles;
     function addScopedStyle(name2, className) {
-      var _scopedStyles$name;
-      scopedStyles[name2] = (_scopedStyles$name = scopedStyles[name2]) !== null && _scopedStyles$name !== void 0 ? _scopedStyles$name : /* @__PURE__ */new Set();
+      scopedStyles[name2] = scopedStyles[name2] ?? /* @__PURE__ */ new Set();
       scopedStyles[name2].add(className);
     }
   }
 }
 function iteratePreconditions(sheet, styles, selector) {
-  var output = [];
-  forIn(styles, function (key, value) {
+  const output = [];
+  forIn(styles, (key, value) => {
     if (isStyleCondition(key)) {
-      return iteratePreconditions(sheet, value, selector.addPrecondition(key)).forEach(function (item) {
-        return output.push(item);
-      });
+      return iteratePreconditions(
+        sheet,
+        value,
+        selector.addPrecondition(key)
+      ).forEach((item) => output.push(item));
     }
     output.push([key, styles[key], selector.addScope(key)]);
   });
   return output;
 }
 function iterateStyles(sheet, styles, selector) {
-  var output = /* @__PURE__ */new Set();
-  forIn(styles, function (property, value) {
-    var res = [];
+  const output = /* @__PURE__ */ new Set();
+  forIn(styles, (property, value) => {
+    let res = [];
     if (isStyleCondition(property)) {
-      res = iterateStyles(sheet, value, selector.addPostcondition(property));
+      res = iterateStyles(
+        sheet,
+        value,
+        selector.addPostcondition(property)
+      );
     } else if (isDirectClass(property)) {
       res = asArray(value);
     } else if (isMediaQuery(property)) {
@@ -546,7 +468,7 @@ function iterateStyles(sheet, styles, selector) {
     } else if (isCssVariables(property)) {
       res = cssVariablesBlock(sheet, value, selector);
     } else if (isValidProperty(property, value)) {
-      var rule = selector.createRule(property, value);
+      const rule = selector.createRule(property, value);
       sheet.addRule(rule);
       output.add(rule.hash);
     }
@@ -555,37 +477,37 @@ function iterateStyles(sheet, styles, selector) {
   return output;
 }
 function addEachClass(list, to) {
-  list.forEach(function (className) {
-    return to.add(className);
-  });
+  list.forEach((className) => to.add(className));
   return to;
 }
 function cssVariablesBlock(sheet, styles, selector) {
-  var classes = /* @__PURE__ */new Set();
-  var chunkRows = [];
-  forIn(styles, function (property, value) {
+  const classes = /* @__PURE__ */ new Set();
+  const chunkRows = [];
+  forIn(styles, (property, value) => {
     if (isValidProperty(property, value)) {
       chunkRows.push(Rule.genRule(property, value));
       return;
     }
-    var res = iterateStyles(sheet, value !== null && value !== void 0 ? value : {}, selector);
+    const res = iterateStyles(sheet, value ?? {}, selector);
     addEachClass(res, classes);
   });
   if (!selector.scopeClassName) {
     return classes;
   }
   if (chunkRows.length) {
-    var output = chunkRows.join(" ");
-    sheet.append("".concat(mergeSelectors(selector.preconditions, {
-      right: selector.scopeClassName
-    }), " {").concat(output, "}"));
+    const output = chunkRows.join(" ");
+    sheet.append(
+      `${mergeSelectors(selector.preconditions, {
+        right: selector.scopeClassName
+      })} {${output}}`
+    );
   }
   classes.add(selector.scopeClassName);
   return classes;
 }
 function handleMediaQuery(sheet, styles, mediaQuery, selector) {
   sheet.append(mediaQuery + " {");
-  var output = iterateStyles(sheet, styles, selector);
+  const output = iterateStyles(sheet, styles, selector);
   sheet.append("}");
   return output;
 }
@@ -659,6 +581,7 @@ function _createForOfIteratorHelperLoose(o, allowArrayLike) {
   }
   throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
+
 var ClassNames;
 (function (ClassNames) {
   ClassNames["hiddenOnSearch"] = "epr-hidden-on-search";
@@ -690,6 +613,7 @@ function asSelectors() {
     return "." + c;
   }).join('');
 }
+
 var stylesheet = /*#__PURE__*/createSheet('epr', null);
 var hidden = {
   display: 'none',
@@ -704,7 +628,7 @@ var commonStyles = /*#__PURE__*/stylesheet.create({
   }, hidden)
 });
 var PickerStyleTag = /*#__PURE__*/React.memo(function PickerStyleTag() {
-  return /*#__PURE__*/React.createElement("style", {
+  return React.createElement("style", {
     suppressHydrationWarning: true,
     dangerouslySetInnerHTML: {
       __html: stylesheet.getStyle()
@@ -773,8 +697,10 @@ function compareConfig(prev, next) {
   var nextCustomEmojis = (_next$customEmojis = next.customEmojis) != null ? _next$customEmojis : [];
   return prev.open === next.open && prev.emojiVersion === next.emojiVersion && prev.reactionsDefaultOpen === next.reactionsDefaultOpen && prev.searchPlaceHolder === next.searchPlaceHolder && prev.searchPlaceholder === next.searchPlaceholder && prev.defaultSkinTone === next.defaultSkinTone && prev.skinTonesDisabled === next.skinTonesDisabled && prev.autoFocusSearch === next.autoFocusSearch && prev.emojiStyle === next.emojiStyle && prev.theme === next.theme && prev.suggestedEmojisMode === next.suggestedEmojisMode && prev.lazyLoadEmojis === next.lazyLoadEmojis && prev.className === next.className && prev.height === next.height && prev.width === next.width && prev.style === next.style && prev.searchDisabled === next.searchDisabled && prev.skinTonePickerLocation === next.skinTonePickerLocation && prevCustomEmojis.length === nextCustomEmojis.length;
 }
+
 var DEFAULT_REACTIONS = ['1f44d', '2764-fe0f', '1f603', '1f622', '1f64f', '1f44e', '1f621' // 😡
 ];
+
 var alphaNumericEmojiIndex = {};
 setTimeout(function () {
   allEmojis.reduce(function (searchIndex, emoji) {
@@ -790,6 +716,7 @@ function indexEmoji(emoji) {
     alphaNumericEmojiIndex[_char][emojiUnified(emoji)] = emoji;
   });
 }
+
 function useDebouncedState(initialValue, delay) {
   if (delay === void 0) {
     delay = 0;
@@ -812,12 +739,14 @@ function useDebouncedState(initialValue, delay) {
   }
   return [state, debouncedSetState];
 }
+
 function useIsUnicodeHidden() {
   var unicodeToHide = useUnicodeToHide();
   return function (emojiUnified) {
     return unicodeToHide.has(emojiUnified);
   };
 }
+
 function useDisallowedEmojis() {
   var DisallowedEmojisRef = React.useRef({});
   var emojiVersionConfig = useEmojiVersionConfig();
@@ -845,11 +774,13 @@ function useIsEmojiDisallowed() {
 function addedInNewerVersion(emoji, supportedLevel) {
   return addedIn(emoji) > supportedLevel;
 }
+
 function useMarkInitialLoad(dispatch) {
   React.useEffect(function () {
     dispatch(true);
   }, [dispatch]);
 }
+
 var SuggestionMode;
 (function (SuggestionMode) {
   SuggestionMode["RECENT"] = "recent";
@@ -896,6 +827,7 @@ var SkinTonePickerLocation;
   SkinTonePickerLocation["SEARCH"] = "SEARCH";
   SkinTonePickerLocation["PREVIEW"] = "PREVIEW";
 })(SkinTonePickerLocation || (SkinTonePickerLocation = {}));
+
 function PickerContextProvider(_ref) {
   var children = _ref.children;
   var disallowedEmojis = useDisallowedEmojis();
@@ -919,7 +851,7 @@ function PickerContextProvider(_ref) {
     setIsPastInitialLoad = _useState[1];
   var visibleCategoriesState = React.useState([]);
   useMarkInitialLoad(setIsPastInitialLoad);
-  return /*#__PURE__*/React.createElement(PickerContext.Provider, {
+  return React.createElement(PickerContext.Provider, {
     value: {
       activeCategoryState: activeCategoryState,
       activeSkinTone: activeSkinTone,
@@ -1027,6 +959,7 @@ function useUpdateSuggested() {
     setsuggestedUpdate(Date.now());
   }];
 }
+
 var _configByCategory;
 var categoriesOrdered = [Categories.SUGGESTED, Categories.CUSTOM, Categories.SMILEYS_PEOPLE, Categories.ANIMALS_NATURE, Categories.FOOD_DRINK, Categories.TRAVEL_PLACES, Categories.ACTIVITIES, Categories.OBJECTS, Categories.SYMBOLS, Categories.FLAGS];
 var SuggestedRecent = {
@@ -1104,6 +1037,7 @@ function getBaseConfigByCategory(category, modifier) {
   }
   return Object.assign(configByCategory[category], modifier);
 }
+
 var CDN_URL_APPLE = 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/';
 var CDN_URL_FACEBOOK = 'https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/';
 var CDN_URL_TWITTER = 'https://cdn.jsdelivr.net/npm/emoji-datasource-twitter/img/twitter/64/';
@@ -1121,7941 +1055,16817 @@ function cdnUrl(emojiStyle) {
       return CDN_URL_APPLE;
   }
 }
-var custom = [];
-var smileys_people = [{
-  n: ["grinning", "grinning face"],
-  u: "1f600",
-  a: "1.0"
-}, {
-  n: ["smiley", "smiling face with open mouth"],
-  u: "1f603",
-  a: "0.6"
-}, {
-  n: ["smile", "smiling face with open mouth and smiling eyes"],
-  u: "1f604",
-  a: "0.6"
-}, {
-  n: ["grin", "grinning face with smiling eyes"],
-  u: "1f601",
-  a: "0.6"
-}, {
-  n: ["laughing", "satisfied", "smiling face with open mouth and tightly-closed eyes"],
-  u: "1f606",
-  a: "0.6"
-}, {
-  n: ["sweat smile", "smiling face with open mouth and cold sweat"],
-  u: "1f605",
-  a: "0.6"
-}, {
-  n: ["rolling on the floor laughing"],
-  u: "1f923",
-  a: "3.0"
-}, {
-  n: ["joy", "face with tears of joy"],
-  u: "1f602",
-  a: "0.6"
-}, {
-  n: ["slightly smiling face"],
-  u: "1f642",
-  a: "1.0"
-}, {
-  n: ["upside-down face", "upside down face"],
-  u: "1f643",
-  a: "1.0"
-}, {
-  n: ["melting face"],
-  u: "1fae0",
-  a: "14.0"
-}, {
-  n: ["wink", "winking face"],
-  u: "1f609",
-  a: "0.6"
-}, {
-  n: ["blush", "smiling face with smiling eyes"],
-  u: "1f60a",
-  a: "0.6"
-}, {
-  n: ["innocent", "smiling face with halo"],
-  u: "1f607",
-  a: "1.0"
-}, {
-  n: ["smiling face with 3 hearts", "smiling face with smiling eyes and three hearts"],
-  u: "1f970",
-  a: "11.0"
-}, {
-  n: ["heart eyes", "smiling face with heart-shaped eyes"],
-  u: "1f60d",
-  a: "0.6"
-}, {
-  n: ["star-struck", "grinning face with star eyes"],
-  u: "1f929",
-  a: "5.0"
-}, {
-  n: ["kissing heart", "face throwing a kiss"],
-  u: "1f618",
-  a: "0.6"
-}, {
-  n: ["kissing", "kissing face"],
-  u: "1f617",
-  a: "1.0"
-}, {
-  n: ["relaxed", "white smiling face"],
-  u: "263a-fe0f",
-  a: "0.6"
-}, {
-  n: ["kissing closed eyes", "kissing face with closed eyes"],
-  u: "1f61a",
-  a: "0.6"
-}, {
-  n: ["kissing smiling eyes", "kissing face with smiling eyes"],
-  u: "1f619",
-  a: "1.0"
-}, {
-  n: ["smiling face with tear"],
-  u: "1f972",
-  a: "13.0"
-}, {
-  n: ["yum", "face savouring delicious food"],
-  u: "1f60b",
-  a: "0.6"
-}, {
-  n: ["stuck out tongue", "face with stuck-out tongue"],
-  u: "1f61b",
-  a: "1.0"
-}, {
-  n: ["stuck out tongue winking eye", "face with stuck-out tongue and winking eye"],
-  u: "1f61c",
-  a: "0.6"
-}, {
-  n: ["zany face", "grinning face with one large and one small eye"],
-  u: "1f92a",
-  a: "5.0"
-}, {
-  n: ["stuck out tongue closed eyes", "face with stuck-out tongue and tightly-closed eyes"],
-  u: "1f61d",
-  a: "0.6"
-}, {
-  n: ["money-mouth face", "money mouth face"],
-  u: "1f911",
-  a: "1.0"
-}, {
-  n: ["hugging face"],
-  u: "1f917",
-  a: "1.0"
-}, {
-  n: ["face with hand over mouth", "smiling face with smiling eyes and hand covering mouth"],
-  u: "1f92d",
-  a: "5.0"
-}, {
-  n: ["face with open eyes and hand over mouth"],
-  u: "1fae2",
-  a: "14.0"
-}, {
-  n: ["face with peeking eye"],
-  u: "1fae3",
-  a: "14.0"
-}, {
-  n: ["shushing face", "face with finger covering closed lips"],
-  u: "1f92b",
-  a: "5.0"
-}, {
-  n: ["thinking face"],
-  u: "1f914",
-  a: "1.0"
-}, {
-  n: ["saluting face"],
-  u: "1fae1",
-  a: "14.0"
-}, {
-  n: ["zipper-mouth face", "zipper mouth face"],
-  u: "1f910",
-  a: "1.0"
-}, {
-  n: ["face with raised eyebrow", "face with one eyebrow raised"],
-  u: "1f928",
-  a: "5.0"
-}, {
-  n: ["neutral face"],
-  u: "1f610",
-  a: "0.7"
-}, {
-  n: ["expressionless", "expressionless face"],
-  u: "1f611",
-  a: "1.0"
-}, {
-  n: ["no mouth", "face without mouth"],
-  u: "1f636",
-  a: "1.0"
-}, {
-  n: ["dotted line face"],
-  u: "1fae5",
-  a: "14.0"
-}, {
-  n: ["face in clouds"],
-  u: "1f636-200d-1f32b-fe0f",
-  a: "13.1"
-}, {
-  n: ["smirk", "smirking face"],
-  u: "1f60f",
-  a: "0.6"
-}, {
-  n: ["unamused", "unamused face"],
-  u: "1f612",
-  a: "0.6"
-}, {
-  n: ["face with rolling eyes"],
-  u: "1f644",
-  a: "1.0"
-}, {
-  n: ["grimacing", "grimacing face"],
-  u: "1f62c",
-  a: "1.0"
-}, {
-  n: ["face exhaling"],
-  u: "1f62e-200d-1f4a8",
-  a: "13.1"
-}, {
-  n: ["lying face"],
-  u: "1f925",
-  a: "3.0"
-}, {
-  n: ["shaking face"],
-  u: "1fae8",
-  a: "15.0"
-}, {
-  n: ["head shaking horizontally"],
-  u: "1f642-200d-2194-fe0f",
-  a: "15.1"
-}, {
-  n: ["head shaking vertically"],
-  u: "1f642-200d-2195-fe0f",
-  a: "15.1"
-}, {
-  n: ["relieved", "relieved face"],
-  u: "1f60c",
-  a: "0.6"
-}, {
-  n: ["pensive", "pensive face"],
-  u: "1f614",
-  a: "0.6"
-}, {
-  n: ["sleepy", "sleepy face"],
-  u: "1f62a",
-  a: "0.6"
-}, {
-  n: ["drooling face"],
-  u: "1f924",
-  a: "3.0"
-}, {
-  n: ["sleeping", "sleeping face"],
-  u: "1f634",
-  a: "1.0"
-}, {
-  n: ["mask", "face with medical mask"],
-  u: "1f637",
-  a: "0.6"
-}, {
-  n: ["face with thermometer"],
-  u: "1f912",
-  a: "1.0"
-}, {
-  n: ["face with head-bandage", "face with head bandage"],
-  u: "1f915",
-  a: "1.0"
-}, {
-  n: ["nauseated face"],
-  u: "1f922",
-  a: "3.0"
-}, {
-  n: ["face vomiting", "face with open mouth vomiting"],
-  u: "1f92e",
-  a: "5.0"
-}, {
-  n: ["sneezing face"],
-  u: "1f927",
-  a: "3.0"
-}, {
-  n: ["hot face", "overheated face"],
-  u: "1f975",
-  a: "11.0"
-}, {
-  n: ["cold face", "freezing face"],
-  u: "1f976",
-  a: "11.0"
-}, {
-  n: ["woozy face", "face with uneven eyes and wavy mouth"],
-  u: "1f974",
-  a: "11.0"
-}, {
-  n: ["dizzy face"],
-  u: "1f635",
-  a: "0.6"
-}, {
-  n: ["face with spiral eyes"],
-  u: "1f635-200d-1f4ab",
-  a: "13.1"
-}, {
-  n: ["exploding head", "shocked face with exploding head"],
-  u: "1f92f",
-  a: "5.0"
-}, {
-  n: ["face with cowboy hat"],
-  u: "1f920",
-  a: "3.0"
-}, {
-  n: ["partying face", "face with party horn and party hat"],
-  u: "1f973",
-  a: "11.0"
-}, {
-  n: ["disguised face"],
-  u: "1f978",
-  a: "13.0"
-}, {
-  n: ["sunglasses", "smiling face with sunglasses"],
-  u: "1f60e",
-  a: "1.0"
-}, {
-  n: ["nerd face"],
-  u: "1f913",
-  a: "1.0"
-}, {
-  n: ["face with monocle"],
-  u: "1f9d0",
-  a: "5.0"
-}, {
-  n: ["confused", "confused face"],
-  u: "1f615",
-  a: "1.0"
-}, {
-  n: ["face with diagonal mouth"],
-  u: "1fae4",
-  a: "14.0"
-}, {
-  n: ["worried", "worried face"],
-  u: "1f61f",
-  a: "1.0"
-}, {
-  n: ["slightly frowning face"],
-  u: "1f641",
-  a: "1.0"
-}, {
-  n: ["frowning face", "white frowning face"],
-  u: "2639-fe0f",
-  a: "0.7"
-}, {
-  n: ["open mouth", "face with open mouth"],
-  u: "1f62e",
-  a: "1.0"
-}, {
-  n: ["hushed", "hushed face"],
-  u: "1f62f",
-  a: "1.0"
-}, {
-  n: ["astonished", "astonished face"],
-  u: "1f632",
-  a: "0.6"
-}, {
-  n: ["flushed", "flushed face"],
-  u: "1f633",
-  a: "0.6"
-}, {
-  n: ["pleading face", "face with pleading eyes"],
-  u: "1f97a",
-  a: "11.0"
-}, {
-  n: ["face holding back tears"],
-  u: "1f979",
-  a: "14.0"
-}, {
-  n: ["frowning", "frowning face with open mouth"],
-  u: "1f626",
-  a: "1.0"
-}, {
-  n: ["anguished", "anguished face"],
-  u: "1f627",
-  a: "1.0"
-}, {
-  n: ["fearful", "fearful face"],
-  u: "1f628",
-  a: "0.6"
-}, {
-  n: ["cold sweat", "face with open mouth and cold sweat"],
-  u: "1f630",
-  a: "0.6"
-}, {
-  n: ["disappointed relieved", "disappointed but relieved face"],
-  u: "1f625",
-  a: "0.6"
-}, {
-  n: ["cry", "crying face"],
-  u: "1f622",
-  a: "0.6"
-}, {
-  n: ["sob", "loudly crying face"],
-  u: "1f62d",
-  a: "0.6"
-}, {
-  n: ["scream", "face screaming in fear"],
-  u: "1f631",
-  a: "0.6"
-}, {
-  n: ["confounded", "confounded face"],
-  u: "1f616",
-  a: "0.6"
-}, {
-  n: ["persevere", "persevering face"],
-  u: "1f623",
-  a: "0.6"
-}, {
-  n: ["disappointed", "disappointed face"],
-  u: "1f61e",
-  a: "0.6"
-}, {
-  n: ["sweat", "face with cold sweat"],
-  u: "1f613",
-  a: "0.6"
-}, {
-  n: ["weary", "weary face"],
-  u: "1f629",
-  a: "0.6"
-}, {
-  n: ["tired face"],
-  u: "1f62b",
-  a: "0.6"
-}, {
-  n: ["yawning face"],
-  u: "1f971",
-  a: "12.0"
-}, {
-  n: ["triumph", "face with look of triumph"],
-  u: "1f624",
-  a: "0.6"
-}, {
-  n: ["rage", "pouting face"],
-  u: "1f621",
-  a: "0.6"
-}, {
-  n: ["angry", "angry face"],
-  u: "1f620",
-  a: "0.6"
-}, {
-  n: ["face with symbols on mouth", "serious face with symbols covering mouth"],
-  u: "1f92c",
-  a: "5.0"
-}, {
-  n: ["smiling imp", "smiling face with horns"],
-  u: "1f608",
-  a: "1.0"
-}, {
-  n: ["imp"],
-  u: "1f47f",
-  a: "0.6"
-}, {
-  n: ["skull"],
-  u: "1f480",
-  a: "0.6"
-}, {
-  n: ["skull and crossbones"],
-  u: "2620-fe0f",
-  a: "1.0"
-}, {
-  n: ["poop", "shit", "hankey", "pile of poo"],
-  u: "1f4a9",
-  a: "0.6"
-}, {
-  n: ["clown face"],
-  u: "1f921",
-  a: "3.0"
-}, {
-  n: ["japanese ogre"],
-  u: "1f479",
-  a: "0.6"
-}, {
-  n: ["japanese goblin"],
-  u: "1f47a",
-  a: "0.6"
-}, {
-  n: ["ghost"],
-  u: "1f47b",
-  a: "0.6"
-}, {
-  n: ["alien", "extraterrestrial alien"],
-  u: "1f47d",
-  a: "0.6"
-}, {
-  n: ["alien monster", "space invader"],
-  u: "1f47e",
-  a: "0.6"
-}, {
-  n: ["robot face"],
-  u: "1f916",
-  a: "1.0"
-}, {
-  n: ["smiley cat", "smiling cat face with open mouth"],
-  u: "1f63a",
-  a: "0.6"
-}, {
-  n: ["smile cat", "grinning cat face with smiling eyes"],
-  u: "1f638",
-  a: "0.6"
-}, {
-  n: ["joy cat", "cat face with tears of joy"],
-  u: "1f639",
-  a: "0.6"
-}, {
-  n: ["heart eyes cat", "smiling cat face with heart-shaped eyes"],
-  u: "1f63b",
-  a: "0.6"
-}, {
-  n: ["smirk cat", "cat face with wry smile"],
-  u: "1f63c",
-  a: "0.6"
-}, {
-  n: ["kissing cat", "kissing cat face with closed eyes"],
-  u: "1f63d",
-  a: "0.6"
-}, {
-  n: ["scream cat", "weary cat face"],
-  u: "1f640",
-  a: "0.6"
-}, {
-  n: ["crying cat face"],
-  u: "1f63f",
-  a: "0.6"
-}, {
-  n: ["pouting cat", "pouting cat face"],
-  u: "1f63e",
-  a: "0.6"
-}, {
-  n: ["see no evil", "see-no-evil monkey"],
-  u: "1f648",
-  a: "0.6"
-}, {
-  n: ["hear no evil", "hear-no-evil monkey"],
-  u: "1f649",
-  a: "0.6"
-}, {
-  n: ["speak no evil", "speak-no-evil monkey"],
-  u: "1f64a",
-  a: "0.6"
-}, {
-  n: ["love letter"],
-  u: "1f48c",
-  a: "0.6"
-}, {
-  n: ["cupid", "heart with arrow"],
-  u: "1f498",
-  a: "0.6"
-}, {
-  n: ["gift heart", "heart with ribbon"],
-  u: "1f49d",
-  a: "0.6"
-}, {
-  n: ["sparkling heart"],
-  u: "1f496",
-  a: "0.6"
-}, {
-  n: ["heartpulse", "growing heart"],
-  u: "1f497",
-  a: "0.6"
-}, {
-  n: ["heartbeat", "beating heart"],
-  u: "1f493",
-  a: "0.6"
-}, {
-  n: ["revolving hearts"],
-  u: "1f49e",
-  a: "0.6"
-}, {
-  n: ["two hearts"],
-  u: "1f495",
-  a: "0.6"
-}, {
-  n: ["heart decoration"],
-  u: "1f49f",
-  a: "0.6"
-}, {
-  n: ["heart exclamation", "heavy heart exclamation mark ornament"],
-  u: "2763-fe0f",
-  a: "1.0"
-}, {
-  n: ["broken heart"],
-  u: "1f494",
-  a: "0.6"
-}, {
-  n: ["heart on fire"],
-  u: "2764-fe0f-200d-1f525",
-  a: "13.1"
-}, {
-  n: ["mending heart"],
-  u: "2764-fe0f-200d-1fa79",
-  a: "13.1"
-}, {
-  n: ["heart", "heavy black heart"],
-  u: "2764-fe0f",
-  a: "0.6"
-}, {
-  n: ["pink heart"],
-  u: "1fa77",
-  a: "15.0"
-}, {
-  n: ["orange heart"],
-  u: "1f9e1",
-  a: "5.0"
-}, {
-  n: ["yellow heart"],
-  u: "1f49b",
-  a: "0.6"
-}, {
-  n: ["green heart"],
-  u: "1f49a",
-  a: "0.6"
-}, {
-  n: ["blue heart"],
-  u: "1f499",
-  a: "0.6"
-}, {
-  n: ["light blue heart"],
-  u: "1fa75",
-  a: "15.0"
-}, {
-  n: ["purple heart"],
-  u: "1f49c",
-  a: "0.6"
-}, {
-  n: ["brown heart"],
-  u: "1f90e",
-  a: "12.0"
-}, {
-  n: ["black heart"],
-  u: "1f5a4",
-  a: "3.0"
-}, {
-  n: ["grey heart"],
-  u: "1fa76",
-  a: "15.0"
-}, {
-  n: ["white heart"],
-  u: "1f90d",
-  a: "12.0"
-}, {
-  n: ["kiss", "kiss mark"],
-  u: "1f48b",
-  a: "0.6"
-}, {
-  n: ["100", "hundred points symbol"],
-  u: "1f4af",
-  a: "0.6"
-}, {
-  n: ["anger", "anger symbol"],
-  u: "1f4a2",
-  a: "0.6"
-}, {
-  n: ["boom", "collision", "collision symbol"],
-  u: "1f4a5",
-  a: "0.6"
-}, {
-  n: ["dizzy", "dizzy symbol"],
-  u: "1f4ab",
-  a: "0.6"
-}, {
-  n: ["sweat drops", "splashing sweat symbol"],
-  u: "1f4a6",
-  a: "0.6"
-}, {
-  n: ["dash", "dash symbol"],
-  u: "1f4a8",
-  a: "0.6"
-}, {
-  n: ["hole"],
-  u: "1f573-fe0f",
-  a: "0.7"
-}, {
-  n: ["speech balloon"],
-  u: "1f4ac",
-  a: "0.6"
-}, {
-  n: ["eye in speech bubble", "eye-in-speech-bubble"],
-  u: "1f441-fe0f-200d-1f5e8-fe0f",
-  a: "2.0"
-}, {
-  n: ["left speech bubble"],
-  u: "1f5e8-fe0f",
-  a: "2.0"
-}, {
-  n: ["right anger bubble"],
-  u: "1f5ef-fe0f",
-  a: "0.7"
-}, {
-  n: ["thought balloon"],
-  u: "1f4ad",
-  a: "1.0"
-}, {
-  n: ["zzz", "sleeping symbol"],
-  u: "1f4a4",
-  a: "0.6"
-}, {
-  n: ["wave", "waving hand sign"],
-  u: "1f44b",
-  v: ["1f44b-1f3fb", "1f44b-1f3fc", "1f44b-1f3fd", "1f44b-1f3fe", "1f44b-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["raised back of hand"],
-  u: "1f91a",
-  v: ["1f91a-1f3fb", "1f91a-1f3fc", "1f91a-1f3fd", "1f91a-1f3fe", "1f91a-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["hand with fingers splayed", "raised hand with fingers splayed"],
-  u: "1f590-fe0f",
-  v: ["1f590-1f3fb", "1f590-1f3fc", "1f590-1f3fd", "1f590-1f3fe", "1f590-1f3ff"],
-  a: "0.7"
-}, {
-  n: ["hand", "raised hand"],
-  u: "270b",
-  v: ["270b-1f3fb", "270b-1f3fc", "270b-1f3fd", "270b-1f3fe", "270b-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["spock-hand", "raised hand with part between middle and ring fingers"],
-  u: "1f596",
-  v: ["1f596-1f3fb", "1f596-1f3fc", "1f596-1f3fd", "1f596-1f3fe", "1f596-1f3ff"],
-  a: "1.0"
-}, {
-  n: ["rightwards hand"],
-  u: "1faf1",
-  v: ["1faf1-1f3fb", "1faf1-1f3fc", "1faf1-1f3fd", "1faf1-1f3fe", "1faf1-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["leftwards hand"],
-  u: "1faf2",
-  v: ["1faf2-1f3fb", "1faf2-1f3fc", "1faf2-1f3fd", "1faf2-1f3fe", "1faf2-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["palm down hand"],
-  u: "1faf3",
-  v: ["1faf3-1f3fb", "1faf3-1f3fc", "1faf3-1f3fd", "1faf3-1f3fe", "1faf3-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["palm up hand"],
-  u: "1faf4",
-  v: ["1faf4-1f3fb", "1faf4-1f3fc", "1faf4-1f3fd", "1faf4-1f3fe", "1faf4-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["leftwards pushing hand"],
-  u: "1faf7",
-  v: ["1faf7-1f3fb", "1faf7-1f3fc", "1faf7-1f3fd", "1faf7-1f3fe", "1faf7-1f3ff"],
-  a: "15.0"
-}, {
-  n: ["rightwards pushing hand"],
-  u: "1faf8",
-  v: ["1faf8-1f3fb", "1faf8-1f3fc", "1faf8-1f3fd", "1faf8-1f3fe", "1faf8-1f3ff"],
-  a: "15.0"
-}, {
-  n: ["ok hand", "ok hand sign"],
-  u: "1f44c",
-  v: ["1f44c-1f3fb", "1f44c-1f3fc", "1f44c-1f3fd", "1f44c-1f3fe", "1f44c-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["pinched fingers"],
-  u: "1f90c",
-  v: ["1f90c-1f3fb", "1f90c-1f3fc", "1f90c-1f3fd", "1f90c-1f3fe", "1f90c-1f3ff"],
-  a: "13.0"
-}, {
-  n: ["pinching hand"],
-  u: "1f90f",
-  v: ["1f90f-1f3fb", "1f90f-1f3fc", "1f90f-1f3fd", "1f90f-1f3fe", "1f90f-1f3ff"],
-  a: "12.0"
-}, {
-  n: ["v", "victory hand"],
-  u: "270c-fe0f",
-  v: ["270c-1f3fb", "270c-1f3fc", "270c-1f3fd", "270c-1f3fe", "270c-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["crossed fingers", "hand with index and middle fingers crossed"],
-  u: "1f91e",
-  v: ["1f91e-1f3fb", "1f91e-1f3fc", "1f91e-1f3fd", "1f91e-1f3fe", "1f91e-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["hand with index finger and thumb crossed"],
-  u: "1faf0",
-  v: ["1faf0-1f3fb", "1faf0-1f3fc", "1faf0-1f3fd", "1faf0-1f3fe", "1faf0-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["i love you hand sign"],
-  u: "1f91f",
-  v: ["1f91f-1f3fb", "1f91f-1f3fc", "1f91f-1f3fd", "1f91f-1f3fe", "1f91f-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["the horns", "sign of the horns"],
-  u: "1f918",
-  v: ["1f918-1f3fb", "1f918-1f3fc", "1f918-1f3fd", "1f918-1f3fe", "1f918-1f3ff"],
-  a: "1.0"
-}, {
-  n: ["call me hand"],
-  u: "1f919",
-  v: ["1f919-1f3fb", "1f919-1f3fc", "1f919-1f3fd", "1f919-1f3fe", "1f919-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["point left", "white left pointing backhand index"],
-  u: "1f448",
-  v: ["1f448-1f3fb", "1f448-1f3fc", "1f448-1f3fd", "1f448-1f3fe", "1f448-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["point right", "white right pointing backhand index"],
-  u: "1f449",
-  v: ["1f449-1f3fb", "1f449-1f3fc", "1f449-1f3fd", "1f449-1f3fe", "1f449-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["point up 2", "white up pointing backhand index"],
-  u: "1f446",
-  v: ["1f446-1f3fb", "1f446-1f3fc", "1f446-1f3fd", "1f446-1f3fe", "1f446-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["middle finger", "reversed hand with middle finger extended"],
-  u: "1f595",
-  v: ["1f595-1f3fb", "1f595-1f3fc", "1f595-1f3fd", "1f595-1f3fe", "1f595-1f3ff"],
-  a: "1.0"
-}, {
-  n: ["point down", "white down pointing backhand index"],
-  u: "1f447",
-  v: ["1f447-1f3fb", "1f447-1f3fc", "1f447-1f3fd", "1f447-1f3fe", "1f447-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["point up", "white up pointing index"],
-  u: "261d-fe0f",
-  v: ["261d-1f3fb", "261d-1f3fc", "261d-1f3fd", "261d-1f3fe", "261d-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["index pointing at the viewer"],
-  u: "1faf5",
-  v: ["1faf5-1f3fb", "1faf5-1f3fc", "1faf5-1f3fd", "1faf5-1f3fe", "1faf5-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["+1", "thumbsup", "thumbs up sign"],
-  u: "1f44d",
-  v: ["1f44d-1f3fb", "1f44d-1f3fc", "1f44d-1f3fd", "1f44d-1f3fe", "1f44d-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["-1", "thumbsdown", "thumbs down sign"],
-  u: "1f44e",
-  v: ["1f44e-1f3fb", "1f44e-1f3fc", "1f44e-1f3fd", "1f44e-1f3fe", "1f44e-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["fist", "raised fist"],
-  u: "270a",
-  v: ["270a-1f3fb", "270a-1f3fc", "270a-1f3fd", "270a-1f3fe", "270a-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["punch", "facepunch", "fisted hand sign"],
-  u: "1f44a",
-  v: ["1f44a-1f3fb", "1f44a-1f3fc", "1f44a-1f3fd", "1f44a-1f3fe", "1f44a-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["left-facing fist"],
-  u: "1f91b",
-  v: ["1f91b-1f3fb", "1f91b-1f3fc", "1f91b-1f3fd", "1f91b-1f3fe", "1f91b-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["right-facing fist"],
-  u: "1f91c",
-  v: ["1f91c-1f3fb", "1f91c-1f3fc", "1f91c-1f3fd", "1f91c-1f3fe", "1f91c-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["clap", "clapping hands sign"],
-  u: "1f44f",
-  v: ["1f44f-1f3fb", "1f44f-1f3fc", "1f44f-1f3fd", "1f44f-1f3fe", "1f44f-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["raised hands", "person raising both hands in celebration"],
-  u: "1f64c",
-  v: ["1f64c-1f3fb", "1f64c-1f3fc", "1f64c-1f3fd", "1f64c-1f3fe", "1f64c-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["heart hands"],
-  u: "1faf6",
-  v: ["1faf6-1f3fb", "1faf6-1f3fc", "1faf6-1f3fd", "1faf6-1f3fe", "1faf6-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["open hands", "open hands sign"],
-  u: "1f450",
-  v: ["1f450-1f3fb", "1f450-1f3fc", "1f450-1f3fd", "1f450-1f3fe", "1f450-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["palms up together"],
-  u: "1f932",
-  v: ["1f932-1f3fb", "1f932-1f3fc", "1f932-1f3fd", "1f932-1f3fe", "1f932-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["handshake"],
-  u: "1f91d",
-  v: ["1f91d-1f3fb", "1f91d-1f3fc", "1f91d-1f3fd", "1f91d-1f3fe", "1f91d-1f3ff", "1faf1-1f3fb-200d-1faf2-1f3fc", "1faf1-1f3fb-200d-1faf2-1f3fd", "1faf1-1f3fb-200d-1faf2-1f3fe", "1faf1-1f3fb-200d-1faf2-1f3ff", "1faf1-1f3fc-200d-1faf2-1f3fb", "1faf1-1f3fc-200d-1faf2-1f3fd", "1faf1-1f3fc-200d-1faf2-1f3fe", "1faf1-1f3fc-200d-1faf2-1f3ff", "1faf1-1f3fd-200d-1faf2-1f3fb", "1faf1-1f3fd-200d-1faf2-1f3fc", "1faf1-1f3fd-200d-1faf2-1f3fe", "1faf1-1f3fd-200d-1faf2-1f3ff", "1faf1-1f3fe-200d-1faf2-1f3fb", "1faf1-1f3fe-200d-1faf2-1f3fc", "1faf1-1f3fe-200d-1faf2-1f3fd", "1faf1-1f3fe-200d-1faf2-1f3ff", "1faf1-1f3ff-200d-1faf2-1f3fb", "1faf1-1f3ff-200d-1faf2-1f3fc", "1faf1-1f3ff-200d-1faf2-1f3fd", "1faf1-1f3ff-200d-1faf2-1f3fe"],
-  a: "3.0"
-}, {
-  n: ["pray", "person with folded hands"],
-  u: "1f64f",
-  v: ["1f64f-1f3fb", "1f64f-1f3fc", "1f64f-1f3fd", "1f64f-1f3fe", "1f64f-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["writing hand"],
-  u: "270d-fe0f",
-  v: ["270d-1f3fb", "270d-1f3fc", "270d-1f3fd", "270d-1f3fe", "270d-1f3ff"],
-  a: "0.7"
-}, {
-  n: ["nail care", "nail polish"],
-  u: "1f485",
-  v: ["1f485-1f3fb", "1f485-1f3fc", "1f485-1f3fd", "1f485-1f3fe", "1f485-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["selfie"],
-  u: "1f933",
-  v: ["1f933-1f3fb", "1f933-1f3fc", "1f933-1f3fd", "1f933-1f3fe", "1f933-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["muscle", "flexed biceps"],
-  u: "1f4aa",
-  v: ["1f4aa-1f3fb", "1f4aa-1f3fc", "1f4aa-1f3fd", "1f4aa-1f3fe", "1f4aa-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["mechanical arm"],
-  u: "1f9be",
-  a: "12.0"
-}, {
-  n: ["mechanical leg"],
-  u: "1f9bf",
-  a: "12.0"
-}, {
-  n: ["leg"],
-  u: "1f9b5",
-  v: ["1f9b5-1f3fb", "1f9b5-1f3fc", "1f9b5-1f3fd", "1f9b5-1f3fe", "1f9b5-1f3ff"],
-  a: "11.0"
-}, {
-  n: ["foot"],
-  u: "1f9b6",
-  v: ["1f9b6-1f3fb", "1f9b6-1f3fc", "1f9b6-1f3fd", "1f9b6-1f3fe", "1f9b6-1f3ff"],
-  a: "11.0"
-}, {
-  n: ["ear"],
-  u: "1f442",
-  v: ["1f442-1f3fb", "1f442-1f3fc", "1f442-1f3fd", "1f442-1f3fe", "1f442-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["ear with hearing aid"],
-  u: "1f9bb",
-  v: ["1f9bb-1f3fb", "1f9bb-1f3fc", "1f9bb-1f3fd", "1f9bb-1f3fe", "1f9bb-1f3ff"],
-  a: "12.0"
-}, {
-  n: ["nose"],
-  u: "1f443",
-  v: ["1f443-1f3fb", "1f443-1f3fc", "1f443-1f3fd", "1f443-1f3fe", "1f443-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["brain"],
-  u: "1f9e0",
-  a: "5.0"
-}, {
-  n: ["anatomical heart"],
-  u: "1fac0",
-  a: "13.0"
-}, {
-  n: ["lungs"],
-  u: "1fac1",
-  a: "13.0"
-}, {
-  n: ["tooth"],
-  u: "1f9b7",
-  a: "11.0"
-}, {
-  n: ["bone"],
-  u: "1f9b4",
-  a: "11.0"
-}, {
-  n: ["eyes"],
-  u: "1f440",
-  a: "0.6"
-}, {
-  n: ["eye"],
-  u: "1f441-fe0f",
-  a: "0.7"
-}, {
-  n: ["tongue"],
-  u: "1f445",
-  a: "0.6"
-}, {
-  n: ["lips", "mouth"],
-  u: "1f444",
-  a: "0.6"
-}, {
-  n: ["biting lip"],
-  u: "1fae6",
-  a: "14.0"
-}, {
-  n: ["baby"],
-  u: "1f476",
-  v: ["1f476-1f3fb", "1f476-1f3fc", "1f476-1f3fd", "1f476-1f3fe", "1f476-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["child"],
-  u: "1f9d2",
-  v: ["1f9d2-1f3fb", "1f9d2-1f3fc", "1f9d2-1f3fd", "1f9d2-1f3fe", "1f9d2-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["boy"],
-  u: "1f466",
-  v: ["1f466-1f3fb", "1f466-1f3fc", "1f466-1f3fd", "1f466-1f3fe", "1f466-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["girl"],
-  u: "1f467",
-  v: ["1f467-1f3fb", "1f467-1f3fc", "1f467-1f3fd", "1f467-1f3fe", "1f467-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["adult"],
-  u: "1f9d1",
-  v: ["1f9d1-1f3fb", "1f9d1-1f3fc", "1f9d1-1f3fd", "1f9d1-1f3fe", "1f9d1-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["person with blond hair"],
-  u: "1f471",
-  v: ["1f471-1f3fb", "1f471-1f3fc", "1f471-1f3fd", "1f471-1f3fe", "1f471-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man"],
-  u: "1f468",
-  v: ["1f468-1f3fb", "1f468-1f3fc", "1f468-1f3fd", "1f468-1f3fe", "1f468-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["bearded person"],
-  u: "1f9d4",
-  v: ["1f9d4-1f3fb", "1f9d4-1f3fc", "1f9d4-1f3fd", "1f9d4-1f3fe", "1f9d4-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["man: beard", "man with beard"],
-  u: "1f9d4-200d-2642-fe0f",
-  v: ["1f9d4-1f3fb-200d-2642-fe0f", "1f9d4-1f3fc-200d-2642-fe0f", "1f9d4-1f3fd-200d-2642-fe0f", "1f9d4-1f3fe-200d-2642-fe0f", "1f9d4-1f3ff-200d-2642-fe0f"],
-  a: "13.1"
-}, {
-  n: ["woman: beard", "woman with beard"],
-  u: "1f9d4-200d-2640-fe0f",
-  v: ["1f9d4-1f3fb-200d-2640-fe0f", "1f9d4-1f3fc-200d-2640-fe0f", "1f9d4-1f3fd-200d-2640-fe0f", "1f9d4-1f3fe-200d-2640-fe0f", "1f9d4-1f3ff-200d-2640-fe0f"],
-  a: "13.1"
-}, {
-  n: ["man: red hair", "red haired man"],
-  u: "1f468-200d-1f9b0",
-  v: ["1f468-1f3fb-200d-1f9b0", "1f468-1f3fc-200d-1f9b0", "1f468-1f3fd-200d-1f9b0", "1f468-1f3fe-200d-1f9b0", "1f468-1f3ff-200d-1f9b0"],
-  a: "11.0"
-}, {
-  n: ["man: curly hair", "curly haired man"],
-  u: "1f468-200d-1f9b1",
-  v: ["1f468-1f3fb-200d-1f9b1", "1f468-1f3fc-200d-1f9b1", "1f468-1f3fd-200d-1f9b1", "1f468-1f3fe-200d-1f9b1", "1f468-1f3ff-200d-1f9b1"],
-  a: "11.0"
-}, {
-  n: ["man: white hair", "white haired man"],
-  u: "1f468-200d-1f9b3",
-  v: ["1f468-1f3fb-200d-1f9b3", "1f468-1f3fc-200d-1f9b3", "1f468-1f3fd-200d-1f9b3", "1f468-1f3fe-200d-1f9b3", "1f468-1f3ff-200d-1f9b3"],
-  a: "11.0"
-}, {
-  n: ["bald man", "man: bald"],
-  u: "1f468-200d-1f9b2",
-  v: ["1f468-1f3fb-200d-1f9b2", "1f468-1f3fc-200d-1f9b2", "1f468-1f3fd-200d-1f9b2", "1f468-1f3fe-200d-1f9b2", "1f468-1f3ff-200d-1f9b2"],
-  a: "11.0"
-}, {
-  n: ["woman"],
-  u: "1f469",
-  v: ["1f469-1f3fb", "1f469-1f3fc", "1f469-1f3fd", "1f469-1f3fe", "1f469-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["woman: red hair", "red haired woman"],
-  u: "1f469-200d-1f9b0",
-  v: ["1f469-1f3fb-200d-1f9b0", "1f469-1f3fc-200d-1f9b0", "1f469-1f3fd-200d-1f9b0", "1f469-1f3fe-200d-1f9b0", "1f469-1f3ff-200d-1f9b0"],
-  a: "11.0"
-}, {
-  n: ["person: red hair", "red haired person"],
-  u: "1f9d1-200d-1f9b0",
-  v: ["1f9d1-1f3fb-200d-1f9b0", "1f9d1-1f3fc-200d-1f9b0", "1f9d1-1f3fd-200d-1f9b0", "1f9d1-1f3fe-200d-1f9b0", "1f9d1-1f3ff-200d-1f9b0"],
-  a: "12.1"
-}, {
-  n: ["woman: curly hair", "curly haired woman"],
-  u: "1f469-200d-1f9b1",
-  v: ["1f469-1f3fb-200d-1f9b1", "1f469-1f3fc-200d-1f9b1", "1f469-1f3fd-200d-1f9b1", "1f469-1f3fe-200d-1f9b1", "1f469-1f3ff-200d-1f9b1"],
-  a: "11.0"
-}, {
-  n: ["person: curly hair", "curly haired person"],
-  u: "1f9d1-200d-1f9b1",
-  v: ["1f9d1-1f3fb-200d-1f9b1", "1f9d1-1f3fc-200d-1f9b1", "1f9d1-1f3fd-200d-1f9b1", "1f9d1-1f3fe-200d-1f9b1", "1f9d1-1f3ff-200d-1f9b1"],
-  a: "12.1"
-}, {
-  n: ["woman: white hair", "white haired woman"],
-  u: "1f469-200d-1f9b3",
-  v: ["1f469-1f3fb-200d-1f9b3", "1f469-1f3fc-200d-1f9b3", "1f469-1f3fd-200d-1f9b3", "1f469-1f3fe-200d-1f9b3", "1f469-1f3ff-200d-1f9b3"],
-  a: "11.0"
-}, {
-  n: ["person: white hair", "white haired person"],
-  u: "1f9d1-200d-1f9b3",
-  v: ["1f9d1-1f3fb-200d-1f9b3", "1f9d1-1f3fc-200d-1f9b3", "1f9d1-1f3fd-200d-1f9b3", "1f9d1-1f3fe-200d-1f9b3", "1f9d1-1f3ff-200d-1f9b3"],
-  a: "12.1"
-}, {
-  n: ["bald woman", "woman: bald"],
-  u: "1f469-200d-1f9b2",
-  v: ["1f469-1f3fb-200d-1f9b2", "1f469-1f3fc-200d-1f9b2", "1f469-1f3fd-200d-1f9b2", "1f469-1f3fe-200d-1f9b2", "1f469-1f3ff-200d-1f9b2"],
-  a: "11.0"
-}, {
-  n: ["bald person", "person: bald"],
-  u: "1f9d1-200d-1f9b2",
-  v: ["1f9d1-1f3fb-200d-1f9b2", "1f9d1-1f3fc-200d-1f9b2", "1f9d1-1f3fd-200d-1f9b2", "1f9d1-1f3fe-200d-1f9b2", "1f9d1-1f3ff-200d-1f9b2"],
-  a: "12.1"
-}, {
-  n: ["woman: blond hair", "blond-haired-woman"],
-  u: "1f471-200d-2640-fe0f",
-  v: ["1f471-1f3fb-200d-2640-fe0f", "1f471-1f3fc-200d-2640-fe0f", "1f471-1f3fd-200d-2640-fe0f", "1f471-1f3fe-200d-2640-fe0f", "1f471-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["man: blond hair", "blond-haired-man"],
-  u: "1f471-200d-2642-fe0f",
-  v: ["1f471-1f3fb-200d-2642-fe0f", "1f471-1f3fc-200d-2642-fe0f", "1f471-1f3fd-200d-2642-fe0f", "1f471-1f3fe-200d-2642-fe0f", "1f471-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["older adult"],
-  u: "1f9d3",
-  v: ["1f9d3-1f3fb", "1f9d3-1f3fc", "1f9d3-1f3fd", "1f9d3-1f3fe", "1f9d3-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["older man"],
-  u: "1f474",
-  v: ["1f474-1f3fb", "1f474-1f3fc", "1f474-1f3fd", "1f474-1f3fe", "1f474-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["older woman"],
-  u: "1f475",
-  v: ["1f475-1f3fb", "1f475-1f3fc", "1f475-1f3fd", "1f475-1f3fe", "1f475-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["person frowning"],
-  u: "1f64d",
-  v: ["1f64d-1f3fb", "1f64d-1f3fc", "1f64d-1f3fd", "1f64d-1f3fe", "1f64d-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man frowning", "man-frowning"],
-  u: "1f64d-200d-2642-fe0f",
-  v: ["1f64d-1f3fb-200d-2642-fe0f", "1f64d-1f3fc-200d-2642-fe0f", "1f64d-1f3fd-200d-2642-fe0f", "1f64d-1f3fe-200d-2642-fe0f", "1f64d-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman frowning", "woman-frowning"],
-  u: "1f64d-200d-2640-fe0f",
-  v: ["1f64d-1f3fb-200d-2640-fe0f", "1f64d-1f3fc-200d-2640-fe0f", "1f64d-1f3fd-200d-2640-fe0f", "1f64d-1f3fe-200d-2640-fe0f", "1f64d-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["person with pouting face"],
-  u: "1f64e",
-  v: ["1f64e-1f3fb", "1f64e-1f3fc", "1f64e-1f3fd", "1f64e-1f3fe", "1f64e-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man pouting", "man-pouting"],
-  u: "1f64e-200d-2642-fe0f",
-  v: ["1f64e-1f3fb-200d-2642-fe0f", "1f64e-1f3fc-200d-2642-fe0f", "1f64e-1f3fd-200d-2642-fe0f", "1f64e-1f3fe-200d-2642-fe0f", "1f64e-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman pouting", "woman-pouting"],
-  u: "1f64e-200d-2640-fe0f",
-  v: ["1f64e-1f3fb-200d-2640-fe0f", "1f64e-1f3fc-200d-2640-fe0f", "1f64e-1f3fd-200d-2640-fe0f", "1f64e-1f3fe-200d-2640-fe0f", "1f64e-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["no good", "face with no good gesture"],
-  u: "1f645",
-  v: ["1f645-1f3fb", "1f645-1f3fc", "1f645-1f3fd", "1f645-1f3fe", "1f645-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man gesturing no", "man-gesturing-no"],
-  u: "1f645-200d-2642-fe0f",
-  v: ["1f645-1f3fb-200d-2642-fe0f", "1f645-1f3fc-200d-2642-fe0f", "1f645-1f3fd-200d-2642-fe0f", "1f645-1f3fe-200d-2642-fe0f", "1f645-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman gesturing no", "woman-gesturing-no"],
-  u: "1f645-200d-2640-fe0f",
-  v: ["1f645-1f3fb-200d-2640-fe0f", "1f645-1f3fc-200d-2640-fe0f", "1f645-1f3fd-200d-2640-fe0f", "1f645-1f3fe-200d-2640-fe0f", "1f645-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["ok woman", "face with ok gesture"],
-  u: "1f646",
-  v: ["1f646-1f3fb", "1f646-1f3fc", "1f646-1f3fd", "1f646-1f3fe", "1f646-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man gesturing ok", "man-gesturing-ok"],
-  u: "1f646-200d-2642-fe0f",
-  v: ["1f646-1f3fb-200d-2642-fe0f", "1f646-1f3fc-200d-2642-fe0f", "1f646-1f3fd-200d-2642-fe0f", "1f646-1f3fe-200d-2642-fe0f", "1f646-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman gesturing ok", "woman-gesturing-ok"],
-  u: "1f646-200d-2640-fe0f",
-  v: ["1f646-1f3fb-200d-2640-fe0f", "1f646-1f3fc-200d-2640-fe0f", "1f646-1f3fd-200d-2640-fe0f", "1f646-1f3fe-200d-2640-fe0f", "1f646-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["information desk person"],
-  u: "1f481",
-  v: ["1f481-1f3fb", "1f481-1f3fc", "1f481-1f3fd", "1f481-1f3fe", "1f481-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man tipping hand", "man-tipping-hand"],
-  u: "1f481-200d-2642-fe0f",
-  v: ["1f481-1f3fb-200d-2642-fe0f", "1f481-1f3fc-200d-2642-fe0f", "1f481-1f3fd-200d-2642-fe0f", "1f481-1f3fe-200d-2642-fe0f", "1f481-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman tipping hand", "woman-tipping-hand"],
-  u: "1f481-200d-2640-fe0f",
-  v: ["1f481-1f3fb-200d-2640-fe0f", "1f481-1f3fc-200d-2640-fe0f", "1f481-1f3fd-200d-2640-fe0f", "1f481-1f3fe-200d-2640-fe0f", "1f481-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["raising hand", "happy person raising one hand"],
-  u: "1f64b",
-  v: ["1f64b-1f3fb", "1f64b-1f3fc", "1f64b-1f3fd", "1f64b-1f3fe", "1f64b-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man raising hand", "man-raising-hand"],
-  u: "1f64b-200d-2642-fe0f",
-  v: ["1f64b-1f3fb-200d-2642-fe0f", "1f64b-1f3fc-200d-2642-fe0f", "1f64b-1f3fd-200d-2642-fe0f", "1f64b-1f3fe-200d-2642-fe0f", "1f64b-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman raising hand", "woman-raising-hand"],
-  u: "1f64b-200d-2640-fe0f",
-  v: ["1f64b-1f3fb-200d-2640-fe0f", "1f64b-1f3fc-200d-2640-fe0f", "1f64b-1f3fd-200d-2640-fe0f", "1f64b-1f3fe-200d-2640-fe0f", "1f64b-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["deaf person"],
-  u: "1f9cf",
-  v: ["1f9cf-1f3fb", "1f9cf-1f3fc", "1f9cf-1f3fd", "1f9cf-1f3fe", "1f9cf-1f3ff"],
-  a: "12.0"
-}, {
-  n: ["deaf man"],
-  u: "1f9cf-200d-2642-fe0f",
-  v: ["1f9cf-1f3fb-200d-2642-fe0f", "1f9cf-1f3fc-200d-2642-fe0f", "1f9cf-1f3fd-200d-2642-fe0f", "1f9cf-1f3fe-200d-2642-fe0f", "1f9cf-1f3ff-200d-2642-fe0f"],
-  a: "12.0"
-}, {
-  n: ["deaf woman"],
-  u: "1f9cf-200d-2640-fe0f",
-  v: ["1f9cf-1f3fb-200d-2640-fe0f", "1f9cf-1f3fc-200d-2640-fe0f", "1f9cf-1f3fd-200d-2640-fe0f", "1f9cf-1f3fe-200d-2640-fe0f", "1f9cf-1f3ff-200d-2640-fe0f"],
-  a: "12.0"
-}, {
-  n: ["bow", "person bowing deeply"],
-  u: "1f647",
-  v: ["1f647-1f3fb", "1f647-1f3fc", "1f647-1f3fd", "1f647-1f3fe", "1f647-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man bowing", "man-bowing"],
-  u: "1f647-200d-2642-fe0f",
-  v: ["1f647-1f3fb-200d-2642-fe0f", "1f647-1f3fc-200d-2642-fe0f", "1f647-1f3fd-200d-2642-fe0f", "1f647-1f3fe-200d-2642-fe0f", "1f647-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman bowing", "woman-bowing"],
-  u: "1f647-200d-2640-fe0f",
-  v: ["1f647-1f3fb-200d-2640-fe0f", "1f647-1f3fc-200d-2640-fe0f", "1f647-1f3fd-200d-2640-fe0f", "1f647-1f3fe-200d-2640-fe0f", "1f647-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["face palm"],
-  u: "1f926",
-  v: ["1f926-1f3fb", "1f926-1f3fc", "1f926-1f3fd", "1f926-1f3fe", "1f926-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["man facepalming", "man-facepalming"],
-  u: "1f926-200d-2642-fe0f",
-  v: ["1f926-1f3fb-200d-2642-fe0f", "1f926-1f3fc-200d-2642-fe0f", "1f926-1f3fd-200d-2642-fe0f", "1f926-1f3fe-200d-2642-fe0f", "1f926-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman facepalming", "woman-facepalming"],
-  u: "1f926-200d-2640-fe0f",
-  v: ["1f926-1f3fb-200d-2640-fe0f", "1f926-1f3fc-200d-2640-fe0f", "1f926-1f3fd-200d-2640-fe0f", "1f926-1f3fe-200d-2640-fe0f", "1f926-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["shrug"],
-  u: "1f937",
-  v: ["1f937-1f3fb", "1f937-1f3fc", "1f937-1f3fd", "1f937-1f3fe", "1f937-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["man shrugging", "man-shrugging"],
-  u: "1f937-200d-2642-fe0f",
-  v: ["1f937-1f3fb-200d-2642-fe0f", "1f937-1f3fc-200d-2642-fe0f", "1f937-1f3fd-200d-2642-fe0f", "1f937-1f3fe-200d-2642-fe0f", "1f937-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman shrugging", "woman-shrugging"],
-  u: "1f937-200d-2640-fe0f",
-  v: ["1f937-1f3fb-200d-2640-fe0f", "1f937-1f3fc-200d-2640-fe0f", "1f937-1f3fd-200d-2640-fe0f", "1f937-1f3fe-200d-2640-fe0f", "1f937-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["health worker"],
-  u: "1f9d1-200d-2695-fe0f",
-  v: ["1f9d1-1f3fb-200d-2695-fe0f", "1f9d1-1f3fc-200d-2695-fe0f", "1f9d1-1f3fd-200d-2695-fe0f", "1f9d1-1f3fe-200d-2695-fe0f", "1f9d1-1f3ff-200d-2695-fe0f"],
-  a: "12.1"
-}, {
-  n: ["male-doctor", "man health worker"],
-  u: "1f468-200d-2695-fe0f",
-  v: ["1f468-1f3fb-200d-2695-fe0f", "1f468-1f3fc-200d-2695-fe0f", "1f468-1f3fd-200d-2695-fe0f", "1f468-1f3fe-200d-2695-fe0f", "1f468-1f3ff-200d-2695-fe0f"],
-  a: "4.0"
-}, {
-  n: ["female-doctor", "woman health worker"],
-  u: "1f469-200d-2695-fe0f",
-  v: ["1f469-1f3fb-200d-2695-fe0f", "1f469-1f3fc-200d-2695-fe0f", "1f469-1f3fd-200d-2695-fe0f", "1f469-1f3fe-200d-2695-fe0f", "1f469-1f3ff-200d-2695-fe0f"],
-  a: "4.0"
-}, {
-  n: ["student"],
-  u: "1f9d1-200d-1f393",
-  v: ["1f9d1-1f3fb-200d-1f393", "1f9d1-1f3fc-200d-1f393", "1f9d1-1f3fd-200d-1f393", "1f9d1-1f3fe-200d-1f393", "1f9d1-1f3ff-200d-1f393"],
-  a: "12.1"
-}, {
-  n: ["man student", "male-student"],
-  u: "1f468-200d-1f393",
-  v: ["1f468-1f3fb-200d-1f393", "1f468-1f3fc-200d-1f393", "1f468-1f3fd-200d-1f393", "1f468-1f3fe-200d-1f393", "1f468-1f3ff-200d-1f393"],
-  a: "4.0"
-}, {
-  n: ["woman student", "female-student"],
-  u: "1f469-200d-1f393",
-  v: ["1f469-1f3fb-200d-1f393", "1f469-1f3fc-200d-1f393", "1f469-1f3fd-200d-1f393", "1f469-1f3fe-200d-1f393", "1f469-1f3ff-200d-1f393"],
-  a: "4.0"
-}, {
-  n: ["teacher"],
-  u: "1f9d1-200d-1f3eb",
-  v: ["1f9d1-1f3fb-200d-1f3eb", "1f9d1-1f3fc-200d-1f3eb", "1f9d1-1f3fd-200d-1f3eb", "1f9d1-1f3fe-200d-1f3eb", "1f9d1-1f3ff-200d-1f3eb"],
-  a: "12.1"
-}, {
-  n: ["man teacher", "male-teacher"],
-  u: "1f468-200d-1f3eb",
-  v: ["1f468-1f3fb-200d-1f3eb", "1f468-1f3fc-200d-1f3eb", "1f468-1f3fd-200d-1f3eb", "1f468-1f3fe-200d-1f3eb", "1f468-1f3ff-200d-1f3eb"],
-  a: "4.0"
-}, {
-  n: ["woman teacher", "female-teacher"],
-  u: "1f469-200d-1f3eb",
-  v: ["1f469-1f3fb-200d-1f3eb", "1f469-1f3fc-200d-1f3eb", "1f469-1f3fd-200d-1f3eb", "1f469-1f3fe-200d-1f3eb", "1f469-1f3ff-200d-1f3eb"],
-  a: "4.0"
-}, {
-  n: ["judge"],
-  u: "1f9d1-200d-2696-fe0f",
-  v: ["1f9d1-1f3fb-200d-2696-fe0f", "1f9d1-1f3fc-200d-2696-fe0f", "1f9d1-1f3fd-200d-2696-fe0f", "1f9d1-1f3fe-200d-2696-fe0f", "1f9d1-1f3ff-200d-2696-fe0f"],
-  a: "12.1"
-}, {
-  n: ["man judge", "male-judge"],
-  u: "1f468-200d-2696-fe0f",
-  v: ["1f468-1f3fb-200d-2696-fe0f", "1f468-1f3fc-200d-2696-fe0f", "1f468-1f3fd-200d-2696-fe0f", "1f468-1f3fe-200d-2696-fe0f", "1f468-1f3ff-200d-2696-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman judge", "female-judge"],
-  u: "1f469-200d-2696-fe0f",
-  v: ["1f469-1f3fb-200d-2696-fe0f", "1f469-1f3fc-200d-2696-fe0f", "1f469-1f3fd-200d-2696-fe0f", "1f469-1f3fe-200d-2696-fe0f", "1f469-1f3ff-200d-2696-fe0f"],
-  a: "4.0"
-}, {
-  n: ["farmer"],
-  u: "1f9d1-200d-1f33e",
-  v: ["1f9d1-1f3fb-200d-1f33e", "1f9d1-1f3fc-200d-1f33e", "1f9d1-1f3fd-200d-1f33e", "1f9d1-1f3fe-200d-1f33e", "1f9d1-1f3ff-200d-1f33e"],
-  a: "12.1"
-}, {
-  n: ["man farmer", "male-farmer"],
-  u: "1f468-200d-1f33e",
-  v: ["1f468-1f3fb-200d-1f33e", "1f468-1f3fc-200d-1f33e", "1f468-1f3fd-200d-1f33e", "1f468-1f3fe-200d-1f33e", "1f468-1f3ff-200d-1f33e"],
-  a: "4.0"
-}, {
-  n: ["woman farmer", "female-farmer"],
-  u: "1f469-200d-1f33e",
-  v: ["1f469-1f3fb-200d-1f33e", "1f469-1f3fc-200d-1f33e", "1f469-1f3fd-200d-1f33e", "1f469-1f3fe-200d-1f33e", "1f469-1f3ff-200d-1f33e"],
-  a: "4.0"
-}, {
-  n: ["cook"],
-  u: "1f9d1-200d-1f373",
-  v: ["1f9d1-1f3fb-200d-1f373", "1f9d1-1f3fc-200d-1f373", "1f9d1-1f3fd-200d-1f373", "1f9d1-1f3fe-200d-1f373", "1f9d1-1f3ff-200d-1f373"],
-  a: "12.1"
-}, {
-  n: ["man cook", "male-cook"],
-  u: "1f468-200d-1f373",
-  v: ["1f468-1f3fb-200d-1f373", "1f468-1f3fc-200d-1f373", "1f468-1f3fd-200d-1f373", "1f468-1f3fe-200d-1f373", "1f468-1f3ff-200d-1f373"],
-  a: "4.0"
-}, {
-  n: ["woman cook", "female-cook"],
-  u: "1f469-200d-1f373",
-  v: ["1f469-1f3fb-200d-1f373", "1f469-1f3fc-200d-1f373", "1f469-1f3fd-200d-1f373", "1f469-1f3fe-200d-1f373", "1f469-1f3ff-200d-1f373"],
-  a: "4.0"
-}, {
-  n: ["mechanic"],
-  u: "1f9d1-200d-1f527",
-  v: ["1f9d1-1f3fb-200d-1f527", "1f9d1-1f3fc-200d-1f527", "1f9d1-1f3fd-200d-1f527", "1f9d1-1f3fe-200d-1f527", "1f9d1-1f3ff-200d-1f527"],
-  a: "12.1"
-}, {
-  n: ["man mechanic", "male-mechanic"],
-  u: "1f468-200d-1f527",
-  v: ["1f468-1f3fb-200d-1f527", "1f468-1f3fc-200d-1f527", "1f468-1f3fd-200d-1f527", "1f468-1f3fe-200d-1f527", "1f468-1f3ff-200d-1f527"],
-  a: "4.0"
-}, {
-  n: ["woman mechanic", "female-mechanic"],
-  u: "1f469-200d-1f527",
-  v: ["1f469-1f3fb-200d-1f527", "1f469-1f3fc-200d-1f527", "1f469-1f3fd-200d-1f527", "1f469-1f3fe-200d-1f527", "1f469-1f3ff-200d-1f527"],
-  a: "4.0"
-}, {
-  n: ["factory worker"],
-  u: "1f9d1-200d-1f3ed",
-  v: ["1f9d1-1f3fb-200d-1f3ed", "1f9d1-1f3fc-200d-1f3ed", "1f9d1-1f3fd-200d-1f3ed", "1f9d1-1f3fe-200d-1f3ed", "1f9d1-1f3ff-200d-1f3ed"],
-  a: "12.1"
-}, {
-  n: ["man factory worker", "male-factory-worker"],
-  u: "1f468-200d-1f3ed",
-  v: ["1f468-1f3fb-200d-1f3ed", "1f468-1f3fc-200d-1f3ed", "1f468-1f3fd-200d-1f3ed", "1f468-1f3fe-200d-1f3ed", "1f468-1f3ff-200d-1f3ed"],
-  a: "4.0"
-}, {
-  n: ["woman factory worker", "female-factory-worker"],
-  u: "1f469-200d-1f3ed",
-  v: ["1f469-1f3fb-200d-1f3ed", "1f469-1f3fc-200d-1f3ed", "1f469-1f3fd-200d-1f3ed", "1f469-1f3fe-200d-1f3ed", "1f469-1f3ff-200d-1f3ed"],
-  a: "4.0"
-}, {
-  n: ["office worker"],
-  u: "1f9d1-200d-1f4bc",
-  v: ["1f9d1-1f3fb-200d-1f4bc", "1f9d1-1f3fc-200d-1f4bc", "1f9d1-1f3fd-200d-1f4bc", "1f9d1-1f3fe-200d-1f4bc", "1f9d1-1f3ff-200d-1f4bc"],
-  a: "12.1"
-}, {
-  n: ["man office worker", "male-office-worker"],
-  u: "1f468-200d-1f4bc",
-  v: ["1f468-1f3fb-200d-1f4bc", "1f468-1f3fc-200d-1f4bc", "1f468-1f3fd-200d-1f4bc", "1f468-1f3fe-200d-1f4bc", "1f468-1f3ff-200d-1f4bc"],
-  a: "4.0"
-}, {
-  n: ["woman office worker", "female-office-worker"],
-  u: "1f469-200d-1f4bc",
-  v: ["1f469-1f3fb-200d-1f4bc", "1f469-1f3fc-200d-1f4bc", "1f469-1f3fd-200d-1f4bc", "1f469-1f3fe-200d-1f4bc", "1f469-1f3ff-200d-1f4bc"],
-  a: "4.0"
-}, {
-  n: ["scientist"],
-  u: "1f9d1-200d-1f52c",
-  v: ["1f9d1-1f3fb-200d-1f52c", "1f9d1-1f3fc-200d-1f52c", "1f9d1-1f3fd-200d-1f52c", "1f9d1-1f3fe-200d-1f52c", "1f9d1-1f3ff-200d-1f52c"],
-  a: "12.1"
-}, {
-  n: ["man scientist", "male-scientist"],
-  u: "1f468-200d-1f52c",
-  v: ["1f468-1f3fb-200d-1f52c", "1f468-1f3fc-200d-1f52c", "1f468-1f3fd-200d-1f52c", "1f468-1f3fe-200d-1f52c", "1f468-1f3ff-200d-1f52c"],
-  a: "4.0"
-}, {
-  n: ["woman scientist", "female-scientist"],
-  u: "1f469-200d-1f52c",
-  v: ["1f469-1f3fb-200d-1f52c", "1f469-1f3fc-200d-1f52c", "1f469-1f3fd-200d-1f52c", "1f469-1f3fe-200d-1f52c", "1f469-1f3ff-200d-1f52c"],
-  a: "4.0"
-}, {
-  n: ["technologist"],
-  u: "1f9d1-200d-1f4bb",
-  v: ["1f9d1-1f3fb-200d-1f4bb", "1f9d1-1f3fc-200d-1f4bb", "1f9d1-1f3fd-200d-1f4bb", "1f9d1-1f3fe-200d-1f4bb", "1f9d1-1f3ff-200d-1f4bb"],
-  a: "12.1"
-}, {
-  n: ["man technologist", "male-technologist"],
-  u: "1f468-200d-1f4bb",
-  v: ["1f468-1f3fb-200d-1f4bb", "1f468-1f3fc-200d-1f4bb", "1f468-1f3fd-200d-1f4bb", "1f468-1f3fe-200d-1f4bb", "1f468-1f3ff-200d-1f4bb"],
-  a: "4.0"
-}, {
-  n: ["woman technologist", "female-technologist"],
-  u: "1f469-200d-1f4bb",
-  v: ["1f469-1f3fb-200d-1f4bb", "1f469-1f3fc-200d-1f4bb", "1f469-1f3fd-200d-1f4bb", "1f469-1f3fe-200d-1f4bb", "1f469-1f3ff-200d-1f4bb"],
-  a: "4.0"
-}, {
-  n: ["singer"],
-  u: "1f9d1-200d-1f3a4",
-  v: ["1f9d1-1f3fb-200d-1f3a4", "1f9d1-1f3fc-200d-1f3a4", "1f9d1-1f3fd-200d-1f3a4", "1f9d1-1f3fe-200d-1f3a4", "1f9d1-1f3ff-200d-1f3a4"],
-  a: "12.1"
-}, {
-  n: ["man singer", "male-singer"],
-  u: "1f468-200d-1f3a4",
-  v: ["1f468-1f3fb-200d-1f3a4", "1f468-1f3fc-200d-1f3a4", "1f468-1f3fd-200d-1f3a4", "1f468-1f3fe-200d-1f3a4", "1f468-1f3ff-200d-1f3a4"],
-  a: "4.0"
-}, {
-  n: ["woman singer", "female-singer"],
-  u: "1f469-200d-1f3a4",
-  v: ["1f469-1f3fb-200d-1f3a4", "1f469-1f3fc-200d-1f3a4", "1f469-1f3fd-200d-1f3a4", "1f469-1f3fe-200d-1f3a4", "1f469-1f3ff-200d-1f3a4"],
-  a: "4.0"
-}, {
-  n: ["artist"],
-  u: "1f9d1-200d-1f3a8",
-  v: ["1f9d1-1f3fb-200d-1f3a8", "1f9d1-1f3fc-200d-1f3a8", "1f9d1-1f3fd-200d-1f3a8", "1f9d1-1f3fe-200d-1f3a8", "1f9d1-1f3ff-200d-1f3a8"],
-  a: "12.1"
-}, {
-  n: ["man artist", "male-artist"],
-  u: "1f468-200d-1f3a8",
-  v: ["1f468-1f3fb-200d-1f3a8", "1f468-1f3fc-200d-1f3a8", "1f468-1f3fd-200d-1f3a8", "1f468-1f3fe-200d-1f3a8", "1f468-1f3ff-200d-1f3a8"],
-  a: "4.0"
-}, {
-  n: ["woman artist", "female-artist"],
-  u: "1f469-200d-1f3a8",
-  v: ["1f469-1f3fb-200d-1f3a8", "1f469-1f3fc-200d-1f3a8", "1f469-1f3fd-200d-1f3a8", "1f469-1f3fe-200d-1f3a8", "1f469-1f3ff-200d-1f3a8"],
-  a: "4.0"
-}, {
-  n: ["pilot"],
-  u: "1f9d1-200d-2708-fe0f",
-  v: ["1f9d1-1f3fb-200d-2708-fe0f", "1f9d1-1f3fc-200d-2708-fe0f", "1f9d1-1f3fd-200d-2708-fe0f", "1f9d1-1f3fe-200d-2708-fe0f", "1f9d1-1f3ff-200d-2708-fe0f"],
-  a: "12.1"
-}, {
-  n: ["man pilot", "male-pilot"],
-  u: "1f468-200d-2708-fe0f",
-  v: ["1f468-1f3fb-200d-2708-fe0f", "1f468-1f3fc-200d-2708-fe0f", "1f468-1f3fd-200d-2708-fe0f", "1f468-1f3fe-200d-2708-fe0f", "1f468-1f3ff-200d-2708-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman pilot", "female-pilot"],
-  u: "1f469-200d-2708-fe0f",
-  v: ["1f469-1f3fb-200d-2708-fe0f", "1f469-1f3fc-200d-2708-fe0f", "1f469-1f3fd-200d-2708-fe0f", "1f469-1f3fe-200d-2708-fe0f", "1f469-1f3ff-200d-2708-fe0f"],
-  a: "4.0"
-}, {
-  n: ["astronaut"],
-  u: "1f9d1-200d-1f680",
-  v: ["1f9d1-1f3fb-200d-1f680", "1f9d1-1f3fc-200d-1f680", "1f9d1-1f3fd-200d-1f680", "1f9d1-1f3fe-200d-1f680", "1f9d1-1f3ff-200d-1f680"],
-  a: "12.1"
-}, {
-  n: ["man astronaut", "male-astronaut"],
-  u: "1f468-200d-1f680",
-  v: ["1f468-1f3fb-200d-1f680", "1f468-1f3fc-200d-1f680", "1f468-1f3fd-200d-1f680", "1f468-1f3fe-200d-1f680", "1f468-1f3ff-200d-1f680"],
-  a: "4.0"
-}, {
-  n: ["woman astronaut", "female-astronaut"],
-  u: "1f469-200d-1f680",
-  v: ["1f469-1f3fb-200d-1f680", "1f469-1f3fc-200d-1f680", "1f469-1f3fd-200d-1f680", "1f469-1f3fe-200d-1f680", "1f469-1f3ff-200d-1f680"],
-  a: "4.0"
-}, {
-  n: ["firefighter"],
-  u: "1f9d1-200d-1f692",
-  v: ["1f9d1-1f3fb-200d-1f692", "1f9d1-1f3fc-200d-1f692", "1f9d1-1f3fd-200d-1f692", "1f9d1-1f3fe-200d-1f692", "1f9d1-1f3ff-200d-1f692"],
-  a: "12.1"
-}, {
-  n: ["man firefighter", "male-firefighter"],
-  u: "1f468-200d-1f692",
-  v: ["1f468-1f3fb-200d-1f692", "1f468-1f3fc-200d-1f692", "1f468-1f3fd-200d-1f692", "1f468-1f3fe-200d-1f692", "1f468-1f3ff-200d-1f692"],
-  a: "4.0"
-}, {
-  n: ["woman firefighter", "female-firefighter"],
-  u: "1f469-200d-1f692",
-  v: ["1f469-1f3fb-200d-1f692", "1f469-1f3fc-200d-1f692", "1f469-1f3fd-200d-1f692", "1f469-1f3fe-200d-1f692", "1f469-1f3ff-200d-1f692"],
-  a: "4.0"
-}, {
-  n: ["cop", "police officer"],
-  u: "1f46e",
-  v: ["1f46e-1f3fb", "1f46e-1f3fc", "1f46e-1f3fd", "1f46e-1f3fe", "1f46e-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man police officer", "male-police-officer"],
-  u: "1f46e-200d-2642-fe0f",
-  v: ["1f46e-1f3fb-200d-2642-fe0f", "1f46e-1f3fc-200d-2642-fe0f", "1f46e-1f3fd-200d-2642-fe0f", "1f46e-1f3fe-200d-2642-fe0f", "1f46e-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman police officer", "female-police-officer"],
-  u: "1f46e-200d-2640-fe0f",
-  v: ["1f46e-1f3fb-200d-2640-fe0f", "1f46e-1f3fc-200d-2640-fe0f", "1f46e-1f3fd-200d-2640-fe0f", "1f46e-1f3fe-200d-2640-fe0f", "1f46e-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["detective", "sleuth or spy"],
-  u: "1f575-fe0f",
-  v: ["1f575-1f3fb", "1f575-1f3fc", "1f575-1f3fd", "1f575-1f3fe", "1f575-1f3ff"],
-  a: "0.7"
-}, {
-  n: ["man detective", "male-detective"],
-  u: "1f575-fe0f-200d-2642-fe0f",
-  v: ["1f575-1f3fb-200d-2642-fe0f", "1f575-1f3fc-200d-2642-fe0f", "1f575-1f3fd-200d-2642-fe0f", "1f575-1f3fe-200d-2642-fe0f", "1f575-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman detective", "female-detective"],
-  u: "1f575-fe0f-200d-2640-fe0f",
-  v: ["1f575-1f3fb-200d-2640-fe0f", "1f575-1f3fc-200d-2640-fe0f", "1f575-1f3fd-200d-2640-fe0f", "1f575-1f3fe-200d-2640-fe0f", "1f575-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["guardsman"],
-  u: "1f482",
-  v: ["1f482-1f3fb", "1f482-1f3fc", "1f482-1f3fd", "1f482-1f3fe", "1f482-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man guard", "male-guard"],
-  u: "1f482-200d-2642-fe0f",
-  v: ["1f482-1f3fb-200d-2642-fe0f", "1f482-1f3fc-200d-2642-fe0f", "1f482-1f3fd-200d-2642-fe0f", "1f482-1f3fe-200d-2642-fe0f", "1f482-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman guard", "female-guard"],
-  u: "1f482-200d-2640-fe0f",
-  v: ["1f482-1f3fb-200d-2640-fe0f", "1f482-1f3fc-200d-2640-fe0f", "1f482-1f3fd-200d-2640-fe0f", "1f482-1f3fe-200d-2640-fe0f", "1f482-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["ninja"],
-  u: "1f977",
-  v: ["1f977-1f3fb", "1f977-1f3fc", "1f977-1f3fd", "1f977-1f3fe", "1f977-1f3ff"],
-  a: "13.0"
-}, {
-  n: ["construction worker"],
-  u: "1f477",
-  v: ["1f477-1f3fb", "1f477-1f3fc", "1f477-1f3fd", "1f477-1f3fe", "1f477-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man construction worker", "male-construction-worker"],
-  u: "1f477-200d-2642-fe0f",
-  v: ["1f477-1f3fb-200d-2642-fe0f", "1f477-1f3fc-200d-2642-fe0f", "1f477-1f3fd-200d-2642-fe0f", "1f477-1f3fe-200d-2642-fe0f", "1f477-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman construction worker", "female-construction-worker"],
-  u: "1f477-200d-2640-fe0f",
-  v: ["1f477-1f3fb-200d-2640-fe0f", "1f477-1f3fc-200d-2640-fe0f", "1f477-1f3fd-200d-2640-fe0f", "1f477-1f3fe-200d-2640-fe0f", "1f477-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["person with crown"],
-  u: "1fac5",
-  v: ["1fac5-1f3fb", "1fac5-1f3fc", "1fac5-1f3fd", "1fac5-1f3fe", "1fac5-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["prince"],
-  u: "1f934",
-  v: ["1f934-1f3fb", "1f934-1f3fc", "1f934-1f3fd", "1f934-1f3fe", "1f934-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["princess"],
-  u: "1f478",
-  v: ["1f478-1f3fb", "1f478-1f3fc", "1f478-1f3fd", "1f478-1f3fe", "1f478-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man with turban"],
-  u: "1f473",
-  v: ["1f473-1f3fb", "1f473-1f3fc", "1f473-1f3fd", "1f473-1f3fe", "1f473-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man wearing turban", "man-wearing-turban"],
-  u: "1f473-200d-2642-fe0f",
-  v: ["1f473-1f3fb-200d-2642-fe0f", "1f473-1f3fc-200d-2642-fe0f", "1f473-1f3fd-200d-2642-fe0f", "1f473-1f3fe-200d-2642-fe0f", "1f473-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman wearing turban", "woman-wearing-turban"],
-  u: "1f473-200d-2640-fe0f",
-  v: ["1f473-1f3fb-200d-2640-fe0f", "1f473-1f3fc-200d-2640-fe0f", "1f473-1f3fd-200d-2640-fe0f", "1f473-1f3fe-200d-2640-fe0f", "1f473-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["man with gua pi mao"],
-  u: "1f472",
-  v: ["1f472-1f3fb", "1f472-1f3fc", "1f472-1f3fd", "1f472-1f3fe", "1f472-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["person with headscarf"],
-  u: "1f9d5",
-  v: ["1f9d5-1f3fb", "1f9d5-1f3fc", "1f9d5-1f3fd", "1f9d5-1f3fe", "1f9d5-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["man in tuxedo", "person in tuxedo"],
-  u: "1f935",
-  v: ["1f935-1f3fb", "1f935-1f3fc", "1f935-1f3fd", "1f935-1f3fe", "1f935-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["man in tuxedo"],
-  u: "1f935-200d-2642-fe0f",
-  v: ["1f935-1f3fb-200d-2642-fe0f", "1f935-1f3fc-200d-2642-fe0f", "1f935-1f3fd-200d-2642-fe0f", "1f935-1f3fe-200d-2642-fe0f", "1f935-1f3ff-200d-2642-fe0f"],
-  a: "13.0"
-}, {
-  n: ["woman in tuxedo"],
-  u: "1f935-200d-2640-fe0f",
-  v: ["1f935-1f3fb-200d-2640-fe0f", "1f935-1f3fc-200d-2640-fe0f", "1f935-1f3fd-200d-2640-fe0f", "1f935-1f3fe-200d-2640-fe0f", "1f935-1f3ff-200d-2640-fe0f"],
-  a: "13.0"
-}, {
-  n: ["bride with veil"],
-  u: "1f470",
-  v: ["1f470-1f3fb", "1f470-1f3fc", "1f470-1f3fd", "1f470-1f3fe", "1f470-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man with veil"],
-  u: "1f470-200d-2642-fe0f",
-  v: ["1f470-1f3fb-200d-2642-fe0f", "1f470-1f3fc-200d-2642-fe0f", "1f470-1f3fd-200d-2642-fe0f", "1f470-1f3fe-200d-2642-fe0f", "1f470-1f3ff-200d-2642-fe0f"],
-  a: "13.0"
-}, {
-  n: ["woman with veil"],
-  u: "1f470-200d-2640-fe0f",
-  v: ["1f470-1f3fb-200d-2640-fe0f", "1f470-1f3fc-200d-2640-fe0f", "1f470-1f3fd-200d-2640-fe0f", "1f470-1f3fe-200d-2640-fe0f", "1f470-1f3ff-200d-2640-fe0f"],
-  a: "13.0"
-}, {
-  n: ["pregnant woman"],
-  u: "1f930",
-  v: ["1f930-1f3fb", "1f930-1f3fc", "1f930-1f3fd", "1f930-1f3fe", "1f930-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["pregnant man"],
-  u: "1fac3",
-  v: ["1fac3-1f3fb", "1fac3-1f3fc", "1fac3-1f3fd", "1fac3-1f3fe", "1fac3-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["pregnant person"],
-  u: "1fac4",
-  v: ["1fac4-1f3fb", "1fac4-1f3fc", "1fac4-1f3fd", "1fac4-1f3fe", "1fac4-1f3ff"],
-  a: "14.0"
-}, {
-  n: ["breast-feeding"],
-  u: "1f931",
-  v: ["1f931-1f3fb", "1f931-1f3fc", "1f931-1f3fd", "1f931-1f3fe", "1f931-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["woman feeding baby"],
-  u: "1f469-200d-1f37c",
-  v: ["1f469-1f3fb-200d-1f37c", "1f469-1f3fc-200d-1f37c", "1f469-1f3fd-200d-1f37c", "1f469-1f3fe-200d-1f37c", "1f469-1f3ff-200d-1f37c"],
-  a: "13.0"
-}, {
-  n: ["man feeding baby"],
-  u: "1f468-200d-1f37c",
-  v: ["1f468-1f3fb-200d-1f37c", "1f468-1f3fc-200d-1f37c", "1f468-1f3fd-200d-1f37c", "1f468-1f3fe-200d-1f37c", "1f468-1f3ff-200d-1f37c"],
-  a: "13.0"
-}, {
-  n: ["person feeding baby"],
-  u: "1f9d1-200d-1f37c",
-  v: ["1f9d1-1f3fb-200d-1f37c", "1f9d1-1f3fc-200d-1f37c", "1f9d1-1f3fd-200d-1f37c", "1f9d1-1f3fe-200d-1f37c", "1f9d1-1f3ff-200d-1f37c"],
-  a: "13.0"
-}, {
-  n: ["angel", "baby angel"],
-  u: "1f47c",
-  v: ["1f47c-1f3fb", "1f47c-1f3fc", "1f47c-1f3fd", "1f47c-1f3fe", "1f47c-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["santa", "father christmas"],
-  u: "1f385",
-  v: ["1f385-1f3fb", "1f385-1f3fc", "1f385-1f3fd", "1f385-1f3fe", "1f385-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["mrs claus", "mother christmas"],
-  u: "1f936",
-  v: ["1f936-1f3fb", "1f936-1f3fc", "1f936-1f3fd", "1f936-1f3fe", "1f936-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["mx claus"],
-  u: "1f9d1-200d-1f384",
-  v: ["1f9d1-1f3fb-200d-1f384", "1f9d1-1f3fc-200d-1f384", "1f9d1-1f3fd-200d-1f384", "1f9d1-1f3fe-200d-1f384", "1f9d1-1f3ff-200d-1f384"],
-  a: "13.0"
-}, {
-  n: ["superhero"],
-  u: "1f9b8",
-  v: ["1f9b8-1f3fb", "1f9b8-1f3fc", "1f9b8-1f3fd", "1f9b8-1f3fe", "1f9b8-1f3ff"],
-  a: "11.0"
-}, {
-  n: ["man superhero", "male superhero"],
-  u: "1f9b8-200d-2642-fe0f",
-  v: ["1f9b8-1f3fb-200d-2642-fe0f", "1f9b8-1f3fc-200d-2642-fe0f", "1f9b8-1f3fd-200d-2642-fe0f", "1f9b8-1f3fe-200d-2642-fe0f", "1f9b8-1f3ff-200d-2642-fe0f"],
-  a: "11.0"
-}, {
-  n: ["woman superhero", "female superhero"],
-  u: "1f9b8-200d-2640-fe0f",
-  v: ["1f9b8-1f3fb-200d-2640-fe0f", "1f9b8-1f3fc-200d-2640-fe0f", "1f9b8-1f3fd-200d-2640-fe0f", "1f9b8-1f3fe-200d-2640-fe0f", "1f9b8-1f3ff-200d-2640-fe0f"],
-  a: "11.0"
-}, {
-  n: ["supervillain"],
-  u: "1f9b9",
-  v: ["1f9b9-1f3fb", "1f9b9-1f3fc", "1f9b9-1f3fd", "1f9b9-1f3fe", "1f9b9-1f3ff"],
-  a: "11.0"
-}, {
-  n: ["man supervillain", "male supervillain"],
-  u: "1f9b9-200d-2642-fe0f",
-  v: ["1f9b9-1f3fb-200d-2642-fe0f", "1f9b9-1f3fc-200d-2642-fe0f", "1f9b9-1f3fd-200d-2642-fe0f", "1f9b9-1f3fe-200d-2642-fe0f", "1f9b9-1f3ff-200d-2642-fe0f"],
-  a: "11.0"
-}, {
-  n: ["woman supervillain", "female supervillain"],
-  u: "1f9b9-200d-2640-fe0f",
-  v: ["1f9b9-1f3fb-200d-2640-fe0f", "1f9b9-1f3fc-200d-2640-fe0f", "1f9b9-1f3fd-200d-2640-fe0f", "1f9b9-1f3fe-200d-2640-fe0f", "1f9b9-1f3ff-200d-2640-fe0f"],
-  a: "11.0"
-}, {
-  n: ["mage"],
-  u: "1f9d9",
-  v: ["1f9d9-1f3fb", "1f9d9-1f3fc", "1f9d9-1f3fd", "1f9d9-1f3fe", "1f9d9-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["man mage", "male mage"],
-  u: "1f9d9-200d-2642-fe0f",
-  v: ["1f9d9-1f3fb-200d-2642-fe0f", "1f9d9-1f3fc-200d-2642-fe0f", "1f9d9-1f3fd-200d-2642-fe0f", "1f9d9-1f3fe-200d-2642-fe0f", "1f9d9-1f3ff-200d-2642-fe0f"],
-  a: "5.0"
-}, {
-  n: ["woman mage", "female mage"],
-  u: "1f9d9-200d-2640-fe0f",
-  v: ["1f9d9-1f3fb-200d-2640-fe0f", "1f9d9-1f3fc-200d-2640-fe0f", "1f9d9-1f3fd-200d-2640-fe0f", "1f9d9-1f3fe-200d-2640-fe0f", "1f9d9-1f3ff-200d-2640-fe0f"],
-  a: "5.0"
-}, {
-  n: ["fairy"],
-  u: "1f9da",
-  v: ["1f9da-1f3fb", "1f9da-1f3fc", "1f9da-1f3fd", "1f9da-1f3fe", "1f9da-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["man fairy", "male fairy"],
-  u: "1f9da-200d-2642-fe0f",
-  v: ["1f9da-1f3fb-200d-2642-fe0f", "1f9da-1f3fc-200d-2642-fe0f", "1f9da-1f3fd-200d-2642-fe0f", "1f9da-1f3fe-200d-2642-fe0f", "1f9da-1f3ff-200d-2642-fe0f"],
-  a: "5.0"
-}, {
-  n: ["woman fairy", "female fairy"],
-  u: "1f9da-200d-2640-fe0f",
-  v: ["1f9da-1f3fb-200d-2640-fe0f", "1f9da-1f3fc-200d-2640-fe0f", "1f9da-1f3fd-200d-2640-fe0f", "1f9da-1f3fe-200d-2640-fe0f", "1f9da-1f3ff-200d-2640-fe0f"],
-  a: "5.0"
-}, {
-  n: ["vampire"],
-  u: "1f9db",
-  v: ["1f9db-1f3fb", "1f9db-1f3fc", "1f9db-1f3fd", "1f9db-1f3fe", "1f9db-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["man vampire", "male vampire"],
-  u: "1f9db-200d-2642-fe0f",
-  v: ["1f9db-1f3fb-200d-2642-fe0f", "1f9db-1f3fc-200d-2642-fe0f", "1f9db-1f3fd-200d-2642-fe0f", "1f9db-1f3fe-200d-2642-fe0f", "1f9db-1f3ff-200d-2642-fe0f"],
-  a: "5.0"
-}, {
-  n: ["woman vampire", "female vampire"],
-  u: "1f9db-200d-2640-fe0f",
-  v: ["1f9db-1f3fb-200d-2640-fe0f", "1f9db-1f3fc-200d-2640-fe0f", "1f9db-1f3fd-200d-2640-fe0f", "1f9db-1f3fe-200d-2640-fe0f", "1f9db-1f3ff-200d-2640-fe0f"],
-  a: "5.0"
-}, {
-  n: ["merperson"],
-  u: "1f9dc",
-  v: ["1f9dc-1f3fb", "1f9dc-1f3fc", "1f9dc-1f3fd", "1f9dc-1f3fe", "1f9dc-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["merman"],
-  u: "1f9dc-200d-2642-fe0f",
-  v: ["1f9dc-1f3fb-200d-2642-fe0f", "1f9dc-1f3fc-200d-2642-fe0f", "1f9dc-1f3fd-200d-2642-fe0f", "1f9dc-1f3fe-200d-2642-fe0f", "1f9dc-1f3ff-200d-2642-fe0f"],
-  a: "5.0"
-}, {
-  n: ["mermaid"],
-  u: "1f9dc-200d-2640-fe0f",
-  v: ["1f9dc-1f3fb-200d-2640-fe0f", "1f9dc-1f3fc-200d-2640-fe0f", "1f9dc-1f3fd-200d-2640-fe0f", "1f9dc-1f3fe-200d-2640-fe0f", "1f9dc-1f3ff-200d-2640-fe0f"],
-  a: "5.0"
-}, {
-  n: ["elf"],
-  u: "1f9dd",
-  v: ["1f9dd-1f3fb", "1f9dd-1f3fc", "1f9dd-1f3fd", "1f9dd-1f3fe", "1f9dd-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["man elf", "male elf"],
-  u: "1f9dd-200d-2642-fe0f",
-  v: ["1f9dd-1f3fb-200d-2642-fe0f", "1f9dd-1f3fc-200d-2642-fe0f", "1f9dd-1f3fd-200d-2642-fe0f", "1f9dd-1f3fe-200d-2642-fe0f", "1f9dd-1f3ff-200d-2642-fe0f"],
-  a: "5.0"
-}, {
-  n: ["woman elf", "female elf"],
-  u: "1f9dd-200d-2640-fe0f",
-  v: ["1f9dd-1f3fb-200d-2640-fe0f", "1f9dd-1f3fc-200d-2640-fe0f", "1f9dd-1f3fd-200d-2640-fe0f", "1f9dd-1f3fe-200d-2640-fe0f", "1f9dd-1f3ff-200d-2640-fe0f"],
-  a: "5.0"
-}, {
-  n: ["genie"],
-  u: "1f9de",
-  a: "5.0"
-}, {
-  n: ["man genie", "male genie"],
-  u: "1f9de-200d-2642-fe0f",
-  a: "5.0"
-}, {
-  n: ["woman genie", "female genie"],
-  u: "1f9de-200d-2640-fe0f",
-  a: "5.0"
-}, {
-  n: ["zombie"],
-  u: "1f9df",
-  a: "5.0"
-}, {
-  n: ["man zombie", "male zombie"],
-  u: "1f9df-200d-2642-fe0f",
-  a: "5.0"
-}, {
-  n: ["woman zombie", "female zombie"],
-  u: "1f9df-200d-2640-fe0f",
-  a: "5.0"
-}, {
-  n: ["troll"],
-  u: "1f9cc",
-  a: "14.0"
-}, {
-  n: ["massage", "face massage"],
-  u: "1f486",
-  v: ["1f486-1f3fb", "1f486-1f3fc", "1f486-1f3fd", "1f486-1f3fe", "1f486-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man getting massage", "man-getting-massage"],
-  u: "1f486-200d-2642-fe0f",
-  v: ["1f486-1f3fb-200d-2642-fe0f", "1f486-1f3fc-200d-2642-fe0f", "1f486-1f3fd-200d-2642-fe0f", "1f486-1f3fe-200d-2642-fe0f", "1f486-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman getting massage", "woman-getting-massage"],
-  u: "1f486-200d-2640-fe0f",
-  v: ["1f486-1f3fb-200d-2640-fe0f", "1f486-1f3fc-200d-2640-fe0f", "1f486-1f3fd-200d-2640-fe0f", "1f486-1f3fe-200d-2640-fe0f", "1f486-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["haircut"],
-  u: "1f487",
-  v: ["1f487-1f3fb", "1f487-1f3fc", "1f487-1f3fd", "1f487-1f3fe", "1f487-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man getting haircut", "man-getting-haircut"],
-  u: "1f487-200d-2642-fe0f",
-  v: ["1f487-1f3fb-200d-2642-fe0f", "1f487-1f3fc-200d-2642-fe0f", "1f487-1f3fd-200d-2642-fe0f", "1f487-1f3fe-200d-2642-fe0f", "1f487-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman getting haircut", "woman-getting-haircut"],
-  u: "1f487-200d-2640-fe0f",
-  v: ["1f487-1f3fb-200d-2640-fe0f", "1f487-1f3fc-200d-2640-fe0f", "1f487-1f3fd-200d-2640-fe0f", "1f487-1f3fe-200d-2640-fe0f", "1f487-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["walking", "pedestrian"],
-  u: "1f6b6",
-  v: ["1f6b6-1f3fb", "1f6b6-1f3fc", "1f6b6-1f3fd", "1f6b6-1f3fe", "1f6b6-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man walking", "man-walking"],
-  u: "1f6b6-200d-2642-fe0f",
-  v: ["1f6b6-1f3fb-200d-2642-fe0f", "1f6b6-1f3fc-200d-2642-fe0f", "1f6b6-1f3fd-200d-2642-fe0f", "1f6b6-1f3fe-200d-2642-fe0f", "1f6b6-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman walking", "woman-walking"],
-  u: "1f6b6-200d-2640-fe0f",
-  v: ["1f6b6-1f3fb-200d-2640-fe0f", "1f6b6-1f3fc-200d-2640-fe0f", "1f6b6-1f3fd-200d-2640-fe0f", "1f6b6-1f3fe-200d-2640-fe0f", "1f6b6-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["person walking facing right"],
-  u: "1f6b6-200d-27a1-fe0f",
-  v: ["1f6b6-1f3fb-200d-27a1-fe0f", "1f6b6-1f3fc-200d-27a1-fe0f", "1f6b6-1f3fd-200d-27a1-fe0f", "1f6b6-1f3fe-200d-27a1-fe0f", "1f6b6-1f3ff-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["woman walking facing right"],
-  u: "1f6b6-200d-2640-fe0f-200d-27a1-fe0f",
-  v: ["1f6b6-1f3fb-200d-2640-fe0f-200d-27a1-fe0f", "1f6b6-1f3fc-200d-2640-fe0f-200d-27a1-fe0f", "1f6b6-1f3fd-200d-2640-fe0f-200d-27a1-fe0f", "1f6b6-1f3fe-200d-2640-fe0f-200d-27a1-fe0f", "1f6b6-1f3ff-200d-2640-fe0f-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["man walking facing right"],
-  u: "1f6b6-200d-2642-fe0f-200d-27a1-fe0f",
-  v: ["1f6b6-1f3fb-200d-2642-fe0f-200d-27a1-fe0f", "1f6b6-1f3fc-200d-2642-fe0f-200d-27a1-fe0f", "1f6b6-1f3fd-200d-2642-fe0f-200d-27a1-fe0f", "1f6b6-1f3fe-200d-2642-fe0f-200d-27a1-fe0f", "1f6b6-1f3ff-200d-2642-fe0f-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["standing person"],
-  u: "1f9cd",
-  v: ["1f9cd-1f3fb", "1f9cd-1f3fc", "1f9cd-1f3fd", "1f9cd-1f3fe", "1f9cd-1f3ff"],
-  a: "12.0"
-}, {
-  n: ["man standing"],
-  u: "1f9cd-200d-2642-fe0f",
-  v: ["1f9cd-1f3fb-200d-2642-fe0f", "1f9cd-1f3fc-200d-2642-fe0f", "1f9cd-1f3fd-200d-2642-fe0f", "1f9cd-1f3fe-200d-2642-fe0f", "1f9cd-1f3ff-200d-2642-fe0f"],
-  a: "12.0"
-}, {
-  n: ["woman standing"],
-  u: "1f9cd-200d-2640-fe0f",
-  v: ["1f9cd-1f3fb-200d-2640-fe0f", "1f9cd-1f3fc-200d-2640-fe0f", "1f9cd-1f3fd-200d-2640-fe0f", "1f9cd-1f3fe-200d-2640-fe0f", "1f9cd-1f3ff-200d-2640-fe0f"],
-  a: "12.0"
-}, {
-  n: ["kneeling person"],
-  u: "1f9ce",
-  v: ["1f9ce-1f3fb", "1f9ce-1f3fc", "1f9ce-1f3fd", "1f9ce-1f3fe", "1f9ce-1f3ff"],
-  a: "12.0"
-}, {
-  n: ["man kneeling"],
-  u: "1f9ce-200d-2642-fe0f",
-  v: ["1f9ce-1f3fb-200d-2642-fe0f", "1f9ce-1f3fc-200d-2642-fe0f", "1f9ce-1f3fd-200d-2642-fe0f", "1f9ce-1f3fe-200d-2642-fe0f", "1f9ce-1f3ff-200d-2642-fe0f"],
-  a: "12.0"
-}, {
-  n: ["woman kneeling"],
-  u: "1f9ce-200d-2640-fe0f",
-  v: ["1f9ce-1f3fb-200d-2640-fe0f", "1f9ce-1f3fc-200d-2640-fe0f", "1f9ce-1f3fd-200d-2640-fe0f", "1f9ce-1f3fe-200d-2640-fe0f", "1f9ce-1f3ff-200d-2640-fe0f"],
-  a: "12.0"
-}, {
-  n: ["person kneeling facing right"],
-  u: "1f9ce-200d-27a1-fe0f",
-  v: ["1f9ce-1f3fb-200d-27a1-fe0f", "1f9ce-1f3fc-200d-27a1-fe0f", "1f9ce-1f3fd-200d-27a1-fe0f", "1f9ce-1f3fe-200d-27a1-fe0f", "1f9ce-1f3ff-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["woman kneeling facing right"],
-  u: "1f9ce-200d-2640-fe0f-200d-27a1-fe0f",
-  v: ["1f9ce-1f3fb-200d-2640-fe0f-200d-27a1-fe0f", "1f9ce-1f3fc-200d-2640-fe0f-200d-27a1-fe0f", "1f9ce-1f3fd-200d-2640-fe0f-200d-27a1-fe0f", "1f9ce-1f3fe-200d-2640-fe0f-200d-27a1-fe0f", "1f9ce-1f3ff-200d-2640-fe0f-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["man kneeling facing right"],
-  u: "1f9ce-200d-2642-fe0f-200d-27a1-fe0f",
-  v: ["1f9ce-1f3fb-200d-2642-fe0f-200d-27a1-fe0f", "1f9ce-1f3fc-200d-2642-fe0f-200d-27a1-fe0f", "1f9ce-1f3fd-200d-2642-fe0f-200d-27a1-fe0f", "1f9ce-1f3fe-200d-2642-fe0f-200d-27a1-fe0f", "1f9ce-1f3ff-200d-2642-fe0f-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["person with white cane", "person with probing cane"],
-  u: "1f9d1-200d-1f9af",
-  v: ["1f9d1-1f3fb-200d-1f9af", "1f9d1-1f3fc-200d-1f9af", "1f9d1-1f3fd-200d-1f9af", "1f9d1-1f3fe-200d-1f9af", "1f9d1-1f3ff-200d-1f9af"],
-  a: "12.1"
-}, {
-  n: ["person with white cane facing right"],
-  u: "1f9d1-200d-1f9af-200d-27a1-fe0f",
-  v: ["1f9d1-1f3fb-200d-1f9af-200d-27a1-fe0f", "1f9d1-1f3fc-200d-1f9af-200d-27a1-fe0f", "1f9d1-1f3fd-200d-1f9af-200d-27a1-fe0f", "1f9d1-1f3fe-200d-1f9af-200d-27a1-fe0f", "1f9d1-1f3ff-200d-1f9af-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["man with white cane", "man with probing cane"],
-  u: "1f468-200d-1f9af",
-  v: ["1f468-1f3fb-200d-1f9af", "1f468-1f3fc-200d-1f9af", "1f468-1f3fd-200d-1f9af", "1f468-1f3fe-200d-1f9af", "1f468-1f3ff-200d-1f9af"],
-  a: "12.0"
-}, {
-  n: ["man with white cane facing right"],
-  u: "1f468-200d-1f9af-200d-27a1-fe0f",
-  v: ["1f468-1f3fb-200d-1f9af-200d-27a1-fe0f", "1f468-1f3fc-200d-1f9af-200d-27a1-fe0f", "1f468-1f3fd-200d-1f9af-200d-27a1-fe0f", "1f468-1f3fe-200d-1f9af-200d-27a1-fe0f", "1f468-1f3ff-200d-1f9af-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["woman with white cane", "woman with probing cane"],
-  u: "1f469-200d-1f9af",
-  v: ["1f469-1f3fb-200d-1f9af", "1f469-1f3fc-200d-1f9af", "1f469-1f3fd-200d-1f9af", "1f469-1f3fe-200d-1f9af", "1f469-1f3ff-200d-1f9af"],
-  a: "12.0"
-}, {
-  n: ["woman with white cane facing right"],
-  u: "1f469-200d-1f9af-200d-27a1-fe0f",
-  v: ["1f469-1f3fb-200d-1f9af-200d-27a1-fe0f", "1f469-1f3fc-200d-1f9af-200d-27a1-fe0f", "1f469-1f3fd-200d-1f9af-200d-27a1-fe0f", "1f469-1f3fe-200d-1f9af-200d-27a1-fe0f", "1f469-1f3ff-200d-1f9af-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["person in motorized wheelchair"],
-  u: "1f9d1-200d-1f9bc",
-  v: ["1f9d1-1f3fb-200d-1f9bc", "1f9d1-1f3fc-200d-1f9bc", "1f9d1-1f3fd-200d-1f9bc", "1f9d1-1f3fe-200d-1f9bc", "1f9d1-1f3ff-200d-1f9bc"],
-  a: "12.1"
-}, {
-  n: ["person in motorized wheelchair facing right"],
-  u: "1f9d1-200d-1f9bc-200d-27a1-fe0f",
-  v: ["1f9d1-1f3fb-200d-1f9bc-200d-27a1-fe0f", "1f9d1-1f3fc-200d-1f9bc-200d-27a1-fe0f", "1f9d1-1f3fd-200d-1f9bc-200d-27a1-fe0f", "1f9d1-1f3fe-200d-1f9bc-200d-27a1-fe0f", "1f9d1-1f3ff-200d-1f9bc-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["man in motorized wheelchair"],
-  u: "1f468-200d-1f9bc",
-  v: ["1f468-1f3fb-200d-1f9bc", "1f468-1f3fc-200d-1f9bc", "1f468-1f3fd-200d-1f9bc", "1f468-1f3fe-200d-1f9bc", "1f468-1f3ff-200d-1f9bc"],
-  a: "12.0"
-}, {
-  n: ["man in motorized wheelchair facing right"],
-  u: "1f468-200d-1f9bc-200d-27a1-fe0f",
-  v: ["1f468-1f3fb-200d-1f9bc-200d-27a1-fe0f", "1f468-1f3fc-200d-1f9bc-200d-27a1-fe0f", "1f468-1f3fd-200d-1f9bc-200d-27a1-fe0f", "1f468-1f3fe-200d-1f9bc-200d-27a1-fe0f", "1f468-1f3ff-200d-1f9bc-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["woman in motorized wheelchair"],
-  u: "1f469-200d-1f9bc",
-  v: ["1f469-1f3fb-200d-1f9bc", "1f469-1f3fc-200d-1f9bc", "1f469-1f3fd-200d-1f9bc", "1f469-1f3fe-200d-1f9bc", "1f469-1f3ff-200d-1f9bc"],
-  a: "12.0"
-}, {
-  n: ["woman in motorized wheelchair facing right"],
-  u: "1f469-200d-1f9bc-200d-27a1-fe0f",
-  v: ["1f469-1f3fb-200d-1f9bc-200d-27a1-fe0f", "1f469-1f3fc-200d-1f9bc-200d-27a1-fe0f", "1f469-1f3fd-200d-1f9bc-200d-27a1-fe0f", "1f469-1f3fe-200d-1f9bc-200d-27a1-fe0f", "1f469-1f3ff-200d-1f9bc-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["person in manual wheelchair"],
-  u: "1f9d1-200d-1f9bd",
-  v: ["1f9d1-1f3fb-200d-1f9bd", "1f9d1-1f3fc-200d-1f9bd", "1f9d1-1f3fd-200d-1f9bd", "1f9d1-1f3fe-200d-1f9bd", "1f9d1-1f3ff-200d-1f9bd"],
-  a: "12.1"
-}, {
-  n: ["person in manual wheelchair facing right"],
-  u: "1f9d1-200d-1f9bd-200d-27a1-fe0f",
-  v: ["1f9d1-1f3fb-200d-1f9bd-200d-27a1-fe0f", "1f9d1-1f3fc-200d-1f9bd-200d-27a1-fe0f", "1f9d1-1f3fd-200d-1f9bd-200d-27a1-fe0f", "1f9d1-1f3fe-200d-1f9bd-200d-27a1-fe0f", "1f9d1-1f3ff-200d-1f9bd-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["man in manual wheelchair"],
-  u: "1f468-200d-1f9bd",
-  v: ["1f468-1f3fb-200d-1f9bd", "1f468-1f3fc-200d-1f9bd", "1f468-1f3fd-200d-1f9bd", "1f468-1f3fe-200d-1f9bd", "1f468-1f3ff-200d-1f9bd"],
-  a: "12.0"
-}, {
-  n: ["man in manual wheelchair facing right"],
-  u: "1f468-200d-1f9bd-200d-27a1-fe0f",
-  v: ["1f468-1f3fb-200d-1f9bd-200d-27a1-fe0f", "1f468-1f3fc-200d-1f9bd-200d-27a1-fe0f", "1f468-1f3fd-200d-1f9bd-200d-27a1-fe0f", "1f468-1f3fe-200d-1f9bd-200d-27a1-fe0f", "1f468-1f3ff-200d-1f9bd-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["woman in manual wheelchair"],
-  u: "1f469-200d-1f9bd",
-  v: ["1f469-1f3fb-200d-1f9bd", "1f469-1f3fc-200d-1f9bd", "1f469-1f3fd-200d-1f9bd", "1f469-1f3fe-200d-1f9bd", "1f469-1f3ff-200d-1f9bd"],
-  a: "12.0"
-}, {
-  n: ["woman in manual wheelchair facing right"],
-  u: "1f469-200d-1f9bd-200d-27a1-fe0f",
-  v: ["1f469-1f3fb-200d-1f9bd-200d-27a1-fe0f", "1f469-1f3fc-200d-1f9bd-200d-27a1-fe0f", "1f469-1f3fd-200d-1f9bd-200d-27a1-fe0f", "1f469-1f3fe-200d-1f9bd-200d-27a1-fe0f", "1f469-1f3ff-200d-1f9bd-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["runner", "running"],
-  u: "1f3c3",
-  v: ["1f3c3-1f3fb", "1f3c3-1f3fc", "1f3c3-1f3fd", "1f3c3-1f3fe", "1f3c3-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man running", "man-running"],
-  u: "1f3c3-200d-2642-fe0f",
-  v: ["1f3c3-1f3fb-200d-2642-fe0f", "1f3c3-1f3fc-200d-2642-fe0f", "1f3c3-1f3fd-200d-2642-fe0f", "1f3c3-1f3fe-200d-2642-fe0f", "1f3c3-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman running", "woman-running"],
-  u: "1f3c3-200d-2640-fe0f",
-  v: ["1f3c3-1f3fb-200d-2640-fe0f", "1f3c3-1f3fc-200d-2640-fe0f", "1f3c3-1f3fd-200d-2640-fe0f", "1f3c3-1f3fe-200d-2640-fe0f", "1f3c3-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["person running facing right"],
-  u: "1f3c3-200d-27a1-fe0f",
-  v: ["1f3c3-1f3fb-200d-27a1-fe0f", "1f3c3-1f3fc-200d-27a1-fe0f", "1f3c3-1f3fd-200d-27a1-fe0f", "1f3c3-1f3fe-200d-27a1-fe0f", "1f3c3-1f3ff-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["woman running facing right"],
-  u: "1f3c3-200d-2640-fe0f-200d-27a1-fe0f",
-  v: ["1f3c3-1f3fb-200d-2640-fe0f-200d-27a1-fe0f", "1f3c3-1f3fc-200d-2640-fe0f-200d-27a1-fe0f", "1f3c3-1f3fd-200d-2640-fe0f-200d-27a1-fe0f", "1f3c3-1f3fe-200d-2640-fe0f-200d-27a1-fe0f", "1f3c3-1f3ff-200d-2640-fe0f-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["man running facing right"],
-  u: "1f3c3-200d-2642-fe0f-200d-27a1-fe0f",
-  v: ["1f3c3-1f3fb-200d-2642-fe0f-200d-27a1-fe0f", "1f3c3-1f3fc-200d-2642-fe0f-200d-27a1-fe0f", "1f3c3-1f3fd-200d-2642-fe0f-200d-27a1-fe0f", "1f3c3-1f3fe-200d-2642-fe0f-200d-27a1-fe0f", "1f3c3-1f3ff-200d-2642-fe0f-200d-27a1-fe0f"],
-  a: "15.1"
-}, {
-  n: ["dancer"],
-  u: "1f483",
-  v: ["1f483-1f3fb", "1f483-1f3fc", "1f483-1f3fd", "1f483-1f3fe", "1f483-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man dancing"],
-  u: "1f57a",
-  v: ["1f57a-1f3fb", "1f57a-1f3fc", "1f57a-1f3fd", "1f57a-1f3fe", "1f57a-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["person in suit levitating", "man in business suit levitating"],
-  u: "1f574-fe0f",
-  v: ["1f574-1f3fb", "1f574-1f3fc", "1f574-1f3fd", "1f574-1f3fe", "1f574-1f3ff"],
-  a: "0.7"
-}, {
-  n: ["dancers", "woman with bunny ears"],
-  u: "1f46f",
-  a: "0.6"
-}, {
-  n: ["men with bunny ears", "men-with-bunny-ears-partying", "man-with-bunny-ears-partying"],
-  u: "1f46f-200d-2642-fe0f",
-  a: "4.0"
-}, {
-  n: ["women with bunny ears", "women-with-bunny-ears-partying", "woman-with-bunny-ears-partying"],
-  u: "1f46f-200d-2640-fe0f",
-  a: "4.0"
-}, {
-  n: ["person in steamy room"],
-  u: "1f9d6",
-  v: ["1f9d6-1f3fb", "1f9d6-1f3fc", "1f9d6-1f3fd", "1f9d6-1f3fe", "1f9d6-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["man in steamy room"],
-  u: "1f9d6-200d-2642-fe0f",
-  v: ["1f9d6-1f3fb-200d-2642-fe0f", "1f9d6-1f3fc-200d-2642-fe0f", "1f9d6-1f3fd-200d-2642-fe0f", "1f9d6-1f3fe-200d-2642-fe0f", "1f9d6-1f3ff-200d-2642-fe0f"],
-  a: "5.0"
-}, {
-  n: ["woman in steamy room"],
-  u: "1f9d6-200d-2640-fe0f",
-  v: ["1f9d6-1f3fb-200d-2640-fe0f", "1f9d6-1f3fc-200d-2640-fe0f", "1f9d6-1f3fd-200d-2640-fe0f", "1f9d6-1f3fe-200d-2640-fe0f", "1f9d6-1f3ff-200d-2640-fe0f"],
-  a: "5.0"
-}, {
-  n: ["person climbing"],
-  u: "1f9d7",
-  v: ["1f9d7-1f3fb", "1f9d7-1f3fc", "1f9d7-1f3fd", "1f9d7-1f3fe", "1f9d7-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["man climbing"],
-  u: "1f9d7-200d-2642-fe0f",
-  v: ["1f9d7-1f3fb-200d-2642-fe0f", "1f9d7-1f3fc-200d-2642-fe0f", "1f9d7-1f3fd-200d-2642-fe0f", "1f9d7-1f3fe-200d-2642-fe0f", "1f9d7-1f3ff-200d-2642-fe0f"],
-  a: "5.0"
-}, {
-  n: ["woman climbing"],
-  u: "1f9d7-200d-2640-fe0f",
-  v: ["1f9d7-1f3fb-200d-2640-fe0f", "1f9d7-1f3fc-200d-2640-fe0f", "1f9d7-1f3fd-200d-2640-fe0f", "1f9d7-1f3fe-200d-2640-fe0f", "1f9d7-1f3ff-200d-2640-fe0f"],
-  a: "5.0"
-}, {
-  n: ["fencer"],
-  u: "1f93a",
-  a: "3.0"
-}, {
-  n: ["horse racing"],
-  u: "1f3c7",
-  v: ["1f3c7-1f3fb", "1f3c7-1f3fc", "1f3c7-1f3fd", "1f3c7-1f3fe", "1f3c7-1f3ff"],
-  a: "1.0"
-}, {
-  n: ["skier"],
-  u: "26f7-fe0f",
-  a: "0.7"
-}, {
-  n: ["snowboarder"],
-  u: "1f3c2",
-  v: ["1f3c2-1f3fb", "1f3c2-1f3fc", "1f3c2-1f3fd", "1f3c2-1f3fe", "1f3c2-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["golfer", "person golfing"],
-  u: "1f3cc-fe0f",
-  v: ["1f3cc-1f3fb", "1f3cc-1f3fc", "1f3cc-1f3fd", "1f3cc-1f3fe", "1f3cc-1f3ff"],
-  a: "0.7"
-}, {
-  n: ["man golfing", "man-golfing"],
-  u: "1f3cc-fe0f-200d-2642-fe0f",
-  v: ["1f3cc-1f3fb-200d-2642-fe0f", "1f3cc-1f3fc-200d-2642-fe0f", "1f3cc-1f3fd-200d-2642-fe0f", "1f3cc-1f3fe-200d-2642-fe0f", "1f3cc-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman golfing", "woman-golfing"],
-  u: "1f3cc-fe0f-200d-2640-fe0f",
-  v: ["1f3cc-1f3fb-200d-2640-fe0f", "1f3cc-1f3fc-200d-2640-fe0f", "1f3cc-1f3fd-200d-2640-fe0f", "1f3cc-1f3fe-200d-2640-fe0f", "1f3cc-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["surfer"],
-  u: "1f3c4",
-  v: ["1f3c4-1f3fb", "1f3c4-1f3fc", "1f3c4-1f3fd", "1f3c4-1f3fe", "1f3c4-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man surfing", "man-surfing"],
-  u: "1f3c4-200d-2642-fe0f",
-  v: ["1f3c4-1f3fb-200d-2642-fe0f", "1f3c4-1f3fc-200d-2642-fe0f", "1f3c4-1f3fd-200d-2642-fe0f", "1f3c4-1f3fe-200d-2642-fe0f", "1f3c4-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman surfing", "woman-surfing"],
-  u: "1f3c4-200d-2640-fe0f",
-  v: ["1f3c4-1f3fb-200d-2640-fe0f", "1f3c4-1f3fc-200d-2640-fe0f", "1f3c4-1f3fd-200d-2640-fe0f", "1f3c4-1f3fe-200d-2640-fe0f", "1f3c4-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["rowboat"],
-  u: "1f6a3",
-  v: ["1f6a3-1f3fb", "1f6a3-1f3fc", "1f6a3-1f3fd", "1f6a3-1f3fe", "1f6a3-1f3ff"],
-  a: "1.0"
-}, {
-  n: ["man rowing boat", "man-rowing-boat"],
-  u: "1f6a3-200d-2642-fe0f",
-  v: ["1f6a3-1f3fb-200d-2642-fe0f", "1f6a3-1f3fc-200d-2642-fe0f", "1f6a3-1f3fd-200d-2642-fe0f", "1f6a3-1f3fe-200d-2642-fe0f", "1f6a3-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman rowing boat", "woman-rowing-boat"],
-  u: "1f6a3-200d-2640-fe0f",
-  v: ["1f6a3-1f3fb-200d-2640-fe0f", "1f6a3-1f3fc-200d-2640-fe0f", "1f6a3-1f3fd-200d-2640-fe0f", "1f6a3-1f3fe-200d-2640-fe0f", "1f6a3-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["swimmer"],
-  u: "1f3ca",
-  v: ["1f3ca-1f3fb", "1f3ca-1f3fc", "1f3ca-1f3fd", "1f3ca-1f3fe", "1f3ca-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["man swimming", "man-swimming"],
-  u: "1f3ca-200d-2642-fe0f",
-  v: ["1f3ca-1f3fb-200d-2642-fe0f", "1f3ca-1f3fc-200d-2642-fe0f", "1f3ca-1f3fd-200d-2642-fe0f", "1f3ca-1f3fe-200d-2642-fe0f", "1f3ca-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman swimming", "woman-swimming"],
-  u: "1f3ca-200d-2640-fe0f",
-  v: ["1f3ca-1f3fb-200d-2640-fe0f", "1f3ca-1f3fc-200d-2640-fe0f", "1f3ca-1f3fd-200d-2640-fe0f", "1f3ca-1f3fe-200d-2640-fe0f", "1f3ca-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["person with ball", "person bouncing ball"],
-  u: "26f9-fe0f",
-  v: ["26f9-1f3fb", "26f9-1f3fc", "26f9-1f3fd", "26f9-1f3fe", "26f9-1f3ff"],
-  a: "0.7"
-}, {
-  n: ["man bouncing ball", "man-bouncing-ball"],
-  u: "26f9-fe0f-200d-2642-fe0f",
-  v: ["26f9-1f3fb-200d-2642-fe0f", "26f9-1f3fc-200d-2642-fe0f", "26f9-1f3fd-200d-2642-fe0f", "26f9-1f3fe-200d-2642-fe0f", "26f9-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman bouncing ball", "woman-bouncing-ball"],
-  u: "26f9-fe0f-200d-2640-fe0f",
-  v: ["26f9-1f3fb-200d-2640-fe0f", "26f9-1f3fc-200d-2640-fe0f", "26f9-1f3fd-200d-2640-fe0f", "26f9-1f3fe-200d-2640-fe0f", "26f9-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["weight lifter", "person lifting weights"],
-  u: "1f3cb-fe0f",
-  v: ["1f3cb-1f3fb", "1f3cb-1f3fc", "1f3cb-1f3fd", "1f3cb-1f3fe", "1f3cb-1f3ff"],
-  a: "0.7"
-}, {
-  n: ["man lifting weights", "man-lifting-weights"],
-  u: "1f3cb-fe0f-200d-2642-fe0f",
-  v: ["1f3cb-1f3fb-200d-2642-fe0f", "1f3cb-1f3fc-200d-2642-fe0f", "1f3cb-1f3fd-200d-2642-fe0f", "1f3cb-1f3fe-200d-2642-fe0f", "1f3cb-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman lifting weights", "woman-lifting-weights"],
-  u: "1f3cb-fe0f-200d-2640-fe0f",
-  v: ["1f3cb-1f3fb-200d-2640-fe0f", "1f3cb-1f3fc-200d-2640-fe0f", "1f3cb-1f3fd-200d-2640-fe0f", "1f3cb-1f3fe-200d-2640-fe0f", "1f3cb-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["bicyclist"],
-  u: "1f6b4",
-  v: ["1f6b4-1f3fb", "1f6b4-1f3fc", "1f6b4-1f3fd", "1f6b4-1f3fe", "1f6b4-1f3ff"],
-  a: "1.0"
-}, {
-  n: ["man biking", "man-biking"],
-  u: "1f6b4-200d-2642-fe0f",
-  v: ["1f6b4-1f3fb-200d-2642-fe0f", "1f6b4-1f3fc-200d-2642-fe0f", "1f6b4-1f3fd-200d-2642-fe0f", "1f6b4-1f3fe-200d-2642-fe0f", "1f6b4-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman biking", "woman-biking"],
-  u: "1f6b4-200d-2640-fe0f",
-  v: ["1f6b4-1f3fb-200d-2640-fe0f", "1f6b4-1f3fc-200d-2640-fe0f", "1f6b4-1f3fd-200d-2640-fe0f", "1f6b4-1f3fe-200d-2640-fe0f", "1f6b4-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["mountain bicyclist"],
-  u: "1f6b5",
-  v: ["1f6b5-1f3fb", "1f6b5-1f3fc", "1f6b5-1f3fd", "1f6b5-1f3fe", "1f6b5-1f3ff"],
-  a: "1.0"
-}, {
-  n: ["man mountain biking", "man-mountain-biking"],
-  u: "1f6b5-200d-2642-fe0f",
-  v: ["1f6b5-1f3fb-200d-2642-fe0f", "1f6b5-1f3fc-200d-2642-fe0f", "1f6b5-1f3fd-200d-2642-fe0f", "1f6b5-1f3fe-200d-2642-fe0f", "1f6b5-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman mountain biking", "woman-mountain-biking"],
-  u: "1f6b5-200d-2640-fe0f",
-  v: ["1f6b5-1f3fb-200d-2640-fe0f", "1f6b5-1f3fc-200d-2640-fe0f", "1f6b5-1f3fd-200d-2640-fe0f", "1f6b5-1f3fe-200d-2640-fe0f", "1f6b5-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["person doing cartwheel"],
-  u: "1f938",
-  v: ["1f938-1f3fb", "1f938-1f3fc", "1f938-1f3fd", "1f938-1f3fe", "1f938-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["man cartwheeling", "man-cartwheeling"],
-  u: "1f938-200d-2642-fe0f",
-  v: ["1f938-1f3fb-200d-2642-fe0f", "1f938-1f3fc-200d-2642-fe0f", "1f938-1f3fd-200d-2642-fe0f", "1f938-1f3fe-200d-2642-fe0f", "1f938-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman cartwheeling", "woman-cartwheeling"],
-  u: "1f938-200d-2640-fe0f",
-  v: ["1f938-1f3fb-200d-2640-fe0f", "1f938-1f3fc-200d-2640-fe0f", "1f938-1f3fd-200d-2640-fe0f", "1f938-1f3fe-200d-2640-fe0f", "1f938-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["wrestlers"],
-  u: "1f93c",
-  a: "3.0"
-}, {
-  n: ["men wrestling", "man-wrestling"],
-  u: "1f93c-200d-2642-fe0f",
-  a: "4.0"
-}, {
-  n: ["women wrestling", "woman-wrestling"],
-  u: "1f93c-200d-2640-fe0f",
-  a: "4.0"
-}, {
-  n: ["water polo"],
-  u: "1f93d",
-  v: ["1f93d-1f3fb", "1f93d-1f3fc", "1f93d-1f3fd", "1f93d-1f3fe", "1f93d-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["man playing water polo", "man-playing-water-polo"],
-  u: "1f93d-200d-2642-fe0f",
-  v: ["1f93d-1f3fb-200d-2642-fe0f", "1f93d-1f3fc-200d-2642-fe0f", "1f93d-1f3fd-200d-2642-fe0f", "1f93d-1f3fe-200d-2642-fe0f", "1f93d-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman playing water polo", "woman-playing-water-polo"],
-  u: "1f93d-200d-2640-fe0f",
-  v: ["1f93d-1f3fb-200d-2640-fe0f", "1f93d-1f3fc-200d-2640-fe0f", "1f93d-1f3fd-200d-2640-fe0f", "1f93d-1f3fe-200d-2640-fe0f", "1f93d-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["handball"],
-  u: "1f93e",
-  v: ["1f93e-1f3fb", "1f93e-1f3fc", "1f93e-1f3fd", "1f93e-1f3fe", "1f93e-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["man playing handball", "man-playing-handball"],
-  u: "1f93e-200d-2642-fe0f",
-  v: ["1f93e-1f3fb-200d-2642-fe0f", "1f93e-1f3fc-200d-2642-fe0f", "1f93e-1f3fd-200d-2642-fe0f", "1f93e-1f3fe-200d-2642-fe0f", "1f93e-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman playing handball", "woman-playing-handball"],
-  u: "1f93e-200d-2640-fe0f",
-  v: ["1f93e-1f3fb-200d-2640-fe0f", "1f93e-1f3fc-200d-2640-fe0f", "1f93e-1f3fd-200d-2640-fe0f", "1f93e-1f3fe-200d-2640-fe0f", "1f93e-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["juggling"],
-  u: "1f939",
-  v: ["1f939-1f3fb", "1f939-1f3fc", "1f939-1f3fd", "1f939-1f3fe", "1f939-1f3ff"],
-  a: "3.0"
-}, {
-  n: ["man juggling", "man-juggling"],
-  u: "1f939-200d-2642-fe0f",
-  v: ["1f939-1f3fb-200d-2642-fe0f", "1f939-1f3fc-200d-2642-fe0f", "1f939-1f3fd-200d-2642-fe0f", "1f939-1f3fe-200d-2642-fe0f", "1f939-1f3ff-200d-2642-fe0f"],
-  a: "4.0"
-}, {
-  n: ["woman juggling", "woman-juggling"],
-  u: "1f939-200d-2640-fe0f",
-  v: ["1f939-1f3fb-200d-2640-fe0f", "1f939-1f3fc-200d-2640-fe0f", "1f939-1f3fd-200d-2640-fe0f", "1f939-1f3fe-200d-2640-fe0f", "1f939-1f3ff-200d-2640-fe0f"],
-  a: "4.0"
-}, {
-  n: ["person in lotus position"],
-  u: "1f9d8",
-  v: ["1f9d8-1f3fb", "1f9d8-1f3fc", "1f9d8-1f3fd", "1f9d8-1f3fe", "1f9d8-1f3ff"],
-  a: "5.0"
-}, {
-  n: ["man in lotus position"],
-  u: "1f9d8-200d-2642-fe0f",
-  v: ["1f9d8-1f3fb-200d-2642-fe0f", "1f9d8-1f3fc-200d-2642-fe0f", "1f9d8-1f3fd-200d-2642-fe0f", "1f9d8-1f3fe-200d-2642-fe0f", "1f9d8-1f3ff-200d-2642-fe0f"],
-  a: "5.0"
-}, {
-  n: ["woman in lotus position"],
-  u: "1f9d8-200d-2640-fe0f",
-  v: ["1f9d8-1f3fb-200d-2640-fe0f", "1f9d8-1f3fc-200d-2640-fe0f", "1f9d8-1f3fd-200d-2640-fe0f", "1f9d8-1f3fe-200d-2640-fe0f", "1f9d8-1f3ff-200d-2640-fe0f"],
-  a: "5.0"
-}, {
-  n: ["bath"],
-  u: "1f6c0",
-  v: ["1f6c0-1f3fb", "1f6c0-1f3fc", "1f6c0-1f3fd", "1f6c0-1f3fe", "1f6c0-1f3ff"],
-  a: "0.6"
-}, {
-  n: ["sleeping accommodation"],
-  u: "1f6cc",
-  v: ["1f6cc-1f3fb", "1f6cc-1f3fc", "1f6cc-1f3fd", "1f6cc-1f3fe", "1f6cc-1f3ff"],
-  a: "1.0"
-}, {
-  n: ["people holding hands"],
-  u: "1f9d1-200d-1f91d-200d-1f9d1",
-  v: ["1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fb", "1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fc", "1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fd", "1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fe", "1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3ff", "1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fb", "1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fc", "1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fd", "1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fe", "1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3ff", "1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3fb", "1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3fc", "1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3fd", "1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3fe", "1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3ff", "1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3fb", "1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3fc", "1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3fd", "1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3fe", "1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3ff", "1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3fb", "1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3fc", "1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3fd", "1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3fe", "1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3ff"],
-  a: "12.0"
-}, {
-  n: ["women holding hands", "two women holding hands"],
-  u: "1f46d",
-  v: ["1f46d-1f3fb", "1f46d-1f3fc", "1f46d-1f3fd", "1f46d-1f3fe", "1f46d-1f3ff", "1f469-1f3fb-200d-1f91d-200d-1f469-1f3fc", "1f469-1f3fb-200d-1f91d-200d-1f469-1f3fd", "1f469-1f3fb-200d-1f91d-200d-1f469-1f3fe", "1f469-1f3fb-200d-1f91d-200d-1f469-1f3ff", "1f469-1f3fc-200d-1f91d-200d-1f469-1f3fb", "1f469-1f3fc-200d-1f91d-200d-1f469-1f3fd", "1f469-1f3fc-200d-1f91d-200d-1f469-1f3fe", "1f469-1f3fc-200d-1f91d-200d-1f469-1f3ff", "1f469-1f3fd-200d-1f91d-200d-1f469-1f3fb", "1f469-1f3fd-200d-1f91d-200d-1f469-1f3fc", "1f469-1f3fd-200d-1f91d-200d-1f469-1f3fe", "1f469-1f3fd-200d-1f91d-200d-1f469-1f3ff", "1f469-1f3fe-200d-1f91d-200d-1f469-1f3fb", "1f469-1f3fe-200d-1f91d-200d-1f469-1f3fc", "1f469-1f3fe-200d-1f91d-200d-1f469-1f3fd", "1f469-1f3fe-200d-1f91d-200d-1f469-1f3ff", "1f469-1f3ff-200d-1f91d-200d-1f469-1f3fb", "1f469-1f3ff-200d-1f91d-200d-1f469-1f3fc", "1f469-1f3ff-200d-1f91d-200d-1f469-1f3fd", "1f469-1f3ff-200d-1f91d-200d-1f469-1f3fe"],
-  a: "1.0"
-}, {
-  n: ["couple", "man and woman holding hands", "woman and man holding hands"],
-  u: "1f46b",
-  v: ["1f46b-1f3fb", "1f46b-1f3fc", "1f46b-1f3fd", "1f46b-1f3fe", "1f46b-1f3ff", "1f469-1f3fb-200d-1f91d-200d-1f468-1f3fc", "1f469-1f3fb-200d-1f91d-200d-1f468-1f3fd", "1f469-1f3fb-200d-1f91d-200d-1f468-1f3fe", "1f469-1f3fb-200d-1f91d-200d-1f468-1f3ff", "1f469-1f3fc-200d-1f91d-200d-1f468-1f3fb", "1f469-1f3fc-200d-1f91d-200d-1f468-1f3fd", "1f469-1f3fc-200d-1f91d-200d-1f468-1f3fe", "1f469-1f3fc-200d-1f91d-200d-1f468-1f3ff", "1f469-1f3fd-200d-1f91d-200d-1f468-1f3fb", "1f469-1f3fd-200d-1f91d-200d-1f468-1f3fc", "1f469-1f3fd-200d-1f91d-200d-1f468-1f3fe", "1f469-1f3fd-200d-1f91d-200d-1f468-1f3ff", "1f469-1f3fe-200d-1f91d-200d-1f468-1f3fb", "1f469-1f3fe-200d-1f91d-200d-1f468-1f3fc", "1f469-1f3fe-200d-1f91d-200d-1f468-1f3fd", "1f469-1f3fe-200d-1f91d-200d-1f468-1f3ff", "1f469-1f3ff-200d-1f91d-200d-1f468-1f3fb", "1f469-1f3ff-200d-1f91d-200d-1f468-1f3fc", "1f469-1f3ff-200d-1f91d-200d-1f468-1f3fd", "1f469-1f3ff-200d-1f91d-200d-1f468-1f3fe"],
-  a: "0.6"
-}, {
-  n: ["men holding hands", "two men holding hands"],
-  u: "1f46c",
-  v: ["1f46c-1f3fb", "1f46c-1f3fc", "1f46c-1f3fd", "1f46c-1f3fe", "1f46c-1f3ff", "1f468-1f3fb-200d-1f91d-200d-1f468-1f3fc", "1f468-1f3fb-200d-1f91d-200d-1f468-1f3fd", "1f468-1f3fb-200d-1f91d-200d-1f468-1f3fe", "1f468-1f3fb-200d-1f91d-200d-1f468-1f3ff", "1f468-1f3fc-200d-1f91d-200d-1f468-1f3fb", "1f468-1f3fc-200d-1f91d-200d-1f468-1f3fd", "1f468-1f3fc-200d-1f91d-200d-1f468-1f3fe", "1f468-1f3fc-200d-1f91d-200d-1f468-1f3ff", "1f468-1f3fd-200d-1f91d-200d-1f468-1f3fb", "1f468-1f3fd-200d-1f91d-200d-1f468-1f3fc", "1f468-1f3fd-200d-1f91d-200d-1f468-1f3fe", "1f468-1f3fd-200d-1f91d-200d-1f468-1f3ff", "1f468-1f3fe-200d-1f91d-200d-1f468-1f3fb", "1f468-1f3fe-200d-1f91d-200d-1f468-1f3fc", "1f468-1f3fe-200d-1f91d-200d-1f468-1f3fd", "1f468-1f3fe-200d-1f91d-200d-1f468-1f3ff", "1f468-1f3ff-200d-1f91d-200d-1f468-1f3fb", "1f468-1f3ff-200d-1f91d-200d-1f468-1f3fc", "1f468-1f3ff-200d-1f91d-200d-1f468-1f3fd", "1f468-1f3ff-200d-1f91d-200d-1f468-1f3fe"],
-  a: "1.0"
-}, {
-  n: ["kiss", "couplekiss"],
-  u: "1f48f",
-  v: ["1f48f-1f3fb", "1f48f-1f3fc", "1f48f-1f3fd", "1f48f-1f3fe", "1f48f-1f3ff", "1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc", "1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fd", "1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fe", "1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3ff", "1f9d1-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fb", "1f9d1-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fd", "1f9d1-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fe", "1f9d1-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3ff", "1f9d1-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fb", "1f9d1-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc", "1f9d1-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fe", "1f9d1-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3ff", "1f9d1-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fb", "1f9d1-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc", "1f9d1-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fd", "1f9d1-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3ff", "1f9d1-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fb", "1f9d1-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc", "1f9d1-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fd", "1f9d1-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fe"],
-  a: "0.6"
-}, {
-  n: ["woman-kiss-man", "kiss: woman, man"],
-  u: "1f469-200d-2764-fe0f-200d-1f48b-200d-1f468",
-  v: ["1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff"],
-  a: "2.0"
-}, {
-  n: ["man-kiss-man", "kiss: man, man"],
-  u: "1f468-200d-2764-fe0f-200d-1f48b-200d-1f468",
-  v: ["1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff", "1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff", "1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff", "1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff", "1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb", "1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc", "1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd", "1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe", "1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff"],
-  a: "2.0"
-}, {
-  n: ["woman-kiss-woman", "kiss: woman, woman"],
-  u: "1f469-200d-2764-fe0f-200d-1f48b-200d-1f469",
-  v: ["1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb", "1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc", "1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd", "1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe", "1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe", "1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe", "1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe", "1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe", "1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff"],
-  a: "2.0"
-}, {
-  n: ["couple with heart"],
-  u: "1f491",
-  v: ["1f491-1f3fb", "1f491-1f3fc", "1f491-1f3fd", "1f491-1f3fe", "1f491-1f3ff", "1f9d1-1f3fb-200d-2764-fe0f-200d-1f9d1-1f3fc", "1f9d1-1f3fb-200d-2764-fe0f-200d-1f9d1-1f3fd", "1f9d1-1f3fb-200d-2764-fe0f-200d-1f9d1-1f3fe", "1f9d1-1f3fb-200d-2764-fe0f-200d-1f9d1-1f3ff", "1f9d1-1f3fc-200d-2764-fe0f-200d-1f9d1-1f3fb", "1f9d1-1f3fc-200d-2764-fe0f-200d-1f9d1-1f3fd", "1f9d1-1f3fc-200d-2764-fe0f-200d-1f9d1-1f3fe", "1f9d1-1f3fc-200d-2764-fe0f-200d-1f9d1-1f3ff", "1f9d1-1f3fd-200d-2764-fe0f-200d-1f9d1-1f3fb", "1f9d1-1f3fd-200d-2764-fe0f-200d-1f9d1-1f3fc", "1f9d1-1f3fd-200d-2764-fe0f-200d-1f9d1-1f3fe", "1f9d1-1f3fd-200d-2764-fe0f-200d-1f9d1-1f3ff", "1f9d1-1f3fe-200d-2764-fe0f-200d-1f9d1-1f3fb", "1f9d1-1f3fe-200d-2764-fe0f-200d-1f9d1-1f3fc", "1f9d1-1f3fe-200d-2764-fe0f-200d-1f9d1-1f3fd", "1f9d1-1f3fe-200d-2764-fe0f-200d-1f9d1-1f3ff", "1f9d1-1f3ff-200d-2764-fe0f-200d-1f9d1-1f3fb", "1f9d1-1f3ff-200d-2764-fe0f-200d-1f9d1-1f3fc", "1f9d1-1f3ff-200d-2764-fe0f-200d-1f9d1-1f3fd", "1f9d1-1f3ff-200d-2764-fe0f-200d-1f9d1-1f3fe"],
-  a: "0.6"
-}, {
-  n: ["woman-heart-man", "couple with heart: woman, man"],
-  u: "1f469-200d-2764-fe0f-200d-1f468",
-  v: ["1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3fb", "1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3fc", "1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3fd", "1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3fe", "1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3ff", "1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3fb", "1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3fc", "1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3fd", "1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3fe", "1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3ff", "1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3fb", "1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3fc", "1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3fd", "1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3fe", "1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3ff", "1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3fb", "1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3fc", "1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3fd", "1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3fe", "1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3ff", "1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3fb", "1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3fc", "1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3fd", "1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3fe", "1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3ff"],
-  a: "2.0"
-}, {
-  n: ["man-heart-man", "couple with heart: man, man"],
-  u: "1f468-200d-2764-fe0f-200d-1f468",
-  v: ["1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fb", "1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fc", "1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fd", "1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fe", "1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3ff", "1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3fb", "1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3fc", "1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3fd", "1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3fe", "1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3ff", "1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3fb", "1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3fc", "1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3fd", "1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3fe", "1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3ff", "1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3fb", "1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3fc", "1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3fd", "1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3fe", "1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3ff", "1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3fb", "1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3fc", "1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3fd", "1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3fe", "1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3ff"],
-  a: "2.0"
-}, {
-  n: ["woman-heart-woman", "couple with heart: woman, woman"],
-  u: "1f469-200d-2764-fe0f-200d-1f469",
-  v: ["1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3fb", "1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3fc", "1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3fd", "1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3fe", "1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3ff", "1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3fb", "1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3fc", "1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3fd", "1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3fe", "1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3ff", "1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3fb", "1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3fc", "1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3fd", "1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3fe", "1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3ff", "1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3fb", "1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3fc", "1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3fd", "1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3fe", "1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3ff", "1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3fb", "1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3fc", "1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3fd", "1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3fe", "1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3ff"],
-  a: "2.0"
-}, {
-  n: ["man-woman-boy", "family: man, woman, boy"],
-  u: "1f468-200d-1f469-200d-1f466",
-  a: "2.0"
-}, {
-  n: ["man-woman-girl", "family: man, woman, girl"],
-  u: "1f468-200d-1f469-200d-1f467",
-  a: "2.0"
-}, {
-  n: ["man-woman-girl-boy", "family: man, woman, girl, boy"],
-  u: "1f468-200d-1f469-200d-1f467-200d-1f466",
-  a: "2.0"
-}, {
-  n: ["man-woman-boy-boy", "family: man, woman, boy, boy"],
-  u: "1f468-200d-1f469-200d-1f466-200d-1f466",
-  a: "2.0"
-}, {
-  n: ["man-woman-girl-girl", "family: man, woman, girl, girl"],
-  u: "1f468-200d-1f469-200d-1f467-200d-1f467",
-  a: "2.0"
-}, {
-  n: ["man-man-boy", "family: man, man, boy"],
-  u: "1f468-200d-1f468-200d-1f466",
-  a: "2.0"
-}, {
-  n: ["man-man-girl", "family: man, man, girl"],
-  u: "1f468-200d-1f468-200d-1f467",
-  a: "2.0"
-}, {
-  n: ["man-man-girl-boy", "family: man, man, girl, boy"],
-  u: "1f468-200d-1f468-200d-1f467-200d-1f466",
-  a: "2.0"
-}, {
-  n: ["man-man-boy-boy", "family: man, man, boy, boy"],
-  u: "1f468-200d-1f468-200d-1f466-200d-1f466",
-  a: "2.0"
-}, {
-  n: ["man-man-girl-girl", "family: man, man, girl, girl"],
-  u: "1f468-200d-1f468-200d-1f467-200d-1f467",
-  a: "2.0"
-}, {
-  n: ["woman-woman-boy", "family: woman, woman, boy"],
-  u: "1f469-200d-1f469-200d-1f466",
-  a: "2.0"
-}, {
-  n: ["woman-woman-girl", "family: woman, woman, girl"],
-  u: "1f469-200d-1f469-200d-1f467",
-  a: "2.0"
-}, {
-  n: ["woman-woman-girl-boy", "family: woman, woman, girl, boy"],
-  u: "1f469-200d-1f469-200d-1f467-200d-1f466",
-  a: "2.0"
-}, {
-  n: ["woman-woman-boy-boy", "family: woman, woman, boy, boy"],
-  u: "1f469-200d-1f469-200d-1f466-200d-1f466",
-  a: "2.0"
-}, {
-  n: ["woman-woman-girl-girl", "family: woman, woman, girl, girl"],
-  u: "1f469-200d-1f469-200d-1f467-200d-1f467",
-  a: "2.0"
-}, {
-  n: ["man-boy", "family: man, boy"],
-  u: "1f468-200d-1f466",
-  a: "4.0"
-}, {
-  n: ["man-boy-boy", "family: man, boy, boy"],
-  u: "1f468-200d-1f466-200d-1f466",
-  a: "4.0"
-}, {
-  n: ["man-girl", "family: man, girl"],
-  u: "1f468-200d-1f467",
-  a: "4.0"
-}, {
-  n: ["man-girl-boy", "family: man, girl, boy"],
-  u: "1f468-200d-1f467-200d-1f466",
-  a: "4.0"
-}, {
-  n: ["man-girl-girl", "family: man, girl, girl"],
-  u: "1f468-200d-1f467-200d-1f467",
-  a: "4.0"
-}, {
-  n: ["woman-boy", "family: woman, boy"],
-  u: "1f469-200d-1f466",
-  a: "4.0"
-}, {
-  n: ["woman-boy-boy", "family: woman, boy, boy"],
-  u: "1f469-200d-1f466-200d-1f466",
-  a: "4.0"
-}, {
-  n: ["woman-girl", "family: woman, girl"],
-  u: "1f469-200d-1f467",
-  a: "4.0"
-}, {
-  n: ["woman-girl-boy", "family: woman, girl, boy"],
-  u: "1f469-200d-1f467-200d-1f466",
-  a: "4.0"
-}, {
-  n: ["woman-girl-girl", "family: woman, girl, girl"],
-  u: "1f469-200d-1f467-200d-1f467",
-  a: "4.0"
-}, {
-  n: ["speaking head", "speaking head in silhouette"],
-  u: "1f5e3-fe0f",
-  a: "0.7"
-}, {
-  n: ["bust in silhouette"],
-  u: "1f464",
-  a: "0.6"
-}, {
-  n: ["busts in silhouette"],
-  u: "1f465",
-  a: "1.0"
-}, {
-  n: ["people hugging"],
-  u: "1fac2",
-  a: "13.0"
-}, {
-  n: ["family"],
-  u: "1f46a",
-  a: "0.6"
-}, {
-  n: ["family adult adult child", "family: adult, adult, child"],
-  u: "1f9d1-200d-1f9d1-200d-1f9d2",
-  a: "15.1"
-}, {
-  n: ["family adult adult child child", "family: adult, adult, child, child"],
-  u: "1f9d1-200d-1f9d1-200d-1f9d2-200d-1f9d2",
-  a: "15.1"
-}, {
-  n: ["family adult child", "family: adult, child"],
-  u: "1f9d1-200d-1f9d2",
-  a: "15.1"
-}, {
-  n: ["family adult child child", "family: adult, child, child"],
-  u: "1f9d1-200d-1f9d2-200d-1f9d2",
-  a: "15.1"
-}, {
-  n: ["footprints"],
-  u: "1f463",
-  a: "0.6"
-}];
-var animals_nature = [{
-  n: ["monkey face"],
-  u: "1f435",
-  a: "0.6"
-}, {
-  n: ["monkey"],
-  u: "1f412",
-  a: "0.6"
-}, {
-  n: ["gorilla"],
-  u: "1f98d",
-  a: "3.0"
-}, {
-  n: ["orangutan"],
-  u: "1f9a7",
-  a: "12.0"
-}, {
-  n: ["dog", "dog face"],
-  u: "1f436",
-  a: "0.6"
-}, {
-  n: ["dog", "dog2"],
-  u: "1f415",
-  a: "0.7"
-}, {
-  n: ["guide dog"],
-  u: "1f9ae",
-  a: "12.0"
-}, {
-  n: ["service dog"],
-  u: "1f415-200d-1f9ba",
-  a: "12.0"
-}, {
-  n: ["poodle"],
-  u: "1f429",
-  a: "0.6"
-}, {
-  n: ["wolf", "wolf face"],
-  u: "1f43a",
-  a: "0.6"
-}, {
-  n: ["fox face"],
-  u: "1f98a",
-  a: "3.0"
-}, {
-  n: ["raccoon"],
-  u: "1f99d",
-  a: "11.0"
-}, {
-  n: ["cat", "cat face"],
-  u: "1f431",
-  a: "0.6"
-}, {
-  n: ["cat", "cat2"],
-  u: "1f408",
-  a: "0.7"
-}, {
-  n: ["black cat"],
-  u: "1f408-200d-2b1b",
-  a: "13.0"
-}, {
-  n: ["lion face"],
-  u: "1f981",
-  a: "1.0"
-}, {
-  n: ["tiger", "tiger face"],
-  u: "1f42f",
-  a: "0.6"
-}, {
-  n: ["tiger", "tiger2"],
-  u: "1f405",
-  a: "1.0"
-}, {
-  n: ["leopard"],
-  u: "1f406",
-  a: "1.0"
-}, {
-  n: ["horse", "horse face"],
-  u: "1f434",
-  a: "0.6"
-}, {
-  n: ["moose"],
-  u: "1face",
-  a: "15.0"
-}, {
-  n: ["donkey"],
-  u: "1facf",
-  a: "15.0"
-}, {
-  n: ["horse", "racehorse"],
-  u: "1f40e",
-  a: "0.6"
-}, {
-  n: ["unicorn face"],
-  u: "1f984",
-  a: "1.0"
-}, {
-  n: ["zebra face"],
-  u: "1f993",
-  a: "5.0"
-}, {
-  n: ["deer"],
-  u: "1f98c",
-  a: "3.0"
-}, {
-  n: ["bison"],
-  u: "1f9ac",
-  a: "13.0"
-}, {
-  n: ["cow", "cow face"],
-  u: "1f42e",
-  a: "0.6"
-}, {
-  n: ["ox"],
-  u: "1f402",
-  a: "1.0"
-}, {
-  n: ["water buffalo"],
-  u: "1f403",
-  a: "1.0"
-}, {
-  n: ["cow", "cow2"],
-  u: "1f404",
-  a: "1.0"
-}, {
-  n: ["pig", "pig face"],
-  u: "1f437",
-  a: "0.6"
-}, {
-  n: ["pig", "pig2"],
-  u: "1f416",
-  a: "1.0"
-}, {
-  n: ["boar"],
-  u: "1f417",
-  a: "0.6"
-}, {
-  n: ["pig nose"],
-  u: "1f43d",
-  a: "0.6"
-}, {
-  n: ["ram"],
-  u: "1f40f",
-  a: "1.0"
-}, {
-  n: ["sheep"],
-  u: "1f411",
-  a: "0.6"
-}, {
-  n: ["goat"],
-  u: "1f410",
-  a: "1.0"
-}, {
-  n: ["dromedary camel"],
-  u: "1f42a",
-  a: "1.0"
-}, {
-  n: ["camel", "bactrian camel"],
-  u: "1f42b",
-  a: "0.6"
-}, {
-  n: ["llama"],
-  u: "1f999",
-  a: "11.0"
-}, {
-  n: ["giraffe face"],
-  u: "1f992",
-  a: "5.0"
-}, {
-  n: ["elephant"],
-  u: "1f418",
-  a: "0.6"
-}, {
-  n: ["mammoth"],
-  u: "1f9a3",
-  a: "13.0"
-}, {
-  n: ["rhinoceros"],
-  u: "1f98f",
-  a: "3.0"
-}, {
-  n: ["hippopotamus"],
-  u: "1f99b",
-  a: "11.0"
-}, {
-  n: ["mouse", "mouse face"],
-  u: "1f42d",
-  a: "0.6"
-}, {
-  n: ["mouse", "mouse2"],
-  u: "1f401",
-  a: "1.0"
-}, {
-  n: ["rat"],
-  u: "1f400",
-  a: "1.0"
-}, {
-  n: ["hamster", "hamster face"],
-  u: "1f439",
-  a: "0.6"
-}, {
-  n: ["rabbit", "rabbit face"],
-  u: "1f430",
-  a: "0.6"
-}, {
-  n: ["rabbit", "rabbit2"],
-  u: "1f407",
-  a: "1.0"
-}, {
-  n: ["chipmunk"],
-  u: "1f43f-fe0f",
-  a: "0.7"
-}, {
-  n: ["beaver"],
-  u: "1f9ab",
-  a: "13.0"
-}, {
-  n: ["hedgehog"],
-  u: "1f994",
-  a: "5.0"
-}, {
-  n: ["bat"],
-  u: "1f987",
-  a: "3.0"
-}, {
-  n: ["bear", "bear face"],
-  u: "1f43b",
-  a: "0.6"
-}, {
-  n: ["polar bear"],
-  u: "1f43b-200d-2744-fe0f",
-  a: "13.0"
-}, {
-  n: ["koala"],
-  u: "1f428",
-  a: "0.6"
-}, {
-  n: ["panda face"],
-  u: "1f43c",
-  a: "0.6"
-}, {
-  n: ["sloth"],
-  u: "1f9a5",
-  a: "12.0"
-}, {
-  n: ["otter"],
-  u: "1f9a6",
-  a: "12.0"
-}, {
-  n: ["skunk"],
-  u: "1f9a8",
-  a: "12.0"
-}, {
-  n: ["kangaroo"],
-  u: "1f998",
-  a: "11.0"
-}, {
-  n: ["badger"],
-  u: "1f9a1",
-  a: "11.0"
-}, {
-  n: ["feet", "paw prints"],
-  u: "1f43e",
-  a: "0.6"
-}, {
-  n: ["turkey"],
-  u: "1f983",
-  a: "1.0"
-}, {
-  n: ["chicken"],
-  u: "1f414",
-  a: "0.6"
-}, {
-  n: ["rooster"],
-  u: "1f413",
-  a: "1.0"
-}, {
-  n: ["hatching chick"],
-  u: "1f423",
-  a: "0.6"
-}, {
-  n: ["baby chick"],
-  u: "1f424",
-  a: "0.6"
-}, {
-  n: ["hatched chick", "front-facing baby chick"],
-  u: "1f425",
-  a: "0.6"
-}, {
-  n: ["bird"],
-  u: "1f426",
-  a: "0.6"
-}, {
-  n: ["penguin"],
-  u: "1f427",
-  a: "0.6"
-}, {
-  n: ["dove", "dove of peace"],
-  u: "1f54a-fe0f",
-  a: "0.7"
-}, {
-  n: ["eagle"],
-  u: "1f985",
-  a: "3.0"
-}, {
-  n: ["duck"],
-  u: "1f986",
-  a: "3.0"
-}, {
-  n: ["swan"],
-  u: "1f9a2",
-  a: "11.0"
-}, {
-  n: ["owl"],
-  u: "1f989",
-  a: "3.0"
-}, {
-  n: ["dodo"],
-  u: "1f9a4",
-  a: "13.0"
-}, {
-  n: ["feather"],
-  u: "1fab6",
-  a: "13.0"
-}, {
-  n: ["flamingo"],
-  u: "1f9a9",
-  a: "12.0"
-}, {
-  n: ["peacock"],
-  u: "1f99a",
-  a: "11.0"
-}, {
-  n: ["parrot"],
-  u: "1f99c",
-  a: "11.0"
-}, {
-  n: ["wing"],
-  u: "1fabd",
-  a: "15.0"
-}, {
-  n: ["black bird"],
-  u: "1f426-200d-2b1b",
-  a: "15.0"
-}, {
-  n: ["goose"],
-  u: "1fabf",
-  a: "15.0"
-}, {
-  n: ["phoenix"],
-  u: "1f426-200d-1f525",
-  a: "15.1"
-}, {
-  n: ["frog", "frog face"],
-  u: "1f438",
-  a: "0.6"
-}, {
-  n: ["crocodile"],
-  u: "1f40a",
-  a: "1.0"
-}, {
-  n: ["turtle"],
-  u: "1f422",
-  a: "0.6"
-}, {
-  n: ["lizard"],
-  u: "1f98e",
-  a: "3.0"
-}, {
-  n: ["snake"],
-  u: "1f40d",
-  a: "0.6"
-}, {
-  n: ["dragon face"],
-  u: "1f432",
-  a: "0.6"
-}, {
-  n: ["dragon"],
-  u: "1f409",
-  a: "1.0"
-}, {
-  n: ["sauropod"],
-  u: "1f995",
-  a: "5.0"
-}, {
-  n: ["t-rex"],
-  u: "1f996",
-  a: "5.0"
-}, {
-  n: ["whale", "spouting whale"],
-  u: "1f433",
-  a: "0.6"
-}, {
-  n: ["whale", "whale2"],
-  u: "1f40b",
-  a: "1.0"
-}, {
-  n: ["dolphin", "flipper"],
-  u: "1f42c",
-  a: "0.6"
-}, {
-  n: ["seal"],
-  u: "1f9ad",
-  a: "13.0"
-}, {
-  n: ["fish"],
-  u: "1f41f",
-  a: "0.6"
-}, {
-  n: ["tropical fish"],
-  u: "1f420",
-  a: "0.6"
-}, {
-  n: ["blowfish"],
-  u: "1f421",
-  a: "0.6"
-}, {
-  n: ["shark"],
-  u: "1f988",
-  a: "3.0"
-}, {
-  n: ["octopus"],
-  u: "1f419",
-  a: "0.6"
-}, {
-  n: ["shell", "spiral shell"],
-  u: "1f41a",
-  a: "0.6"
-}, {
-  n: ["coral"],
-  u: "1fab8",
-  a: "14.0"
-}, {
-  n: ["jellyfish"],
-  u: "1fabc",
-  a: "15.0"
-}, {
-  n: ["snail"],
-  u: "1f40c",
-  a: "0.6"
-}, {
-  n: ["butterfly"],
-  u: "1f98b",
-  a: "3.0"
-}, {
-  n: ["bug"],
-  u: "1f41b",
-  a: "0.6"
-}, {
-  n: ["ant"],
-  u: "1f41c",
-  a: "0.6"
-}, {
-  n: ["bee", "honeybee"],
-  u: "1f41d",
-  a: "0.6"
-}, {
-  n: ["beetle"],
-  u: "1fab2",
-  a: "13.0"
-}, {
-  n: ["ladybug", "lady beetle"],
-  u: "1f41e",
-  a: "0.6"
-}, {
-  n: ["cricket"],
-  u: "1f997",
-  a: "5.0"
-}, {
-  n: ["cockroach"],
-  u: "1fab3",
-  a: "13.0"
-}, {
-  n: ["spider"],
-  u: "1f577-fe0f",
-  a: "0.7"
-}, {
-  n: ["spider web"],
-  u: "1f578-fe0f",
-  a: "0.7"
-}, {
-  n: ["scorpion"],
-  u: "1f982",
-  a: "1.0"
-}, {
-  n: ["mosquito"],
-  u: "1f99f",
-  a: "11.0"
-}, {
-  n: ["fly"],
-  u: "1fab0",
-  a: "13.0"
-}, {
-  n: ["worm"],
-  u: "1fab1",
-  a: "13.0"
-}, {
-  n: ["microbe"],
-  u: "1f9a0",
-  a: "11.0"
-}, {
-  n: ["bouquet"],
-  u: "1f490",
-  a: "0.6"
-}, {
-  n: ["cherry blossom"],
-  u: "1f338",
-  a: "0.6"
-}, {
-  n: ["white flower"],
-  u: "1f4ae",
-  a: "0.6"
-}, {
-  n: ["lotus"],
-  u: "1fab7",
-  a: "14.0"
-}, {
-  n: ["rosette"],
-  u: "1f3f5-fe0f",
-  a: "0.7"
-}, {
-  n: ["rose"],
-  u: "1f339",
-  a: "0.6"
-}, {
-  n: ["wilted flower"],
-  u: "1f940",
-  a: "3.0"
-}, {
-  n: ["hibiscus"],
-  u: "1f33a",
-  a: "0.6"
-}, {
-  n: ["sunflower"],
-  u: "1f33b",
-  a: "0.6"
-}, {
-  n: ["blossom"],
-  u: "1f33c",
-  a: "0.6"
-}, {
-  n: ["tulip"],
-  u: "1f337",
-  a: "0.6"
-}, {
-  n: ["hyacinth"],
-  u: "1fabb",
-  a: "15.0"
-}, {
-  n: ["seedling"],
-  u: "1f331",
-  a: "0.6"
-}, {
-  n: ["potted plant"],
-  u: "1fab4",
-  a: "13.0"
-}, {
-  n: ["evergreen tree"],
-  u: "1f332",
-  a: "1.0"
-}, {
-  n: ["deciduous tree"],
-  u: "1f333",
-  a: "1.0"
-}, {
-  n: ["palm tree"],
-  u: "1f334",
-  a: "0.6"
-}, {
-  n: ["cactus"],
-  u: "1f335",
-  a: "0.6"
-}, {
-  n: ["ear of rice"],
-  u: "1f33e",
-  a: "0.6"
-}, {
-  n: ["herb"],
-  u: "1f33f",
-  a: "0.6"
-}, {
-  n: ["shamrock"],
-  u: "2618-fe0f",
-  a: "1.0"
-}, {
-  n: ["four leaf clover"],
-  u: "1f340",
-  a: "0.6"
-}, {
-  n: ["maple leaf"],
-  u: "1f341",
-  a: "0.6"
-}, {
-  n: ["fallen leaf"],
-  u: "1f342",
-  a: "0.6"
-}, {
-  n: ["leaves", "leaf fluttering in wind"],
-  u: "1f343",
-  a: "0.6"
-}, {
-  n: ["empty nest"],
-  u: "1fab9",
-  a: "14.0"
-}, {
-  n: ["nest with eggs"],
-  u: "1faba",
-  a: "14.0"
-}, {
-  n: ["mushroom"],
-  u: "1f344",
-  a: "0.6"
-}];
-var food_drink = [{
-  n: ["grapes"],
-  u: "1f347",
-  a: "0.6"
-}, {
-  n: ["melon"],
-  u: "1f348",
-  a: "0.6"
-}, {
-  n: ["watermelon"],
-  u: "1f349",
-  a: "0.6"
-}, {
-  n: ["tangerine"],
-  u: "1f34a",
-  a: "0.6"
-}, {
-  n: ["lemon"],
-  u: "1f34b",
-  a: "1.0"
-}, {
-  n: ["lime"],
-  u: "1f34b-200d-1f7e9",
-  a: "15.1"
-}, {
-  n: ["banana"],
-  u: "1f34c",
-  a: "0.6"
-}, {
-  n: ["pineapple"],
-  u: "1f34d",
-  a: "0.6"
-}, {
-  n: ["mango"],
-  u: "1f96d",
-  a: "11.0"
-}, {
-  n: ["apple", "red apple"],
-  u: "1f34e",
-  a: "0.6"
-}, {
-  n: ["green apple"],
-  u: "1f34f",
-  a: "0.6"
-}, {
-  n: ["pear"],
-  u: "1f350",
-  a: "1.0"
-}, {
-  n: ["peach"],
-  u: "1f351",
-  a: "0.6"
-}, {
-  n: ["cherries"],
-  u: "1f352",
-  a: "0.6"
-}, {
-  n: ["strawberry"],
-  u: "1f353",
-  a: "0.6"
-}, {
-  n: ["blueberries"],
-  u: "1fad0",
-  a: "13.0"
-}, {
-  n: ["kiwifruit"],
-  u: "1f95d",
-  a: "3.0"
-}, {
-  n: ["tomato"],
-  u: "1f345",
-  a: "0.6"
-}, {
-  n: ["olive"],
-  u: "1fad2",
-  a: "13.0"
-}, {
-  n: ["coconut"],
-  u: "1f965",
-  a: "5.0"
-}, {
-  n: ["avocado"],
-  u: "1f951",
-  a: "3.0"
-}, {
-  n: ["eggplant", "aubergine"],
-  u: "1f346",
-  a: "0.6"
-}, {
-  n: ["potato"],
-  u: "1f954",
-  a: "3.0"
-}, {
-  n: ["carrot"],
-  u: "1f955",
-  a: "3.0"
-}, {
-  n: ["corn", "ear of maize"],
-  u: "1f33d",
-  a: "0.6"
-}, {
-  n: ["hot pepper"],
-  u: "1f336-fe0f",
-  a: "0.7"
-}, {
-  n: ["bell pepper"],
-  u: "1fad1",
-  a: "13.0"
-}, {
-  n: ["cucumber"],
-  u: "1f952",
-  a: "3.0"
-}, {
-  n: ["leafy green"],
-  u: "1f96c",
-  a: "11.0"
-}, {
-  n: ["broccoli"],
-  u: "1f966",
-  a: "5.0"
-}, {
-  n: ["garlic"],
-  u: "1f9c4",
-  a: "12.0"
-}, {
-  n: ["onion"],
-  u: "1f9c5",
-  a: "12.0"
-}, {
-  n: ["peanuts"],
-  u: "1f95c",
-  a: "3.0"
-}, {
-  n: ["beans"],
-  u: "1fad8",
-  a: "14.0"
-}, {
-  n: ["chestnut"],
-  u: "1f330",
-  a: "0.6"
-}, {
-  n: ["ginger root"],
-  u: "1fada",
-  a: "15.0"
-}, {
-  n: ["pea pod"],
-  u: "1fadb",
-  a: "15.0"
-}, {
-  n: ["brown mushroom"],
-  u: "1f344-200d-1f7eb",
-  a: "15.1"
-}, {
-  n: ["bread"],
-  u: "1f35e",
-  a: "0.6"
-}, {
-  n: ["croissant"],
-  u: "1f950",
-  a: "3.0"
-}, {
-  n: ["baguette bread"],
-  u: "1f956",
-  a: "3.0"
-}, {
-  n: ["flatbread"],
-  u: "1fad3",
-  a: "13.0"
-}, {
-  n: ["pretzel"],
-  u: "1f968",
-  a: "5.0"
-}, {
-  n: ["bagel"],
-  u: "1f96f",
-  a: "11.0"
-}, {
-  n: ["pancakes"],
-  u: "1f95e",
-  a: "3.0"
-}, {
-  n: ["waffle"],
-  u: "1f9c7",
-  a: "12.0"
-}, {
-  n: ["cheese wedge"],
-  u: "1f9c0",
-  a: "1.0"
-}, {
-  n: ["meat on bone"],
-  u: "1f356",
-  a: "0.6"
-}, {
-  n: ["poultry leg"],
-  u: "1f357",
-  a: "0.6"
-}, {
-  n: ["cut of meat"],
-  u: "1f969",
-  a: "5.0"
-}, {
-  n: ["bacon"],
-  u: "1f953",
-  a: "3.0"
-}, {
-  n: ["hamburger"],
-  u: "1f354",
-  a: "0.6"
-}, {
-  n: ["fries", "french fries"],
-  u: "1f35f",
-  a: "0.6"
-}, {
-  n: ["pizza", "slice of pizza"],
-  u: "1f355",
-  a: "0.6"
-}, {
-  n: ["hotdog", "hot dog"],
-  u: "1f32d",
-  a: "1.0"
-}, {
-  n: ["sandwich"],
-  u: "1f96a",
-  a: "5.0"
-}, {
-  n: ["taco"],
-  u: "1f32e",
-  a: "1.0"
-}, {
-  n: ["burrito"],
-  u: "1f32f",
-  a: "1.0"
-}, {
-  n: ["tamale"],
-  u: "1fad4",
-  a: "13.0"
-}, {
-  n: ["stuffed flatbread"],
-  u: "1f959",
-  a: "3.0"
-}, {
-  n: ["falafel"],
-  u: "1f9c6",
-  a: "12.0"
-}, {
-  n: ["egg"],
-  u: "1f95a",
-  a: "3.0"
-}, {
-  n: ["cooking", "fried egg"],
-  u: "1f373",
-  a: "0.6"
-}, {
-  n: ["shallow pan of food"],
-  u: "1f958",
-  a: "3.0"
-}, {
-  n: ["stew", "pot of food"],
-  u: "1f372",
-  a: "0.6"
-}, {
-  n: ["fondue"],
-  u: "1fad5",
-  a: "13.0"
-}, {
-  n: ["bowl with spoon"],
-  u: "1f963",
-  a: "5.0"
-}, {
-  n: ["green salad"],
-  u: "1f957",
-  a: "3.0"
-}, {
-  n: ["popcorn"],
-  u: "1f37f",
-  a: "1.0"
-}, {
-  n: ["butter"],
-  u: "1f9c8",
-  a: "12.0"
-}, {
-  n: ["salt", "salt shaker"],
-  u: "1f9c2",
-  a: "11.0"
-}, {
-  n: ["canned food"],
-  u: "1f96b",
-  a: "5.0"
-}, {
-  n: ["bento", "bento box"],
-  u: "1f371",
-  a: "0.6"
-}, {
-  n: ["rice cracker"],
-  u: "1f358",
-  a: "0.6"
-}, {
-  n: ["rice ball"],
-  u: "1f359",
-  a: "0.6"
-}, {
-  n: ["rice", "cooked rice"],
-  u: "1f35a",
-  a: "0.6"
-}, {
-  n: ["curry", "curry and rice"],
-  u: "1f35b",
-  a: "0.6"
-}, {
-  n: ["ramen", "steaming bowl"],
-  u: "1f35c",
-  a: "0.6"
-}, {
-  n: ["spaghetti"],
-  u: "1f35d",
-  a: "0.6"
-}, {
-  n: ["sweet potato", "roasted sweet potato"],
-  u: "1f360",
-  a: "0.6"
-}, {
-  n: ["oden"],
-  u: "1f362",
-  a: "0.6"
-}, {
-  n: ["sushi"],
-  u: "1f363",
-  a: "0.6"
-}, {
-  n: ["fried shrimp"],
-  u: "1f364",
-  a: "0.6"
-}, {
-  n: ["fish cake", "fish cake with swirl design"],
-  u: "1f365",
-  a: "0.6"
-}, {
-  n: ["moon cake"],
-  u: "1f96e",
-  a: "11.0"
-}, {
-  n: ["dango"],
-  u: "1f361",
-  a: "0.6"
-}, {
-  n: ["dumpling"],
-  u: "1f95f",
-  a: "5.0"
-}, {
-  n: ["fortune cookie"],
-  u: "1f960",
-  a: "5.0"
-}, {
-  n: ["takeout box"],
-  u: "1f961",
-  a: "5.0"
-}, {
-  n: ["crab"],
-  u: "1f980",
-  a: "1.0"
-}, {
-  n: ["lobster"],
-  u: "1f99e",
-  a: "11.0"
-}, {
-  n: ["shrimp"],
-  u: "1f990",
-  a: "3.0"
-}, {
-  n: ["squid"],
-  u: "1f991",
-  a: "3.0"
-}, {
-  n: ["oyster"],
-  u: "1f9aa",
-  a: "12.0"
-}, {
-  n: ["icecream", "soft ice cream"],
-  u: "1f366",
-  a: "0.6"
-}, {
-  n: ["shaved ice"],
-  u: "1f367",
-  a: "0.6"
-}, {
-  n: ["ice cream"],
-  u: "1f368",
-  a: "0.6"
-}, {
-  n: ["doughnut"],
-  u: "1f369",
-  a: "0.6"
-}, {
-  n: ["cookie"],
-  u: "1f36a",
-  a: "0.6"
-}, {
-  n: ["birthday", "birthday cake"],
-  u: "1f382",
-  a: "0.6"
-}, {
-  n: ["cake", "shortcake"],
-  u: "1f370",
-  a: "0.6"
-}, {
-  n: ["cupcake"],
-  u: "1f9c1",
-  a: "11.0"
-}, {
-  n: ["pie"],
-  u: "1f967",
-  a: "5.0"
-}, {
-  n: ["chocolate bar"],
-  u: "1f36b",
-  a: "0.6"
-}, {
-  n: ["candy"],
-  u: "1f36c",
-  a: "0.6"
-}, {
-  n: ["lollipop"],
-  u: "1f36d",
-  a: "0.6"
-}, {
-  n: ["custard"],
-  u: "1f36e",
-  a: "0.6"
-}, {
-  n: ["honey pot"],
-  u: "1f36f",
-  a: "0.6"
-}, {
-  n: ["baby bottle"],
-  u: "1f37c",
-  a: "1.0"
-}, {
-  n: ["glass of milk"],
-  u: "1f95b",
-  a: "3.0"
-}, {
-  n: ["coffee", "hot beverage"],
-  u: "2615",
-  a: "0.6"
-}, {
-  n: ["teapot"],
-  u: "1fad6",
-  a: "13.0"
-}, {
-  n: ["tea", "teacup without handle"],
-  u: "1f375",
-  a: "0.6"
-}, {
-  n: ["sake", "sake bottle and cup"],
-  u: "1f376",
-  a: "0.6"
-}, {
-  n: ["champagne", "bottle with popping cork"],
-  u: "1f37e",
-  a: "1.0"
-}, {
-  n: ["wine glass"],
-  u: "1f377",
-  a: "0.6"
-}, {
-  n: ["cocktail", "cocktail glass"],
-  u: "1f378",
-  a: "0.6"
-}, {
-  n: ["tropical drink"],
-  u: "1f379",
-  a: "0.6"
-}, {
-  n: ["beer", "beer mug"],
-  u: "1f37a",
-  a: "0.6"
-}, {
-  n: ["beers", "clinking beer mugs"],
-  u: "1f37b",
-  a: "0.6"
-}, {
-  n: ["clinking glasses"],
-  u: "1f942",
-  a: "3.0"
-}, {
-  n: ["tumbler glass"],
-  u: "1f943",
-  a: "3.0"
-}, {
-  n: ["pouring liquid"],
-  u: "1fad7",
-  a: "14.0"
-}, {
-  n: ["cup with straw"],
-  u: "1f964",
-  a: "5.0"
-}, {
-  n: ["bubble tea"],
-  u: "1f9cb",
-  a: "13.0"
-}, {
-  n: ["beverage box"],
-  u: "1f9c3",
-  a: "12.0"
-}, {
-  n: ["mate drink"],
-  u: "1f9c9",
-  a: "12.0"
-}, {
-  n: ["ice cube"],
-  u: "1f9ca",
-  a: "12.0"
-}, {
-  n: ["chopsticks"],
-  u: "1f962",
-  a: "5.0"
-}, {
-  n: ["knife fork plate", "fork and knife with plate"],
-  u: "1f37d-fe0f",
-  a: "0.7"
-}, {
-  n: ["fork and knife"],
-  u: "1f374",
-  a: "0.6"
-}, {
-  n: ["spoon"],
-  u: "1f944",
-  a: "3.0"
-}, {
-  n: ["hocho", "knife"],
-  u: "1f52a",
-  a: "0.6"
-}, {
-  n: ["jar"],
-  u: "1fad9",
-  a: "14.0"
-}, {
-  n: ["amphora"],
-  u: "1f3fa",
-  a: "1.0"
-}];
-var travel_places = [{
-  n: ["earth africa", "earth globe europe-africa"],
-  u: "1f30d",
-  a: "0.7"
-}, {
-  n: ["earth americas", "earth globe americas"],
-  u: "1f30e",
-  a: "0.7"
-}, {
-  n: ["earth asia", "earth globe asia-australia"],
-  u: "1f30f",
-  a: "0.6"
-}, {
-  n: ["globe with meridians"],
-  u: "1f310",
-  a: "1.0"
-}, {
-  n: ["world map"],
-  u: "1f5fa-fe0f",
-  a: "0.7"
-}, {
-  n: ["japan", "silhouette of japan"],
-  u: "1f5fe",
-  a: "0.6"
-}, {
-  n: ["compass"],
-  u: "1f9ed",
-  a: "11.0"
-}, {
-  n: ["snow-capped mountain", "snow capped mountain"],
-  u: "1f3d4-fe0f",
-  a: "0.7"
-}, {
-  n: ["mountain"],
-  u: "26f0-fe0f",
-  a: "0.7"
-}, {
-  n: ["volcano"],
-  u: "1f30b",
-  a: "0.6"
-}, {
-  n: ["mount fuji"],
-  u: "1f5fb",
-  a: "0.6"
-}, {
-  n: ["camping"],
-  u: "1f3d5-fe0f",
-  a: "0.7"
-}, {
-  n: ["beach with umbrella"],
-  u: "1f3d6-fe0f",
-  a: "0.7"
-}, {
-  n: ["desert"],
-  u: "1f3dc-fe0f",
-  a: "0.7"
-}, {
-  n: ["desert island"],
-  u: "1f3dd-fe0f",
-  a: "0.7"
-}, {
-  n: ["national park"],
-  u: "1f3de-fe0f",
-  a: "0.7"
-}, {
-  n: ["stadium"],
-  u: "1f3df-fe0f",
-  a: "0.7"
-}, {
-  n: ["classical building"],
-  u: "1f3db-fe0f",
-  a: "0.7"
-}, {
-  n: ["building construction"],
-  u: "1f3d7-fe0f",
-  a: "0.7"
-}, {
-  n: ["brick", "bricks"],
-  u: "1f9f1",
-  a: "11.0"
-}, {
-  n: ["rock"],
-  u: "1faa8",
-  a: "13.0"
-}, {
-  n: ["wood"],
-  u: "1fab5",
-  a: "13.0"
-}, {
-  n: ["hut"],
-  u: "1f6d6",
-  a: "13.0"
-}, {
-  n: ["houses", "house buildings"],
-  u: "1f3d8-fe0f",
-  a: "0.7"
-}, {
-  n: ["derelict house", "derelict house building"],
-  u: "1f3da-fe0f",
-  a: "0.7"
-}, {
-  n: ["house", "house building"],
-  u: "1f3e0",
-  a: "0.6"
-}, {
-  n: ["house with garden"],
-  u: "1f3e1",
-  a: "0.6"
-}, {
-  n: ["office", "office building"],
-  u: "1f3e2",
-  a: "0.6"
-}, {
-  n: ["post office", "japanese post office"],
-  u: "1f3e3",
-  a: "0.6"
-}, {
-  n: ["european post office"],
-  u: "1f3e4",
-  a: "1.0"
-}, {
-  n: ["hospital"],
-  u: "1f3e5",
-  a: "0.6"
-}, {
-  n: ["bank"],
-  u: "1f3e6",
-  a: "0.6"
-}, {
-  n: ["hotel"],
-  u: "1f3e8",
-  a: "0.6"
-}, {
-  n: ["love hotel"],
-  u: "1f3e9",
-  a: "0.6"
-}, {
-  n: ["convenience store"],
-  u: "1f3ea",
-  a: "0.6"
-}, {
-  n: ["school"],
-  u: "1f3eb",
-  a: "0.6"
-}, {
-  n: ["department store"],
-  u: "1f3ec",
-  a: "0.6"
-}, {
-  n: ["factory"],
-  u: "1f3ed",
-  a: "0.6"
-}, {
-  n: ["japanese castle"],
-  u: "1f3ef",
-  a: "0.6"
-}, {
-  n: ["european castle"],
-  u: "1f3f0",
-  a: "0.6"
-}, {
-  n: ["wedding"],
-  u: "1f492",
-  a: "0.6"
-}, {
-  n: ["tokyo tower"],
-  u: "1f5fc",
-  a: "0.6"
-}, {
-  n: ["statue of liberty"],
-  u: "1f5fd",
-  a: "0.6"
-}, {
-  n: ["church"],
-  u: "26ea",
-  a: "0.6"
-}, {
-  n: ["mosque"],
-  u: "1f54c",
-  a: "1.0"
-}, {
-  n: ["hindu temple"],
-  u: "1f6d5",
-  a: "12.0"
-}, {
-  n: ["synagogue"],
-  u: "1f54d",
-  a: "1.0"
-}, {
-  n: ["shinto shrine"],
-  u: "26e9-fe0f",
-  a: "0.7"
-}, {
-  n: ["kaaba"],
-  u: "1f54b",
-  a: "1.0"
-}, {
-  n: ["fountain"],
-  u: "26f2",
-  a: "0.6"
-}, {
-  n: ["tent"],
-  u: "26fa",
-  a: "0.6"
-}, {
-  n: ["foggy"],
-  u: "1f301",
-  a: "0.6"
-}, {
-  n: ["night with stars"],
-  u: "1f303",
-  a: "0.6"
-}, {
-  n: ["cityscape"],
-  u: "1f3d9-fe0f",
-  a: "0.7"
-}, {
-  n: ["sunrise over mountains"],
-  u: "1f304",
-  a: "0.6"
-}, {
-  n: ["sunrise"],
-  u: "1f305",
-  a: "0.6"
-}, {
-  n: ["city sunset", "cityscape at dusk"],
-  u: "1f306",
-  a: "0.6"
-}, {
-  n: ["city sunrise", "sunset over buildings"],
-  u: "1f307",
-  a: "0.6"
-}, {
-  n: ["bridge at night"],
-  u: "1f309",
-  a: "0.6"
-}, {
-  n: ["hotsprings", "hot springs"],
-  u: "2668-fe0f",
-  a: "0.6"
-}, {
-  n: ["carousel horse"],
-  u: "1f3a0",
-  a: "0.6"
-}, {
-  n: ["playground slide"],
-  u: "1f6dd",
-  a: "14.0"
-}, {
-  n: ["ferris wheel"],
-  u: "1f3a1",
-  a: "0.6"
-}, {
-  n: ["roller coaster"],
-  u: "1f3a2",
-  a: "0.6"
-}, {
-  n: ["barber", "barber pole"],
-  u: "1f488",
-  a: "0.6"
-}, {
-  n: ["circus tent"],
-  u: "1f3aa",
-  a: "0.6"
-}, {
-  n: ["steam locomotive"],
-  u: "1f682",
-  a: "1.0"
-}, {
-  n: ["railway car"],
-  u: "1f683",
-  a: "0.6"
-}, {
-  n: ["high-speed train", "bullettrain side"],
-  u: "1f684",
-  a: "0.6"
-}, {
-  n: ["bullettrain front", "high-speed train with bullet nose"],
-  u: "1f685",
-  a: "0.6"
-}, {
-  n: ["train", "train2"],
-  u: "1f686",
-  a: "1.0"
-}, {
-  n: ["metro"],
-  u: "1f687",
-  a: "0.6"
-}, {
-  n: ["light rail"],
-  u: "1f688",
-  a: "1.0"
-}, {
-  n: ["station"],
-  u: "1f689",
-  a: "0.6"
-}, {
-  n: ["tram"],
-  u: "1f68a",
-  a: "1.0"
-}, {
-  n: ["monorail"],
-  u: "1f69d",
-  a: "1.0"
-}, {
-  n: ["mountain railway"],
-  u: "1f69e",
-  a: "1.0"
-}, {
-  n: ["train", "tram car"],
-  u: "1f68b",
-  a: "1.0"
-}, {
-  n: ["bus"],
-  u: "1f68c",
-  a: "0.6"
-}, {
-  n: ["oncoming bus"],
-  u: "1f68d",
-  a: "0.7"
-}, {
-  n: ["trolleybus"],
-  u: "1f68e",
-  a: "1.0"
-}, {
-  n: ["minibus"],
-  u: "1f690",
-  a: "1.0"
-}, {
-  n: ["ambulance"],
-  u: "1f691",
-  a: "0.6"
-}, {
-  n: ["fire engine"],
-  u: "1f692",
-  a: "0.6"
-}, {
-  n: ["police car"],
-  u: "1f693",
-  a: "0.6"
-}, {
-  n: ["oncoming police car"],
-  u: "1f694",
-  a: "0.7"
-}, {
-  n: ["taxi"],
-  u: "1f695",
-  a: "0.6"
-}, {
-  n: ["oncoming taxi"],
-  u: "1f696",
-  a: "1.0"
-}, {
-  n: ["car", "red car", "automobile"],
-  u: "1f697",
-  a: "0.6"
-}, {
-  n: ["oncoming automobile"],
-  u: "1f698",
-  a: "0.7"
-}, {
-  n: ["blue car", "recreational vehicle"],
-  u: "1f699",
-  a: "0.6"
-}, {
-  n: ["pickup truck"],
-  u: "1f6fb",
-  a: "13.0"
-}, {
-  n: ["truck", "delivery truck"],
-  u: "1f69a",
-  a: "0.6"
-}, {
-  n: ["articulated lorry"],
-  u: "1f69b",
-  a: "1.0"
-}, {
-  n: ["tractor"],
-  u: "1f69c",
-  a: "1.0"
-}, {
-  n: ["racing car"],
-  u: "1f3ce-fe0f",
-  a: "0.7"
-}, {
-  n: ["motorcycle", "racing motorcycle"],
-  u: "1f3cd-fe0f",
-  a: "0.7"
-}, {
-  n: ["motor scooter"],
-  u: "1f6f5",
-  a: "3.0"
-}, {
-  n: ["manual wheelchair"],
-  u: "1f9bd",
-  a: "12.0"
-}, {
-  n: ["motorized wheelchair"],
-  u: "1f9bc",
-  a: "12.0"
-}, {
-  n: ["auto rickshaw"],
-  u: "1f6fa",
-  a: "12.0"
-}, {
-  n: ["bike", "bicycle"],
-  u: "1f6b2",
-  a: "0.6"
-}, {
-  n: ["scooter"],
-  u: "1f6f4",
-  a: "3.0"
-}, {
-  n: ["skateboard"],
-  u: "1f6f9",
-  a: "11.0"
-}, {
-  n: ["roller skate"],
-  u: "1f6fc",
-  a: "13.0"
-}, {
-  n: ["busstop", "bus stop"],
-  u: "1f68f",
-  a: "0.6"
-}, {
-  n: ["motorway"],
-  u: "1f6e3-fe0f",
-  a: "0.7"
-}, {
-  n: ["railway track"],
-  u: "1f6e4-fe0f",
-  a: "0.7"
-}, {
-  n: ["oil drum"],
-  u: "1f6e2-fe0f",
-  a: "0.7"
-}, {
-  n: ["fuelpump", "fuel pump"],
-  u: "26fd",
-  a: "0.6"
-}, {
-  n: ["wheel"],
-  u: "1f6de",
-  a: "14.0"
-}, {
-  n: ["rotating light", "police cars revolving light"],
-  u: "1f6a8",
-  a: "0.6"
-}, {
-  n: ["traffic light", "horizontal traffic light"],
-  u: "1f6a5",
-  a: "0.6"
-}, {
-  n: ["vertical traffic light"],
-  u: "1f6a6",
-  a: "1.0"
-}, {
-  n: ["octagonal sign"],
-  u: "1f6d1",
-  a: "3.0"
-}, {
-  n: ["construction", "construction sign"],
-  u: "1f6a7",
-  a: "0.6"
-}, {
-  n: ["anchor"],
-  u: "2693",
-  a: "0.6"
-}, {
-  n: ["ring buoy"],
-  u: "1f6df",
-  a: "14.0"
-}, {
-  n: ["boat", "sailboat"],
-  u: "26f5",
-  a: "0.6"
-}, {
-  n: ["canoe"],
-  u: "1f6f6",
-  a: "3.0"
-}, {
-  n: ["speedboat"],
-  u: "1f6a4",
-  a: "0.6"
-}, {
-  n: ["passenger ship"],
-  u: "1f6f3-fe0f",
-  a: "0.7"
-}, {
-  n: ["ferry"],
-  u: "26f4-fe0f",
-  a: "0.7"
-}, {
-  n: ["motor boat"],
-  u: "1f6e5-fe0f",
-  a: "0.7"
-}, {
-  n: ["ship"],
-  u: "1f6a2",
-  a: "0.6"
-}, {
-  n: ["airplane"],
-  u: "2708-fe0f",
-  a: "0.6"
-}, {
-  n: ["small airplane"],
-  u: "1f6e9-fe0f",
-  a: "0.7"
-}, {
-  n: ["airplane departure"],
-  u: "1f6eb",
-  a: "1.0"
-}, {
-  n: ["airplane arriving"],
-  u: "1f6ec",
-  a: "1.0"
-}, {
-  n: ["parachute"],
-  u: "1fa82",
-  a: "12.0"
-}, {
-  n: ["seat"],
-  u: "1f4ba",
-  a: "0.6"
-}, {
-  n: ["helicopter"],
-  u: "1f681",
-  a: "1.0"
-}, {
-  n: ["suspension railway"],
-  u: "1f69f",
-  a: "1.0"
-}, {
-  n: ["mountain cableway"],
-  u: "1f6a0",
-  a: "1.0"
-}, {
-  n: ["aerial tramway"],
-  u: "1f6a1",
-  a: "1.0"
-}, {
-  n: ["satellite"],
-  u: "1f6f0-fe0f",
-  a: "0.7"
-}, {
-  n: ["rocket"],
-  u: "1f680",
-  a: "0.6"
-}, {
-  n: ["flying saucer"],
-  u: "1f6f8",
-  a: "5.0"
-}, {
-  n: ["bellhop bell"],
-  u: "1f6ce-fe0f",
-  a: "0.7"
-}, {
-  n: ["luggage"],
-  u: "1f9f3",
-  a: "11.0"
-}, {
-  n: ["hourglass"],
-  u: "231b",
-  a: "0.6"
-}, {
-  n: ["hourglass flowing sand", "hourglass with flowing sand"],
-  u: "23f3",
-  a: "0.6"
-}, {
-  n: ["watch"],
-  u: "231a",
-  a: "0.6"
-}, {
-  n: ["alarm clock"],
-  u: "23f0",
-  a: "0.6"
-}, {
-  n: ["stopwatch"],
-  u: "23f1-fe0f",
-  a: "1.0"
-}, {
-  n: ["timer clock"],
-  u: "23f2-fe0f",
-  a: "1.0"
-}, {
-  n: ["mantelpiece clock"],
-  u: "1f570-fe0f",
-  a: "0.7"
-}, {
-  n: ["clock12", "clock face twelve oclock"],
-  u: "1f55b",
-  a: "0.6"
-}, {
-  n: ["clock1230", "clock face twelve-thirty"],
-  u: "1f567",
-  a: "0.7"
-}, {
-  n: ["clock1", "clock face one oclock"],
-  u: "1f550",
-  a: "0.6"
-}, {
-  n: ["clock130", "clock face one-thirty"],
-  u: "1f55c",
-  a: "0.7"
-}, {
-  n: ["clock2", "clock face two oclock"],
-  u: "1f551",
-  a: "0.6"
-}, {
-  n: ["clock230", "clock face two-thirty"],
-  u: "1f55d",
-  a: "0.7"
-}, {
-  n: ["clock3", "clock face three oclock"],
-  u: "1f552",
-  a: "0.6"
-}, {
-  n: ["clock330", "clock face three-thirty"],
-  u: "1f55e",
-  a: "0.7"
-}, {
-  n: ["clock4", "clock face four oclock"],
-  u: "1f553",
-  a: "0.6"
-}, {
-  n: ["clock430", "clock face four-thirty"],
-  u: "1f55f",
-  a: "0.7"
-}, {
-  n: ["clock5", "clock face five oclock"],
-  u: "1f554",
-  a: "0.6"
-}, {
-  n: ["clock530", "clock face five-thirty"],
-  u: "1f560",
-  a: "0.7"
-}, {
-  n: ["clock6", "clock face six oclock"],
-  u: "1f555",
-  a: "0.6"
-}, {
-  n: ["clock630", "clock face six-thirty"],
-  u: "1f561",
-  a: "0.7"
-}, {
-  n: ["clock7", "clock face seven oclock"],
-  u: "1f556",
-  a: "0.6"
-}, {
-  n: ["clock730", "clock face seven-thirty"],
-  u: "1f562",
-  a: "0.7"
-}, {
-  n: ["clock8", "clock face eight oclock"],
-  u: "1f557",
-  a: "0.6"
-}, {
-  n: ["clock830", "clock face eight-thirty"],
-  u: "1f563",
-  a: "0.7"
-}, {
-  n: ["clock9", "clock face nine oclock"],
-  u: "1f558",
-  a: "0.6"
-}, {
-  n: ["clock930", "clock face nine-thirty"],
-  u: "1f564",
-  a: "0.7"
-}, {
-  n: ["clock10", "clock face ten oclock"],
-  u: "1f559",
-  a: "0.6"
-}, {
-  n: ["clock1030", "clock face ten-thirty"],
-  u: "1f565",
-  a: "0.7"
-}, {
-  n: ["clock11", "clock face eleven oclock"],
-  u: "1f55a",
-  a: "0.6"
-}, {
-  n: ["clock1130", "clock face eleven-thirty"],
-  u: "1f566",
-  a: "0.7"
-}, {
-  n: ["new moon", "new moon symbol"],
-  u: "1f311",
-  a: "0.6"
-}, {
-  n: ["waxing crescent moon", "waxing crescent moon symbol"],
-  u: "1f312",
-  a: "1.0"
-}, {
-  n: ["first quarter moon", "first quarter moon symbol"],
-  u: "1f313",
-  a: "0.6"
-}, {
-  n: ["moon", "waxing gibbous moon", "waxing gibbous moon symbol"],
-  u: "1f314",
-  a: "0.6"
-}, {
-  n: ["full moon", "full moon symbol"],
-  u: "1f315",
-  a: "0.6"
-}, {
-  n: ["waning gibbous moon", "waning gibbous moon symbol"],
-  u: "1f316",
-  a: "1.0"
-}, {
-  n: ["last quarter moon", "last quarter moon symbol"],
-  u: "1f317",
-  a: "1.0"
-}, {
-  n: ["waning crescent moon", "waning crescent moon symbol"],
-  u: "1f318",
-  a: "1.0"
-}, {
-  n: ["crescent moon"],
-  u: "1f319",
-  a: "0.6"
-}, {
-  n: ["new moon with face"],
-  u: "1f31a",
-  a: "1.0"
-}, {
-  n: ["first quarter moon with face"],
-  u: "1f31b",
-  a: "0.6"
-}, {
-  n: ["last quarter moon with face"],
-  u: "1f31c",
-  a: "0.7"
-}, {
-  n: ["thermometer"],
-  u: "1f321-fe0f",
-  a: "0.7"
-}, {
-  n: ["sunny", "black sun with rays"],
-  u: "2600-fe0f",
-  a: "0.6"
-}, {
-  n: ["full moon with face"],
-  u: "1f31d",
-  a: "1.0"
-}, {
-  n: ["sun with face"],
-  u: "1f31e",
-  a: "1.0"
-}, {
-  n: ["ringed planet"],
-  u: "1fa90",
-  a: "12.0"
-}, {
-  n: ["star", "white medium star"],
-  u: "2b50",
-  a: "0.6"
-}, {
-  n: ["star2", "glowing star"],
-  u: "1f31f",
-  a: "0.6"
-}, {
-  n: ["stars", "shooting star"],
-  u: "1f320",
-  a: "0.6"
-}, {
-  n: ["milky way"],
-  u: "1f30c",
-  a: "0.6"
-}, {
-  n: ["cloud"],
-  u: "2601-fe0f",
-  a: "0.6"
-}, {
-  n: ["partly sunny", "sun behind cloud"],
-  u: "26c5",
-  a: "0.6"
-}, {
-  n: ["thunder cloud and rain", "cloud with lightning and rain"],
-  u: "26c8-fe0f",
-  a: "0.7"
-}, {
-  n: ["mostly sunny", "sun small cloud", "sun behind small cloud"],
-  u: "1f324-fe0f",
-  a: "0.7"
-}, {
-  n: ["barely sunny", "sun behind cloud", "sun behind large cloud"],
-  u: "1f325-fe0f",
-  a: "0.7"
-}, {
-  n: ["partly sunny rain", "sun behind rain cloud"],
-  u: "1f326-fe0f",
-  a: "0.7"
-}, {
-  n: ["rain cloud", "cloud with rain"],
-  u: "1f327-fe0f",
-  a: "0.7"
-}, {
-  n: ["snow cloud", "cloud with snow"],
-  u: "1f328-fe0f",
-  a: "0.7"
-}, {
-  n: ["lightning", "lightning cloud", "cloud with lightning"],
-  u: "1f329-fe0f",
-  a: "0.7"
-}, {
-  n: ["tornado", "tornado cloud"],
-  u: "1f32a-fe0f",
-  a: "0.7"
-}, {
-  n: ["fog"],
-  u: "1f32b-fe0f",
-  a: "0.7"
-}, {
-  n: ["wind face", "wind blowing face"],
-  u: "1f32c-fe0f",
-  a: "0.7"
-}, {
-  n: ["cyclone"],
-  u: "1f300",
-  a: "0.6"
-}, {
-  n: ["rainbow"],
-  u: "1f308",
-  a: "0.6"
-}, {
-  n: ["closed umbrella"],
-  u: "1f302",
-  a: "0.6"
-}, {
-  n: ["umbrella"],
-  u: "2602-fe0f",
-  a: "0.7"
-}, {
-  n: ["umbrella with rain drops"],
-  u: "2614",
-  a: "0.6"
-}, {
-  n: ["umbrella on ground"],
-  u: "26f1-fe0f",
-  a: "0.7"
-}, {
-  n: ["zap", "high voltage sign"],
-  u: "26a1",
-  a: "0.6"
-}, {
-  n: ["snowflake"],
-  u: "2744-fe0f",
-  a: "0.6"
-}, {
-  n: ["snowman"],
-  u: "2603-fe0f",
-  a: "0.7"
-}, {
-  n: ["snowman without snow"],
-  u: "26c4",
-  a: "0.6"
-}, {
-  n: ["comet"],
-  u: "2604-fe0f",
-  a: "1.0"
-}, {
-  n: ["fire"],
-  u: "1f525",
-  a: "0.6"
-}, {
-  n: ["droplet"],
-  u: "1f4a7",
-  a: "0.6"
-}, {
-  n: ["ocean", "water wave"],
-  u: "1f30a",
-  a: "0.6"
-}];
-var activities = [{
-  n: ["jack-o-lantern", "jack o lantern"],
-  u: "1f383",
-  a: "0.6"
-}, {
-  n: ["christmas tree"],
-  u: "1f384",
-  a: "0.6"
-}, {
-  n: ["fireworks"],
-  u: "1f386",
-  a: "0.6"
-}, {
-  n: ["sparkler", "firework sparkler"],
-  u: "1f387",
-  a: "0.6"
-}, {
-  n: ["firecracker"],
-  u: "1f9e8",
-  a: "11.0"
-}, {
-  n: ["sparkles"],
-  u: "2728",
-  a: "0.6"
-}, {
-  n: ["balloon"],
-  u: "1f388",
-  a: "0.6"
-}, {
-  n: ["tada", "party popper"],
-  u: "1f389",
-  a: "0.6"
-}, {
-  n: ["confetti ball"],
-  u: "1f38a",
-  a: "0.6"
-}, {
-  n: ["tanabata tree"],
-  u: "1f38b",
-  a: "0.6"
-}, {
-  n: ["bamboo", "pine decoration"],
-  u: "1f38d",
-  a: "0.6"
-}, {
-  n: ["dolls", "japanese dolls"],
-  u: "1f38e",
-  a: "0.6"
-}, {
-  n: ["flags", "carp streamer"],
-  u: "1f38f",
-  a: "0.6"
-}, {
-  n: ["wind chime"],
-  u: "1f390",
-  a: "0.6"
-}, {
-  n: ["rice scene", "moon viewing ceremony"],
-  u: "1f391",
-  a: "0.6"
-}, {
-  n: ["red envelope", "red gift envelope"],
-  u: "1f9e7",
-  a: "11.0"
-}, {
-  n: ["ribbon"],
-  u: "1f380",
-  a: "0.6"
-}, {
-  n: ["gift", "wrapped present"],
-  u: "1f381",
-  a: "0.6"
-}, {
-  n: ["reminder ribbon"],
-  u: "1f397-fe0f",
-  a: "0.7"
-}, {
-  n: ["admission tickets"],
-  u: "1f39f-fe0f",
-  a: "0.7"
-}, {
-  n: ["ticket"],
-  u: "1f3ab",
-  a: "0.6"
-}, {
-  n: ["medal", "military medal"],
-  u: "1f396-fe0f",
-  a: "0.7"
-}, {
-  n: ["trophy"],
-  u: "1f3c6",
-  a: "0.6"
-}, {
-  n: ["sports medal"],
-  u: "1f3c5",
-  a: "1.0"
-}, {
-  n: ["first place medal"],
-  u: "1f947",
-  a: "3.0"
-}, {
-  n: ["second place medal"],
-  u: "1f948",
-  a: "3.0"
-}, {
-  n: ["third place medal"],
-  u: "1f949",
-  a: "3.0"
-}, {
-  n: ["soccer", "soccer ball"],
-  u: "26bd",
-  a: "0.6"
-}, {
-  n: ["baseball"],
-  u: "26be",
-  a: "0.6"
-}, {
-  n: ["softball"],
-  u: "1f94e",
-  a: "11.0"
-}, {
-  n: ["basketball", "basketball and hoop"],
-  u: "1f3c0",
-  a: "0.6"
-}, {
-  n: ["volleyball"],
-  u: "1f3d0",
-  a: "1.0"
-}, {
-  n: ["football", "american football"],
-  u: "1f3c8",
-  a: "0.6"
-}, {
-  n: ["rugby football"],
-  u: "1f3c9",
-  a: "1.0"
-}, {
-  n: ["tennis", "tennis racquet and ball"],
-  u: "1f3be",
-  a: "0.6"
-}, {
-  n: ["flying disc"],
-  u: "1f94f",
-  a: "11.0"
-}, {
-  n: ["bowling"],
-  u: "1f3b3",
-  a: "0.6"
-}, {
-  n: ["cricket bat and ball"],
-  u: "1f3cf",
-  a: "1.0"
-}, {
-  n: ["field hockey stick and ball"],
-  u: "1f3d1",
-  a: "1.0"
-}, {
-  n: ["ice hockey stick and puck"],
-  u: "1f3d2",
-  a: "1.0"
-}, {
-  n: ["lacrosse", "lacrosse stick and ball"],
-  u: "1f94d",
-  a: "11.0"
-}, {
-  n: ["table tennis paddle and ball"],
-  u: "1f3d3",
-  a: "1.0"
-}, {
-  n: ["badminton racquet and shuttlecock"],
-  u: "1f3f8",
-  a: "1.0"
-}, {
-  n: ["boxing glove"],
-  u: "1f94a",
-  a: "3.0"
-}, {
-  n: ["martial arts uniform"],
-  u: "1f94b",
-  a: "3.0"
-}, {
-  n: ["goal net"],
-  u: "1f945",
-  a: "3.0"
-}, {
-  n: ["golf", "flag in hole"],
-  u: "26f3",
-  a: "0.6"
-}, {
-  n: ["ice skate"],
-  u: "26f8-fe0f",
-  a: "0.7"
-}, {
-  n: ["fishing pole and fish"],
-  u: "1f3a3",
-  a: "0.6"
-}, {
-  n: ["diving mask"],
-  u: "1f93f",
-  a: "12.0"
-}, {
-  n: ["running shirt with sash"],
-  u: "1f3bd",
-  a: "0.6"
-}, {
-  n: ["ski", "ski and ski boot"],
-  u: "1f3bf",
-  a: "0.6"
-}, {
-  n: ["sled"],
-  u: "1f6f7",
-  a: "5.0"
-}, {
-  n: ["curling stone"],
-  u: "1f94c",
-  a: "5.0"
-}, {
-  n: ["dart", "direct hit"],
-  u: "1f3af",
-  a: "0.6"
-}, {
-  n: ["yo-yo"],
-  u: "1fa80",
-  a: "12.0"
-}, {
-  n: ["kite"],
-  u: "1fa81",
-  a: "12.0"
-}, {
-  n: ["gun", "pistol"],
-  u: "1f52b",
-  a: "0.6"
-}, {
-  n: ["8ball", "billiards"],
-  u: "1f3b1",
-  a: "0.6"
-}, {
-  n: ["crystal ball"],
-  u: "1f52e",
-  a: "0.6"
-}, {
-  n: ["magic wand"],
-  u: "1fa84",
-  a: "13.0"
-}, {
-  n: ["video game"],
-  u: "1f3ae",
-  a: "0.6"
-}, {
-  n: ["joystick"],
-  u: "1f579-fe0f",
-  a: "0.7"
-}, {
-  n: ["slot machine"],
-  u: "1f3b0",
-  a: "0.6"
-}, {
-  n: ["game die"],
-  u: "1f3b2",
-  a: "0.6"
-}, {
-  n: ["jigsaw", "jigsaw puzzle piece"],
-  u: "1f9e9",
-  a: "11.0"
-}, {
-  n: ["teddy bear"],
-  u: "1f9f8",
-  a: "11.0"
-}, {
-  n: ["pinata"],
-  u: "1fa85",
-  a: "13.0"
-}, {
-  n: ["mirror ball"],
-  u: "1faa9",
-  a: "14.0"
-}, {
-  n: ["nesting dolls"],
-  u: "1fa86",
-  a: "13.0"
-}, {
-  n: ["spades", "black spade suit"],
-  u: "2660-fe0f",
-  a: "0.6"
-}, {
-  n: ["hearts", "black heart suit"],
-  u: "2665-fe0f",
-  a: "0.6"
-}, {
-  n: ["diamonds", "black diamond suit"],
-  u: "2666-fe0f",
-  a: "0.6"
-}, {
-  n: ["clubs", "black club suit"],
-  u: "2663-fe0f",
-  a: "0.6"
-}, {
-  n: ["chess pawn"],
-  u: "265f-fe0f",
-  a: "11.0"
-}, {
-  n: ["black joker", "playing card black joker"],
-  u: "1f0cf",
-  a: "0.6"
-}, {
-  n: ["mahjong", "mahjong tile red dragon"],
-  u: "1f004",
-  a: "0.6"
-}, {
-  n: ["flower playing cards"],
-  u: "1f3b4",
-  a: "0.6"
-}, {
-  n: ["performing arts"],
-  u: "1f3ad",
-  a: "0.6"
-}, {
-  n: ["framed picture", "frame with picture"],
-  u: "1f5bc-fe0f",
-  a: "0.7"
-}, {
-  n: ["art", "artist palette"],
-  u: "1f3a8",
-  a: "0.6"
-}, {
-  n: ["thread", "spool of thread"],
-  u: "1f9f5",
-  a: "11.0"
-}, {
-  n: ["sewing needle"],
-  u: "1faa1",
-  a: "13.0"
-}, {
-  n: ["yarn", "ball of yarn"],
-  u: "1f9f6",
-  a: "11.0"
-}, {
-  n: ["knot"],
-  u: "1faa2",
-  a: "13.0"
-}];
-var objects = [{
-  n: ["eyeglasses"],
-  u: "1f453",
-  a: "0.6"
-}, {
-  n: ["sunglasses", "dark sunglasses"],
-  u: "1f576-fe0f",
-  a: "0.7"
-}, {
-  n: ["goggles"],
-  u: "1f97d",
-  a: "11.0"
-}, {
-  n: ["lab coat"],
-  u: "1f97c",
-  a: "11.0"
-}, {
-  n: ["safety vest"],
-  u: "1f9ba",
-  a: "12.0"
-}, {
-  n: ["necktie"],
-  u: "1f454",
-  a: "0.6"
-}, {
-  n: ["shirt", "tshirt", "t-shirt"],
-  u: "1f455",
-  a: "0.6"
-}, {
-  n: ["jeans"],
-  u: "1f456",
-  a: "0.6"
-}, {
-  n: ["scarf"],
-  u: "1f9e3",
-  a: "5.0"
-}, {
-  n: ["gloves"],
-  u: "1f9e4",
-  a: "5.0"
-}, {
-  n: ["coat"],
-  u: "1f9e5",
-  a: "5.0"
-}, {
-  n: ["socks"],
-  u: "1f9e6",
-  a: "5.0"
-}, {
-  n: ["dress"],
-  u: "1f457",
-  a: "0.6"
-}, {
-  n: ["kimono"],
-  u: "1f458",
-  a: "0.6"
-}, {
-  n: ["sari"],
-  u: "1f97b",
-  a: "12.0"
-}, {
-  n: ["one-piece swimsuit"],
-  u: "1fa71",
-  a: "12.0"
-}, {
-  n: ["briefs"],
-  u: "1fa72",
-  a: "12.0"
-}, {
-  n: ["shorts"],
-  u: "1fa73",
-  a: "12.0"
-}, {
-  n: ["bikini"],
-  u: "1f459",
-  a: "0.6"
-}, {
-  n: ["womans clothes"],
-  u: "1f45a",
-  a: "0.6"
-}, {
-  n: ["folding hand fan"],
-  u: "1faad",
-  a: "15.0"
-}, {
-  n: ["purse"],
-  u: "1f45b",
-  a: "0.6"
-}, {
-  n: ["handbag"],
-  u: "1f45c",
-  a: "0.6"
-}, {
-  n: ["pouch"],
-  u: "1f45d",
-  a: "0.6"
-}, {
-  n: ["shopping bags"],
-  u: "1f6cd-fe0f",
-  a: "0.7"
-}, {
-  n: ["school satchel"],
-  u: "1f392",
-  a: "0.6"
-}, {
-  n: ["thong sandal"],
-  u: "1fa74",
-  a: "13.0"
-}, {
-  n: ["shoe", "mans shoe"],
-  u: "1f45e",
-  a: "0.6"
-}, {
-  n: ["athletic shoe"],
-  u: "1f45f",
-  a: "0.6"
-}, {
-  n: ["hiking boot"],
-  u: "1f97e",
-  a: "11.0"
-}, {
-  n: ["flat shoe", "womans flat shoe"],
-  u: "1f97f",
-  a: "11.0"
-}, {
-  n: ["high heel", "high-heeled shoe"],
-  u: "1f460",
-  a: "0.6"
-}, {
-  n: ["sandal", "womans sandal"],
-  u: "1f461",
-  a: "0.6"
-}, {
-  n: ["ballet shoes"],
-  u: "1fa70",
-  a: "12.0"
-}, {
-  n: ["boot", "womans boots"],
-  u: "1f462",
-  a: "0.6"
-}, {
-  n: ["hair pick"],
-  u: "1faae",
-  a: "15.0"
-}, {
-  n: ["crown"],
-  u: "1f451",
-  a: "0.6"
-}, {
-  n: ["womans hat"],
-  u: "1f452",
-  a: "0.6"
-}, {
-  n: ["tophat", "top hat"],
-  u: "1f3a9",
-  a: "0.6"
-}, {
-  n: ["mortar board", "graduation cap"],
-  u: "1f393",
-  a: "0.6"
-}, {
-  n: ["billed cap"],
-  u: "1f9e2",
-  a: "5.0"
-}, {
-  n: ["military helmet"],
-  u: "1fa96",
-  a: "13.0"
-}, {
-  n: ["rescue worker’s helmet", "helmet with white cross"],
-  u: "26d1-fe0f",
-  a: "0.7"
-}, {
-  n: ["prayer beads"],
-  u: "1f4ff",
-  a: "1.0"
-}, {
-  n: ["lipstick"],
-  u: "1f484",
-  a: "0.6"
-}, {
-  n: ["ring"],
-  u: "1f48d",
-  a: "0.6"
-}, {
-  n: ["gem", "gem stone"],
-  u: "1f48e",
-  a: "0.6"
-}, {
-  n: ["mute", "speaker with cancellation stroke"],
-  u: "1f507",
-  a: "1.0"
-}, {
-  n: ["speaker"],
-  u: "1f508",
-  a: "0.7"
-}, {
-  n: ["sound", "speaker with one sound wave"],
-  u: "1f509",
-  a: "1.0"
-}, {
-  n: ["loud sound", "speaker with three sound waves"],
-  u: "1f50a",
-  a: "0.6"
-}, {
-  n: ["loudspeaker", "public address loudspeaker"],
-  u: "1f4e2",
-  a: "0.6"
-}, {
-  n: ["mega", "cheering megaphone"],
-  u: "1f4e3",
-  a: "0.6"
-}, {
-  n: ["postal horn"],
-  u: "1f4ef",
-  a: "1.0"
-}, {
-  n: ["bell"],
-  u: "1f514",
-  a: "0.6"
-}, {
-  n: ["no bell", "bell with cancellation stroke"],
-  u: "1f515",
-  a: "1.0"
-}, {
-  n: ["musical score"],
-  u: "1f3bc",
-  a: "0.6"
-}, {
-  n: ["musical note"],
-  u: "1f3b5",
-  a: "0.6"
-}, {
-  n: ["notes", "multiple musical notes"],
-  u: "1f3b6",
-  a: "0.6"
-}, {
-  n: ["studio microphone"],
-  u: "1f399-fe0f",
-  a: "0.7"
-}, {
-  n: ["level slider"],
-  u: "1f39a-fe0f",
-  a: "0.7"
-}, {
-  n: ["control knobs"],
-  u: "1f39b-fe0f",
-  a: "0.7"
-}, {
-  n: ["microphone"],
-  u: "1f3a4",
-  a: "0.6"
-}, {
-  n: ["headphone", "headphones"],
-  u: "1f3a7",
-  a: "0.6"
-}, {
-  n: ["radio"],
-  u: "1f4fb",
-  a: "0.6"
-}, {
-  n: ["saxophone"],
-  u: "1f3b7",
-  a: "0.6"
-}, {
-  n: ["accordion"],
-  u: "1fa97",
-  a: "13.0"
-}, {
-  n: ["guitar"],
-  u: "1f3b8",
-  a: "0.6"
-}, {
-  n: ["musical keyboard"],
-  u: "1f3b9",
-  a: "0.6"
-}, {
-  n: ["trumpet"],
-  u: "1f3ba",
-  a: "0.6"
-}, {
-  n: ["violin"],
-  u: "1f3bb",
-  a: "0.6"
-}, {
-  n: ["banjo"],
-  u: "1fa95",
-  a: "12.0"
-}, {
-  n: ["drum with drumsticks"],
-  u: "1f941",
-  a: "3.0"
-}, {
-  n: ["long drum"],
-  u: "1fa98",
-  a: "13.0"
-}, {
-  n: ["maracas"],
-  u: "1fa87",
-  a: "15.0"
-}, {
-  n: ["flute"],
-  u: "1fa88",
-  a: "15.0"
-}, {
-  n: ["iphone", "mobile phone"],
-  u: "1f4f1",
-  a: "0.6"
-}, {
-  n: ["calling", "mobile phone with rightwards arrow at left"],
-  u: "1f4f2",
-  a: "0.6"
-}, {
-  n: ["phone", "telephone", "black telephone"],
-  u: "260e-fe0f",
-  a: "0.6"
-}, {
-  n: ["telephone receiver"],
-  u: "1f4de",
-  a: "0.6"
-}, {
-  n: ["pager"],
-  u: "1f4df",
-  a: "0.6"
-}, {
-  n: ["fax", "fax machine"],
-  u: "1f4e0",
-  a: "0.6"
-}, {
-  n: ["battery"],
-  u: "1f50b",
-  a: "0.6"
-}, {
-  n: ["low battery"],
-  u: "1faab",
-  a: "14.0"
-}, {
-  n: ["electric plug"],
-  u: "1f50c",
-  a: "0.6"
-}, {
-  n: ["computer", "personal computer"],
-  u: "1f4bb",
-  a: "0.6"
-}, {
-  n: ["desktop computer"],
-  u: "1f5a5-fe0f",
-  a: "0.7"
-}, {
-  n: ["printer"],
-  u: "1f5a8-fe0f",
-  a: "0.7"
-}, {
-  n: ["keyboard"],
-  u: "2328-fe0f",
-  a: "1.0"
-}, {
-  n: ["computer mouse", "three button mouse"],
-  u: "1f5b1-fe0f",
-  a: "0.7"
-}, {
-  n: ["trackball"],
-  u: "1f5b2-fe0f",
-  a: "0.7"
-}, {
-  n: ["minidisc"],
-  u: "1f4bd",
-  a: "0.6"
-}, {
-  n: ["floppy disk"],
-  u: "1f4be",
-  a: "0.6"
-}, {
-  n: ["cd", "optical disc"],
-  u: "1f4bf",
-  a: "0.6"
-}, {
-  n: ["dvd"],
-  u: "1f4c0",
-  a: "0.6"
-}, {
-  n: ["abacus"],
-  u: "1f9ee",
-  a: "11.0"
-}, {
-  n: ["movie camera"],
-  u: "1f3a5",
-  a: "0.6"
-}, {
-  n: ["film frames"],
-  u: "1f39e-fe0f",
-  a: "0.7"
-}, {
-  n: ["film projector"],
-  u: "1f4fd-fe0f",
-  a: "0.7"
-}, {
-  n: ["clapper", "clapper board"],
-  u: "1f3ac",
-  a: "0.6"
-}, {
-  n: ["tv", "television"],
-  u: "1f4fa",
-  a: "0.6"
-}, {
-  n: ["camera"],
-  u: "1f4f7",
-  a: "0.6"
-}, {
-  n: ["camera with flash"],
-  u: "1f4f8",
-  a: "1.0"
-}, {
-  n: ["video camera"],
-  u: "1f4f9",
-  a: "0.6"
-}, {
-  n: ["vhs", "videocassette"],
-  u: "1f4fc",
-  a: "0.6"
-}, {
-  n: ["mag", "left-pointing magnifying glass"],
-  u: "1f50d",
-  a: "0.6"
-}, {
-  n: ["mag right", "right-pointing magnifying glass"],
-  u: "1f50e",
-  a: "0.6"
-}, {
-  n: ["candle"],
-  u: "1f56f-fe0f",
-  a: "0.7"
-}, {
-  n: ["bulb", "electric light bulb"],
-  u: "1f4a1",
-  a: "0.6"
-}, {
-  n: ["flashlight", "electric torch"],
-  u: "1f526",
-  a: "0.6"
-}, {
-  n: ["lantern", "izakaya lantern"],
-  u: "1f3ee",
-  a: "0.6"
-}, {
-  n: ["diya lamp"],
-  u: "1fa94",
-  a: "12.0"
-}, {
-  n: ["notebook with decorative cover"],
-  u: "1f4d4",
-  a: "0.6"
-}, {
-  n: ["closed book"],
-  u: "1f4d5",
-  a: "0.6"
-}, {
-  n: ["book", "open book"],
-  u: "1f4d6",
-  a: "0.6"
-}, {
-  n: ["green book"],
-  u: "1f4d7",
-  a: "0.6"
-}, {
-  n: ["blue book"],
-  u: "1f4d8",
-  a: "0.6"
-}, {
-  n: ["orange book"],
-  u: "1f4d9",
-  a: "0.6"
-}, {
-  n: ["books"],
-  u: "1f4da",
-  a: "0.6"
-}, {
-  n: ["notebook"],
-  u: "1f4d3",
-  a: "0.6"
-}, {
-  n: ["ledger"],
-  u: "1f4d2",
-  a: "0.6"
-}, {
-  n: ["page with curl"],
-  u: "1f4c3",
-  a: "0.6"
-}, {
-  n: ["scroll"],
-  u: "1f4dc",
-  a: "0.6"
-}, {
-  n: ["page facing up"],
-  u: "1f4c4",
-  a: "0.6"
-}, {
-  n: ["newspaper"],
-  u: "1f4f0",
-  a: "0.6"
-}, {
-  n: ["rolled-up newspaper", "rolled up newspaper"],
-  u: "1f5de-fe0f",
-  a: "0.7"
-}, {
-  n: ["bookmark tabs"],
-  u: "1f4d1",
-  a: "0.6"
-}, {
-  n: ["bookmark"],
-  u: "1f516",
-  a: "0.6"
-}, {
-  n: ["label"],
-  u: "1f3f7-fe0f",
-  a: "0.7"
-}, {
-  n: ["moneybag", "money bag"],
-  u: "1f4b0",
-  a: "0.6"
-}, {
-  n: ["coin"],
-  u: "1fa99",
-  a: "13.0"
-}, {
-  n: ["yen", "banknote with yen sign"],
-  u: "1f4b4",
-  a: "0.6"
-}, {
-  n: ["dollar", "banknote with dollar sign"],
-  u: "1f4b5",
-  a: "0.6"
-}, {
-  n: ["euro", "banknote with euro sign"],
-  u: "1f4b6",
-  a: "1.0"
-}, {
-  n: ["pound", "banknote with pound sign"],
-  u: "1f4b7",
-  a: "1.0"
-}, {
-  n: ["money with wings"],
-  u: "1f4b8",
-  a: "0.6"
-}, {
-  n: ["credit card"],
-  u: "1f4b3",
-  a: "0.6"
-}, {
-  n: ["receipt"],
-  u: "1f9fe",
-  a: "11.0"
-}, {
-  n: ["chart", "chart with upwards trend and yen sign"],
-  u: "1f4b9",
-  a: "0.6"
-}, {
-  n: ["email", "envelope"],
-  u: "2709-fe0f",
-  a: "0.6"
-}, {
-  n: ["e-mail", "e-mail symbol"],
-  u: "1f4e7",
-  a: "0.6"
-}, {
-  n: ["incoming envelope"],
-  u: "1f4e8",
-  a: "0.6"
-}, {
-  n: ["envelope with arrow", "envelope with downwards arrow above"],
-  u: "1f4e9",
-  a: "0.6"
-}, {
-  n: ["outbox tray"],
-  u: "1f4e4",
-  a: "0.6"
-}, {
-  n: ["inbox tray"],
-  u: "1f4e5",
-  a: "0.6"
-}, {
-  n: ["package"],
-  u: "1f4e6",
-  a: "0.6"
-}, {
-  n: ["mailbox", "closed mailbox with raised flag"],
-  u: "1f4eb",
-  a: "0.6"
-}, {
-  n: ["mailbox closed", "closed mailbox with lowered flag"],
-  u: "1f4ea",
-  a: "0.6"
-}, {
-  n: ["mailbox with mail", "open mailbox with raised flag"],
-  u: "1f4ec",
-  a: "0.7"
-}, {
-  n: ["mailbox with no mail", "open mailbox with lowered flag"],
-  u: "1f4ed",
-  a: "0.7"
-}, {
-  n: ["postbox"],
-  u: "1f4ee",
-  a: "0.6"
-}, {
-  n: ["ballot box with ballot"],
-  u: "1f5f3-fe0f",
-  a: "0.7"
-}, {
-  n: ["pencil", "pencil2"],
-  u: "270f-fe0f",
-  a: "0.6"
-}, {
-  n: ["black nib"],
-  u: "2712-fe0f",
-  a: "0.6"
-}, {
-  n: ["fountain pen", "lower left fountain pen"],
-  u: "1f58b-fe0f",
-  a: "0.7"
-}, {
-  n: ["pen", "lower left ballpoint pen"],
-  u: "1f58a-fe0f",
-  a: "0.7"
-}, {
-  n: ["paintbrush", "lower left paintbrush"],
-  u: "1f58c-fe0f",
-  a: "0.7"
-}, {
-  n: ["crayon", "lower left crayon"],
-  u: "1f58d-fe0f",
-  a: "0.7"
-}, {
-  n: ["memo", "pencil"],
-  u: "1f4dd",
-  a: "0.6"
-}, {
-  n: ["briefcase"],
-  u: "1f4bc",
-  a: "0.6"
-}, {
-  n: ["file folder"],
-  u: "1f4c1",
-  a: "0.6"
-}, {
-  n: ["open file folder"],
-  u: "1f4c2",
-  a: "0.6"
-}, {
-  n: ["card index dividers"],
-  u: "1f5c2-fe0f",
-  a: "0.7"
-}, {
-  n: ["date", "calendar"],
-  u: "1f4c5",
-  a: "0.6"
-}, {
-  n: ["calendar", "tear-off calendar"],
-  u: "1f4c6",
-  a: "0.6"
-}, {
-  n: ["spiral notepad", "spiral note pad"],
-  u: "1f5d2-fe0f",
-  a: "0.7"
-}, {
-  n: ["spiral calendar", "spiral calendar pad"],
-  u: "1f5d3-fe0f",
-  a: "0.7"
-}, {
-  n: ["card index"],
-  u: "1f4c7",
-  a: "0.6"
-}, {
-  n: ["chart with upwards trend"],
-  u: "1f4c8",
-  a: "0.6"
-}, {
-  n: ["chart with downwards trend"],
-  u: "1f4c9",
-  a: "0.6"
-}, {
-  n: ["bar chart"],
-  u: "1f4ca",
-  a: "0.6"
-}, {
-  n: ["clipboard"],
-  u: "1f4cb",
-  a: "0.6"
-}, {
-  n: ["pushpin"],
-  u: "1f4cc",
-  a: "0.6"
-}, {
-  n: ["round pushpin"],
-  u: "1f4cd",
-  a: "0.6"
-}, {
-  n: ["paperclip"],
-  u: "1f4ce",
-  a: "0.6"
-}, {
-  n: ["linked paperclips"],
-  u: "1f587-fe0f",
-  a: "0.7"
-}, {
-  n: ["straight ruler"],
-  u: "1f4cf",
-  a: "0.6"
-}, {
-  n: ["triangular ruler"],
-  u: "1f4d0",
-  a: "0.6"
-}, {
-  n: ["scissors", "black scissors"],
-  u: "2702-fe0f",
-  a: "0.6"
-}, {
-  n: ["card file box"],
-  u: "1f5c3-fe0f",
-  a: "0.7"
-}, {
-  n: ["file cabinet"],
-  u: "1f5c4-fe0f",
-  a: "0.7"
-}, {
-  n: ["wastebasket"],
-  u: "1f5d1-fe0f",
-  a: "0.7"
-}, {
-  n: ["lock"],
-  u: "1f512",
-  a: "0.6"
-}, {
-  n: ["unlock", "open lock"],
-  u: "1f513",
-  a: "0.6"
-}, {
-  n: ["lock with ink pen"],
-  u: "1f50f",
-  a: "0.6"
-}, {
-  n: ["closed lock with key"],
-  u: "1f510",
-  a: "0.6"
-}, {
-  n: ["key"],
-  u: "1f511",
-  a: "0.6"
-}, {
-  n: ["old key"],
-  u: "1f5dd-fe0f",
-  a: "0.7"
-}, {
-  n: ["hammer"],
-  u: "1f528",
-  a: "0.6"
-}, {
-  n: ["axe"],
-  u: "1fa93",
-  a: "12.0"
-}, {
-  n: ["pick"],
-  u: "26cf-fe0f",
-  a: "0.7"
-}, {
-  n: ["hammer and pick"],
-  u: "2692-fe0f",
-  a: "1.0"
-}, {
-  n: ["hammer and wrench"],
-  u: "1f6e0-fe0f",
-  a: "0.7"
-}, {
-  n: ["dagger", "dagger knife"],
-  u: "1f5e1-fe0f",
-  a: "0.7"
-}, {
-  n: ["crossed swords"],
-  u: "2694-fe0f",
-  a: "1.0"
-}, {
-  n: ["bomb"],
-  u: "1f4a3",
-  a: "0.6"
-}, {
-  n: ["boomerang"],
-  u: "1fa83",
-  a: "13.0"
-}, {
-  n: ["bow and arrow"],
-  u: "1f3f9",
-  a: "1.0"
-}, {
-  n: ["shield"],
-  u: "1f6e1-fe0f",
-  a: "0.7"
-}, {
-  n: ["carpentry saw"],
-  u: "1fa9a",
-  a: "13.0"
-}, {
-  n: ["wrench"],
-  u: "1f527",
-  a: "0.6"
-}, {
-  n: ["screwdriver"],
-  u: "1fa9b",
-  a: "13.0"
-}, {
-  n: ["nut and bolt"],
-  u: "1f529",
-  a: "0.6"
-}, {
-  n: ["gear"],
-  u: "2699-fe0f",
-  a: "1.0"
-}, {
-  n: ["clamp", "compression"],
-  u: "1f5dc-fe0f",
-  a: "0.7"
-}, {
-  n: ["scales", "balance scale"],
-  u: "2696-fe0f",
-  a: "1.0"
-}, {
-  n: ["probing cane"],
-  u: "1f9af",
-  a: "12.0"
-}, {
-  n: ["link", "link symbol"],
-  u: "1f517",
-  a: "0.6"
-}, {
-  n: ["broken chain"],
-  u: "26d3-fe0f-200d-1f4a5",
-  a: "15.1"
-}, {
-  n: ["chains"],
-  u: "26d3-fe0f",
-  a: "0.7"
-}, {
-  n: ["hook"],
-  u: "1fa9d",
-  a: "13.0"
-}, {
-  n: ["toolbox"],
-  u: "1f9f0",
-  a: "11.0"
-}, {
-  n: ["magnet"],
-  u: "1f9f2",
-  a: "11.0"
-}, {
-  n: ["ladder"],
-  u: "1fa9c",
-  a: "13.0"
-}, {
-  n: ["alembic"],
-  u: "2697-fe0f",
-  a: "1.0"
-}, {
-  n: ["test tube"],
-  u: "1f9ea",
-  a: "11.0"
-}, {
-  n: ["petri dish"],
-  u: "1f9eb",
-  a: "11.0"
-}, {
-  n: ["dna", "dna double helix"],
-  u: "1f9ec",
-  a: "11.0"
-}, {
-  n: ["microscope"],
-  u: "1f52c",
-  a: "1.0"
-}, {
-  n: ["telescope"],
-  u: "1f52d",
-  a: "1.0"
-}, {
-  n: ["satellite antenna"],
-  u: "1f4e1",
-  a: "0.6"
-}, {
-  n: ["syringe"],
-  u: "1f489",
-  a: "0.6"
-}, {
-  n: ["drop of blood"],
-  u: "1fa78",
-  a: "12.0"
-}, {
-  n: ["pill"],
-  u: "1f48a",
-  a: "0.6"
-}, {
-  n: ["adhesive bandage"],
-  u: "1fa79",
-  a: "12.0"
-}, {
-  n: ["crutch"],
-  u: "1fa7c",
-  a: "14.0"
-}, {
-  n: ["stethoscope"],
-  u: "1fa7a",
-  a: "12.0"
-}, {
-  n: ["x-ray"],
-  u: "1fa7b",
-  a: "14.0"
-}, {
-  n: ["door"],
-  u: "1f6aa",
-  a: "0.6"
-}, {
-  n: ["elevator"],
-  u: "1f6d7",
-  a: "13.0"
-}, {
-  n: ["mirror"],
-  u: "1fa9e",
-  a: "13.0"
-}, {
-  n: ["window"],
-  u: "1fa9f",
-  a: "13.0"
-}, {
-  n: ["bed"],
-  u: "1f6cf-fe0f",
-  a: "0.7"
-}, {
-  n: ["couch and lamp"],
-  u: "1f6cb-fe0f",
-  a: "0.7"
-}, {
-  n: ["chair"],
-  u: "1fa91",
-  a: "12.0"
-}, {
-  n: ["toilet"],
-  u: "1f6bd",
-  a: "0.6"
-}, {
-  n: ["plunger"],
-  u: "1faa0",
-  a: "13.0"
-}, {
-  n: ["shower"],
-  u: "1f6bf",
-  a: "1.0"
-}, {
-  n: ["bathtub"],
-  u: "1f6c1",
-  a: "1.0"
-}, {
-  n: ["mouse trap"],
-  u: "1faa4",
-  a: "13.0"
-}, {
-  n: ["razor"],
-  u: "1fa92",
-  a: "12.0"
-}, {
-  n: ["lotion bottle"],
-  u: "1f9f4",
-  a: "11.0"
-}, {
-  n: ["safety pin"],
-  u: "1f9f7",
-  a: "11.0"
-}, {
-  n: ["broom"],
-  u: "1f9f9",
-  a: "11.0"
-}, {
-  n: ["basket"],
-  u: "1f9fa",
-  a: "11.0"
-}, {
-  n: ["roll of paper"],
-  u: "1f9fb",
-  a: "11.0"
-}, {
-  n: ["bucket"],
-  u: "1faa3",
-  a: "13.0"
-}, {
-  n: ["soap", "bar of soap"],
-  u: "1f9fc",
-  a: "11.0"
-}, {
-  n: ["bubbles"],
-  u: "1fae7",
-  a: "14.0"
-}, {
-  n: ["toothbrush"],
-  u: "1faa5",
-  a: "13.0"
-}, {
-  n: ["sponge"],
-  u: "1f9fd",
-  a: "11.0"
-}, {
-  n: ["fire extinguisher"],
-  u: "1f9ef",
-  a: "11.0"
-}, {
-  n: ["shopping trolley"],
-  u: "1f6d2",
-  a: "3.0"
-}, {
-  n: ["smoking", "smoking symbol"],
-  u: "1f6ac",
-  a: "0.6"
-}, {
-  n: ["coffin"],
-  u: "26b0-fe0f",
-  a: "1.0"
-}, {
-  n: ["headstone"],
-  u: "1faa6",
-  a: "13.0"
-}, {
-  n: ["funeral urn"],
-  u: "26b1-fe0f",
-  a: "1.0"
-}, {
-  n: ["nazar amulet"],
-  u: "1f9ff",
-  a: "11.0"
-}, {
-  n: ["hamsa"],
-  u: "1faac",
-  a: "14.0"
-}, {
-  n: ["moyai"],
-  u: "1f5ff",
-  a: "0.6"
-}, {
-  n: ["placard"],
-  u: "1faa7",
-  a: "13.0"
-}, {
-  n: ["identification card"],
-  u: "1faaa",
-  a: "14.0"
-}];
-var symbols = [{
-  n: ["atm", "automated teller machine"],
-  u: "1f3e7",
-  a: "0.6"
-}, {
-  n: ["put litter in its place", "put litter in its place symbol"],
-  u: "1f6ae",
-  a: "1.0"
-}, {
-  n: ["potable water", "potable water symbol"],
-  u: "1f6b0",
-  a: "1.0"
-}, {
-  n: ["wheelchair", "wheelchair symbol"],
-  u: "267f",
-  a: "0.6"
-}, {
-  n: ["mens", "mens symbol"],
-  u: "1f6b9",
-  a: "0.6"
-}, {
-  n: ["womens", "womens symbol"],
-  u: "1f6ba",
-  a: "0.6"
-}, {
-  n: ["restroom"],
-  u: "1f6bb",
-  a: "0.6"
-}, {
-  n: ["baby symbol"],
-  u: "1f6bc",
-  a: "0.6"
-}, {
-  n: ["wc", "water closet"],
-  u: "1f6be",
-  a: "0.6"
-}, {
-  n: ["passport control"],
-  u: "1f6c2",
-  a: "1.0"
-}, {
-  n: ["customs"],
-  u: "1f6c3",
-  a: "1.0"
-}, {
-  n: ["baggage claim"],
-  u: "1f6c4",
-  a: "1.0"
-}, {
-  n: ["left luggage"],
-  u: "1f6c5",
-  a: "1.0"
-}, {
-  n: ["warning", "warning sign"],
-  u: "26a0-fe0f",
-  a: "0.6"
-}, {
-  n: ["children crossing"],
-  u: "1f6b8",
-  a: "1.0"
-}, {
-  n: ["no entry"],
-  u: "26d4",
-  a: "0.6"
-}, {
-  n: ["no entry sign"],
-  u: "1f6ab",
-  a: "0.6"
-}, {
-  n: ["no bicycles"],
-  u: "1f6b3",
-  a: "1.0"
-}, {
-  n: ["no smoking", "no smoking symbol"],
-  u: "1f6ad",
-  a: "0.6"
-}, {
-  n: ["do not litter", "do not litter symbol"],
-  u: "1f6af",
-  a: "1.0"
-}, {
-  n: ["non-potable water", "non-potable water symbol"],
-  u: "1f6b1",
-  a: "1.0"
-}, {
-  n: ["no pedestrians"],
-  u: "1f6b7",
-  a: "1.0"
-}, {
-  n: ["no mobile phones"],
-  u: "1f4f5",
-  a: "1.0"
-}, {
-  n: ["underage", "no one under eighteen symbol"],
-  u: "1f51e",
-  a: "0.6"
-}, {
-  n: ["radioactive", "radioactive sign"],
-  u: "2622-fe0f",
-  a: "1.0"
-}, {
-  n: ["biohazard", "biohazard sign"],
-  u: "2623-fe0f",
-  a: "1.0"
-}, {
-  n: ["arrow up", "upwards black arrow"],
-  u: "2b06-fe0f",
-  a: "0.6"
-}, {
-  n: ["north east arrow", "arrow upper right"],
-  u: "2197-fe0f",
-  a: "0.6"
-}, {
-  n: ["arrow right", "black rightwards arrow"],
-  u: "27a1-fe0f",
-  a: "0.6"
-}, {
-  n: ["south east arrow", "arrow lower right"],
-  u: "2198-fe0f",
-  a: "0.6"
-}, {
-  n: ["arrow down", "downwards black arrow"],
-  u: "2b07-fe0f",
-  a: "0.6"
-}, {
-  n: ["south west arrow", "arrow lower left"],
-  u: "2199-fe0f",
-  a: "0.6"
-}, {
-  n: ["arrow left", "leftwards black arrow"],
-  u: "2b05-fe0f",
-  a: "0.6"
-}, {
-  n: ["north west arrow", "arrow upper left"],
-  u: "2196-fe0f",
-  a: "0.6"
-}, {
-  n: ["up down arrow", "arrow up down"],
-  u: "2195-fe0f",
-  a: "0.6"
-}, {
-  n: ["left right arrow"],
-  u: "2194-fe0f",
-  a: "0.6"
-}, {
-  n: ["leftwards arrow with hook"],
-  u: "21a9-fe0f",
-  a: "0.6"
-}, {
-  n: ["arrow right hook", "rightwards arrow with hook"],
-  u: "21aa-fe0f",
-  a: "0.6"
-}, {
-  n: ["arrow heading up", "arrow pointing rightwards then curving upwards"],
-  u: "2934-fe0f",
-  a: "0.6"
-}, {
-  n: ["arrow heading down", "arrow pointing rightwards then curving downwards"],
-  u: "2935-fe0f",
-  a: "0.6"
-}, {
-  n: ["arrows clockwise", "clockwise downwards and upwards open circle arrows"],
-  u: "1f503",
-  a: "0.6"
-}, {
-  n: ["arrows counterclockwise", "anticlockwise downwards and upwards open circle arrows"],
-  u: "1f504",
-  a: "1.0"
-}, {
-  n: ["back", "back with leftwards arrow above"],
-  u: "1f519",
-  a: "0.6"
-}, {
-  n: ["end", "end with leftwards arrow above"],
-  u: "1f51a",
-  a: "0.6"
-}, {
-  n: ["on", "on with exclamation mark with left right arrow above"],
-  u: "1f51b",
-  a: "0.6"
-}, {
-  n: ["soon", "soon with rightwards arrow above"],
-  u: "1f51c",
-  a: "0.6"
-}, {
-  n: ["top", "top with upwards arrow above"],
-  u: "1f51d",
-  a: "0.6"
-}, {
-  n: ["place of worship"],
-  u: "1f6d0",
-  a: "1.0"
-}, {
-  n: ["atom symbol"],
-  u: "269b-fe0f",
-  a: "1.0"
-}, {
-  n: ["om", "om symbol"],
-  u: "1f549-fe0f",
-  a: "0.7"
-}, {
-  n: ["star of david"],
-  u: "2721-fe0f",
-  a: "0.7"
-}, {
-  n: ["wheel of dharma"],
-  u: "2638-fe0f",
-  a: "0.7"
-}, {
-  n: ["yin yang"],
-  u: "262f-fe0f",
-  a: "0.7"
-}, {
-  n: ["latin cross"],
-  u: "271d-fe0f",
-  a: "0.7"
-}, {
-  n: ["orthodox cross"],
-  u: "2626-fe0f",
-  a: "1.0"
-}, {
-  n: ["star and crescent"],
-  u: "262a-fe0f",
-  a: "0.7"
-}, {
-  n: ["peace symbol"],
-  u: "262e-fe0f",
-  a: "1.0"
-}, {
-  n: ["menorah with nine branches"],
-  u: "1f54e",
-  a: "1.0"
-}, {
-  n: ["six pointed star", "six pointed star with middle dot"],
-  u: "1f52f",
-  a: "0.6"
-}, {
-  n: ["khanda"],
-  u: "1faaf",
-  a: "15.0"
-}, {
-  n: ["aries"],
-  u: "2648",
-  a: "0.6"
-}, {
-  n: ["taurus"],
-  u: "2649",
-  a: "0.6"
-}, {
-  n: ["gemini"],
-  u: "264a",
-  a: "0.6"
-}, {
-  n: ["cancer"],
-  u: "264b",
-  a: "0.6"
-}, {
-  n: ["leo"],
-  u: "264c",
-  a: "0.6"
-}, {
-  n: ["virgo"],
-  u: "264d",
-  a: "0.6"
-}, {
-  n: ["libra"],
-  u: "264e",
-  a: "0.6"
-}, {
-  n: ["scorpius"],
-  u: "264f",
-  a: "0.6"
-}, {
-  n: ["sagittarius"],
-  u: "2650",
-  a: "0.6"
-}, {
-  n: ["capricorn"],
-  u: "2651",
-  a: "0.6"
-}, {
-  n: ["aquarius"],
-  u: "2652",
-  a: "0.6"
-}, {
-  n: ["pisces"],
-  u: "2653",
-  a: "0.6"
-}, {
-  n: ["ophiuchus"],
-  u: "26ce",
-  a: "0.6"
-}, {
-  n: ["twisted rightwards arrows"],
-  u: "1f500",
-  a: "1.0"
-}, {
-  n: ["repeat", "clockwise rightwards and leftwards open circle arrows"],
-  u: "1f501",
-  a: "1.0"
-}, {
-  n: ["repeat one", "clockwise rightwards and leftwards open circle arrows with circled one overlay"],
-  u: "1f502",
-  a: "1.0"
-}, {
-  n: ["arrow forward", "black right-pointing triangle"],
-  u: "25b6-fe0f",
-  a: "0.6"
-}, {
-  n: ["fast forward", "black right-pointing double triangle"],
-  u: "23e9",
-  a: "0.6"
-}, {
-  n: ["next track button", "black right pointing double triangle with vertical bar"],
-  u: "23ed-fe0f",
-  a: "0.7"
-}, {
-  n: ["play or pause button", "black right pointing triangle with double vertical bar"],
-  u: "23ef-fe0f",
-  a: "1.0"
-}, {
-  n: ["arrow backward", "black left-pointing triangle"],
-  u: "25c0-fe0f",
-  a: "0.6"
-}, {
-  n: ["rewind", "black left-pointing double triangle"],
-  u: "23ea",
-  a: "0.6"
-}, {
-  n: ["last track button", "black left pointing double triangle with vertical bar"],
-  u: "23ee-fe0f",
-  a: "0.7"
-}, {
-  n: ["arrow up small", "up-pointing small red triangle"],
-  u: "1f53c",
-  a: "0.6"
-}, {
-  n: ["arrow double up", "black up-pointing double triangle"],
-  u: "23eb",
-  a: "0.6"
-}, {
-  n: ["arrow down small", "down-pointing small red triangle"],
-  u: "1f53d",
-  a: "0.6"
-}, {
-  n: ["arrow double down", "black down-pointing double triangle"],
-  u: "23ec",
-  a: "0.6"
-}, {
-  n: ["pause button", "double vertical bar"],
-  u: "23f8-fe0f",
-  a: "0.7"
-}, {
-  n: ["stop button", "black square for stop"],
-  u: "23f9-fe0f",
-  a: "0.7"
-}, {
-  n: ["record button", "black circle for record"],
-  u: "23fa-fe0f",
-  a: "0.7"
-}, {
-  n: ["eject", "eject button"],
-  u: "23cf-fe0f",
-  a: "1.0"
-}, {
-  n: ["cinema"],
-  u: "1f3a6",
-  a: "0.6"
-}, {
-  n: ["low brightness", "low brightness symbol"],
-  u: "1f505",
-  a: "1.0"
-}, {
-  n: ["high brightness", "high brightness symbol"],
-  u: "1f506",
-  a: "1.0"
-}, {
-  n: ["signal strength", "antenna with bars"],
-  u: "1f4f6",
-  a: "0.6"
-}, {
-  n: ["wireless"],
-  u: "1f6dc",
-  a: "15.0"
-}, {
-  n: ["vibration mode"],
-  u: "1f4f3",
-  a: "0.6"
-}, {
-  n: ["mobile phone off"],
-  u: "1f4f4",
-  a: "0.6"
-}, {
-  n: ["female sign"],
-  u: "2640-fe0f",
-  a: "4.0"
-}, {
-  n: ["male sign"],
-  u: "2642-fe0f",
-  a: "4.0"
-}, {
-  n: ["transgender symbol"],
-  u: "26a7-fe0f",
-  a: "13.0"
-}, {
-  n: ["heavy multiplication x"],
-  u: "2716-fe0f",
-  a: "0.6"
-}, {
-  n: ["heavy plus sign"],
-  u: "2795",
-  a: "0.6"
-}, {
-  n: ["heavy minus sign"],
-  u: "2796",
-  a: "0.6"
-}, {
-  n: ["heavy division sign"],
-  u: "2797",
-  a: "0.6"
-}, {
-  n: ["heavy equals sign"],
-  u: "1f7f0",
-  a: "14.0"
-}, {
-  n: ["infinity"],
-  u: "267e-fe0f",
-  a: "11.0"
-}, {
-  n: ["bangbang", "double exclamation mark"],
-  u: "203c-fe0f",
-  a: "0.6"
-}, {
-  n: ["interrobang", "exclamation question mark"],
-  u: "2049-fe0f",
-  a: "0.6"
-}, {
-  n: ["question", "black question mark ornament"],
-  u: "2753",
-  a: "0.6"
-}, {
-  n: ["grey question", "white question mark ornament"],
-  u: "2754",
-  a: "0.6"
-}, {
-  n: ["grey exclamation", "white exclamation mark ornament"],
-  u: "2755",
-  a: "0.6"
-}, {
-  n: ["exclamation", "heavy exclamation mark", "heavy exclamation mark symbol"],
-  u: "2757",
-  a: "0.6"
-}, {
-  n: ["wavy dash"],
-  u: "3030-fe0f",
-  a: "0.6"
-}, {
-  n: ["currency exchange"],
-  u: "1f4b1",
-  a: "0.6"
-}, {
-  n: ["heavy dollar sign"],
-  u: "1f4b2",
-  a: "0.6"
-}, {
-  n: ["medical symbol", "staff of aesculapius"],
-  u: "2695-fe0f",
-  a: "4.0"
-}, {
-  n: ["recycle", "black universal recycling symbol"],
-  u: "267b-fe0f",
-  a: "0.6"
-}, {
-  n: ["fleur-de-lis", "fleur de lis"],
-  u: "269c-fe0f",
-  a: "1.0"
-}, {
-  n: ["trident", "trident emblem"],
-  u: "1f531",
-  a: "0.6"
-}, {
-  n: ["name badge"],
-  u: "1f4db",
-  a: "0.6"
-}, {
-  n: ["beginner", "japanese symbol for beginner"],
-  u: "1f530",
-  a: "0.6"
-}, {
-  n: ["o", "heavy large circle"],
-  u: "2b55",
-  a: "0.6"
-}, {
-  n: ["white check mark", "white heavy check mark"],
-  u: "2705",
-  a: "0.6"
-}, {
-  n: ["ballot box with check"],
-  u: "2611-fe0f",
-  a: "0.6"
-}, {
-  n: ["heavy check mark"],
-  u: "2714-fe0f",
-  a: "0.6"
-}, {
-  n: ["x", "cross mark"],
-  u: "274c",
-  a: "0.6"
-}, {
-  n: ["negative squared cross mark"],
-  u: "274e",
-  a: "0.6"
-}, {
-  n: ["curly loop"],
-  u: "27b0",
-  a: "0.6"
-}, {
-  n: ["loop", "double curly loop"],
-  u: "27bf",
-  a: "1.0"
-}, {
-  n: ["part alternation mark"],
-  u: "303d-fe0f",
-  a: "0.6"
-}, {
-  n: ["eight spoked asterisk"],
-  u: "2733-fe0f",
-  a: "0.6"
-}, {
-  n: ["eight pointed black star"],
-  u: "2734-fe0f",
-  a: "0.6"
-}, {
-  n: ["sparkle"],
-  u: "2747-fe0f",
-  a: "0.6"
-}, {
-  n: ["copyright", "copyright sign"],
-  u: "00a9-fe0f",
-  a: "0.6"
-}, {
-  n: ["registered", "registered sign"],
-  u: "00ae-fe0f",
-  a: "0.6"
-}, {
-  n: ["tm", "trade mark sign"],
-  u: "2122-fe0f",
-  a: "0.6"
-}, {
-  n: ["hash", "hash key"],
-  u: "0023-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["keycap: *", "keycap star"],
-  u: "002a-fe0f-20e3",
-  a: "2.0"
-}, {
-  n: ["zero", "keycap 0"],
-  u: "0030-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["one", "keycap 1"],
-  u: "0031-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["two", "keycap 2"],
-  u: "0032-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["three", "keycap 3"],
-  u: "0033-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["four", "keycap 4"],
-  u: "0034-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["five", "keycap 5"],
-  u: "0035-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["six", "keycap 6"],
-  u: "0036-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["seven", "keycap 7"],
-  u: "0037-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["eight", "keycap 8"],
-  u: "0038-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["nine", "keycap 9"],
-  u: "0039-fe0f-20e3",
-  a: "0.6"
-}, {
-  n: ["keycap ten"],
-  u: "1f51f",
-  a: "0.6"
-}, {
-  n: ["capital abcd", "input symbol for latin capital letters"],
-  u: "1f520",
-  a: "0.6"
-}, {
-  n: ["abcd", "input symbol for latin small letters"],
-  u: "1f521",
-  a: "0.6"
-}, {
-  n: ["1234", "input symbol for numbers"],
-  u: "1f522",
-  a: "0.6"
-}, {
-  n: ["symbols", "input symbol for symbols"],
-  u: "1f523",
-  a: "0.6"
-}, {
-  n: ["abc", "input symbol for latin letters"],
-  u: "1f524",
-  a: "0.6"
-}, {
-  n: ["a", "negative squared latin capital letter a"],
-  u: "1f170-fe0f",
-  a: "0.6"
-}, {
-  n: ["ab", "negative squared ab"],
-  u: "1f18e",
-  a: "0.6"
-}, {
-  n: ["b", "negative squared latin capital letter b"],
-  u: "1f171-fe0f",
-  a: "0.6"
-}, {
-  n: ["cl", "squared cl"],
-  u: "1f191",
-  a: "0.6"
-}, {
-  n: ["cool", "squared cool"],
-  u: "1f192",
-  a: "0.6"
-}, {
-  n: ["free", "squared free"],
-  u: "1f193",
-  a: "0.6"
-}, {
-  n: ["information source"],
-  u: "2139-fe0f",
-  a: "0.6"
-}, {
-  n: ["id", "squared id"],
-  u: "1f194",
-  a: "0.6"
-}, {
-  n: ["m", "circled latin capital letter m"],
-  u: "24c2-fe0f",
-  a: "0.6"
-}, {
-  n: ["new", "squared new"],
-  u: "1f195",
-  a: "0.6"
-}, {
-  n: ["ng", "squared ng"],
-  u: "1f196",
-  a: "0.6"
-}, {
-  n: ["o2", "negative squared latin capital letter o"],
-  u: "1f17e-fe0f",
-  a: "0.6"
-}, {
-  n: ["ok", "squared ok"],
-  u: "1f197",
-  a: "0.6"
-}, {
-  n: ["parking", "negative squared latin capital letter p"],
-  u: "1f17f-fe0f",
-  a: "0.6"
-}, {
-  n: ["sos", "squared sos"],
-  u: "1f198",
-  a: "0.6"
-}, {
-  n: ["up", "squared up with exclamation mark"],
-  u: "1f199",
-  a: "0.6"
-}, {
-  n: ["vs", "squared vs"],
-  u: "1f19a",
-  a: "0.6"
-}, {
-  n: ["koko", "squared katakana koko"],
-  u: "1f201",
-  a: "0.6"
-}, {
-  n: ["sa", "squared katakana sa"],
-  u: "1f202-fe0f",
-  a: "0.6"
-}, {
-  n: ["u6708", "squared cjk unified ideograph-6708"],
-  u: "1f237-fe0f",
-  a: "0.6"
-}, {
-  n: ["u6709", "squared cjk unified ideograph-6709"],
-  u: "1f236",
-  a: "0.6"
-}, {
-  n: ["u6307", "squared cjk unified ideograph-6307"],
-  u: "1f22f",
-  a: "0.6"
-}, {
-  n: ["ideograph advantage", "circled ideograph advantage"],
-  u: "1f250",
-  a: "0.6"
-}, {
-  n: ["u5272", "squared cjk unified ideograph-5272"],
-  u: "1f239",
-  a: "0.6"
-}, {
-  n: ["u7121", "squared cjk unified ideograph-7121"],
-  u: "1f21a",
-  a: "0.6"
-}, {
-  n: ["u7981", "squared cjk unified ideograph-7981"],
-  u: "1f232",
-  a: "0.6"
-}, {
-  n: ["accept", "circled ideograph accept"],
-  u: "1f251",
-  a: "0.6"
-}, {
-  n: ["u7533", "squared cjk unified ideograph-7533"],
-  u: "1f238",
-  a: "0.6"
-}, {
-  n: ["u5408", "squared cjk unified ideograph-5408"],
-  u: "1f234",
-  a: "0.6"
-}, {
-  n: ["u7a7a", "squared cjk unified ideograph-7a7a"],
-  u: "1f233",
-  a: "0.6"
-}, {
-  n: ["congratulations", "circled ideograph congratulation"],
-  u: "3297-fe0f",
-  a: "0.6"
-}, {
-  n: ["secret", "circled ideograph secret"],
-  u: "3299-fe0f",
-  a: "0.6"
-}, {
-  n: ["u55b6", "squared cjk unified ideograph-55b6"],
-  u: "1f23a",
-  a: "0.6"
-}, {
-  n: ["u6e80", "squared cjk unified ideograph-6e80"],
-  u: "1f235",
-  a: "0.6"
-}, {
-  n: ["red circle", "large red circle"],
-  u: "1f534",
-  a: "0.6"
-}, {
-  n: ["large orange circle"],
-  u: "1f7e0",
-  a: "12.0"
-}, {
-  n: ["large yellow circle"],
-  u: "1f7e1",
-  a: "12.0"
-}, {
-  n: ["large green circle"],
-  u: "1f7e2",
-  a: "12.0"
-}, {
-  n: ["large blue circle"],
-  u: "1f535",
-  a: "0.6"
-}, {
-  n: ["large purple circle"],
-  u: "1f7e3",
-  a: "12.0"
-}, {
-  n: ["large brown circle"],
-  u: "1f7e4",
-  a: "12.0"
-}, {
-  n: ["black circle", "medium black circle"],
-  u: "26ab",
-  a: "0.6"
-}, {
-  n: ["white circle", "medium white circle"],
-  u: "26aa",
-  a: "0.6"
-}, {
-  n: ["large red square"],
-  u: "1f7e5",
-  a: "12.0"
-}, {
-  n: ["large orange square"],
-  u: "1f7e7",
-  a: "12.0"
-}, {
-  n: ["large yellow square"],
-  u: "1f7e8",
-  a: "12.0"
-}, {
-  n: ["large green square"],
-  u: "1f7e9",
-  a: "12.0"
-}, {
-  n: ["large blue square"],
-  u: "1f7e6",
-  a: "12.0"
-}, {
-  n: ["large purple square"],
-  u: "1f7ea",
-  a: "12.0"
-}, {
-  n: ["large brown square"],
-  u: "1f7eb",
-  a: "12.0"
-}, {
-  n: ["black large square"],
-  u: "2b1b",
-  a: "0.6"
-}, {
-  n: ["white large square"],
-  u: "2b1c",
-  a: "0.6"
-}, {
-  n: ["black medium square"],
-  u: "25fc-fe0f",
-  a: "0.6"
-}, {
-  n: ["white medium square"],
-  u: "25fb-fe0f",
-  a: "0.6"
-}, {
-  n: ["black medium small square"],
-  u: "25fe",
-  a: "0.6"
-}, {
-  n: ["white medium small square"],
-  u: "25fd",
-  a: "0.6"
-}, {
-  n: ["black small square"],
-  u: "25aa-fe0f",
-  a: "0.6"
-}, {
-  n: ["white small square"],
-  u: "25ab-fe0f",
-  a: "0.6"
-}, {
-  n: ["large orange diamond"],
-  u: "1f536",
-  a: "0.6"
-}, {
-  n: ["large blue diamond"],
-  u: "1f537",
-  a: "0.6"
-}, {
-  n: ["small orange diamond"],
-  u: "1f538",
-  a: "0.6"
-}, {
-  n: ["small blue diamond"],
-  u: "1f539",
-  a: "0.6"
-}, {
-  n: ["small red triangle", "up-pointing red triangle"],
-  u: "1f53a",
-  a: "0.6"
-}, {
-  n: ["small red triangle down", "down-pointing red triangle"],
-  u: "1f53b",
-  a: "0.6"
-}, {
-  n: ["diamond shape with a dot inside"],
-  u: "1f4a0",
-  a: "0.6"
-}, {
-  n: ["radio button"],
-  u: "1f518",
-  a: "0.6"
-}, {
-  n: ["white square button"],
-  u: "1f533",
-  a: "0.6"
-}, {
-  n: ["black square button"],
-  u: "1f532",
-  a: "0.6"
-}];
-var flags = [{
-  n: ["chequered flag", "checkered flag"],
-  u: "1f3c1",
-  a: "0.6"
-}, {
-  n: ["triangular flag on post"],
-  u: "1f6a9",
-  a: "0.6"
-}, {
-  n: ["crossed flags"],
-  u: "1f38c",
-  a: "0.6"
-}, {
-  n: ["waving black flag"],
-  u: "1f3f4",
-  a: "1.0"
-}, {
-  n: ["white flag", "waving white flag"],
-  u: "1f3f3-fe0f",
-  a: "0.7"
-}, {
-  n: ["rainbow flag", "rainbow-flag"],
-  u: "1f3f3-fe0f-200d-1f308",
-  a: "4.0"
-}, {
-  n: ["transgender flag"],
-  u: "1f3f3-fe0f-200d-26a7-fe0f",
-  a: "13.0"
-}, {
-  n: ["pirate flag"],
-  u: "1f3f4-200d-2620-fe0f",
-  a: "11.0"
-}, {
-  n: ["flag-ac", "ascension island flag"],
-  u: "1f1e6-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-ad", "andorra flag"],
-  u: "1f1e6-1f1e9",
-  a: "2.0"
-}, {
-  n: ["flag-ae", "united arab emirates flag"],
-  u: "1f1e6-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-af", "afghanistan flag"],
-  u: "1f1e6-1f1eb",
-  a: "2.0"
-}, {
-  n: ["flag-ag", "antigua & barbuda flag"],
-  u: "1f1e6-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-ai", "anguilla flag"],
-  u: "1f1e6-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-al", "albania flag"],
-  u: "1f1e6-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-am", "armenia flag"],
-  u: "1f1e6-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-ao", "angola flag"],
-  u: "1f1e6-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-aq", "antarctica flag"],
-  u: "1f1e6-1f1f6",
-  a: "2.0"
-}, {
-  n: ["flag-ar", "argentina flag"],
-  u: "1f1e6-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-as", "american samoa flag"],
-  u: "1f1e6-1f1f8",
-  a: "2.0"
-}, {
-  n: ["flag-at", "austria flag"],
-  u: "1f1e6-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-au", "australia flag"],
-  u: "1f1e6-1f1fa",
-  a: "2.0"
-}, {
-  n: ["flag-aw", "aruba flag"],
-  u: "1f1e6-1f1fc",
-  a: "2.0"
-}, {
-  n: ["flag-ax", "åland islands flag"],
-  u: "1f1e6-1f1fd",
-  a: "2.0"
-}, {
-  n: ["flag-az", "azerbaijan flag"],
-  u: "1f1e6-1f1ff",
-  a: "2.0"
-}, {
-  n: ["flag-ba", "bosnia & herzegovina flag"],
-  u: "1f1e7-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-bb", "barbados flag"],
-  u: "1f1e7-1f1e7",
-  a: "2.0"
-}, {
-  n: ["flag-bd", "bangladesh flag"],
-  u: "1f1e7-1f1e9",
-  a: "2.0"
-}, {
-  n: ["flag-be", "belgium flag"],
-  u: "1f1e7-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-bf", "burkina faso flag"],
-  u: "1f1e7-1f1eb",
-  a: "2.0"
-}, {
-  n: ["flag-bg", "bulgaria flag"],
-  u: "1f1e7-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-bh", "bahrain flag"],
-  u: "1f1e7-1f1ed",
-  a: "2.0"
-}, {
-  n: ["flag-bi", "burundi flag"],
-  u: "1f1e7-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-bj", "benin flag"],
-  u: "1f1e7-1f1ef",
-  a: "2.0"
-}, {
-  n: ["flag-bl", "st. barthélemy flag"],
-  u: "1f1e7-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-bm", "bermuda flag"],
-  u: "1f1e7-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-bn", "brunei flag"],
-  u: "1f1e7-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-bo", "bolivia flag"],
-  u: "1f1e7-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-bq", "caribbean netherlands flag"],
-  u: "1f1e7-1f1f6",
-  a: "2.0"
-}, {
-  n: ["flag-br", "brazil flag"],
-  u: "1f1e7-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-bs", "bahamas flag"],
-  u: "1f1e7-1f1f8",
-  a: "2.0"
-}, {
-  n: ["flag-bt", "bhutan flag"],
-  u: "1f1e7-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-bv", "bouvet island flag"],
-  u: "1f1e7-1f1fb",
-  a: "2.0"
-}, {
-  n: ["flag-bw", "botswana flag"],
-  u: "1f1e7-1f1fc",
-  a: "2.0"
-}, {
-  n: ["flag-by", "belarus flag"],
-  u: "1f1e7-1f1fe",
-  a: "2.0"
-}, {
-  n: ["flag-bz", "belize flag"],
-  u: "1f1e7-1f1ff",
-  a: "2.0"
-}, {
-  n: ["flag-ca", "canada flag"],
-  u: "1f1e8-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-cc", "cocos (keeling) islands flag"],
-  u: "1f1e8-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-cd", "congo - kinshasa flag"],
-  u: "1f1e8-1f1e9",
-  a: "2.0"
-}, {
-  n: ["flag-cf", "central african republic flag"],
-  u: "1f1e8-1f1eb",
-  a: "2.0"
-}, {
-  n: ["flag-cg", "congo - brazzaville flag"],
-  u: "1f1e8-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-ch", "switzerland flag"],
-  u: "1f1e8-1f1ed",
-  a: "2.0"
-}, {
-  n: ["flag-ci", "côte d’ivoire flag"],
-  u: "1f1e8-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-ck", "cook islands flag"],
-  u: "1f1e8-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-cl", "chile flag"],
-  u: "1f1e8-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-cm", "cameroon flag"],
-  u: "1f1e8-1f1f2",
-  a: "2.0"
-}, {
-  n: ["cn", "flag-cn", "china flag"],
-  u: "1f1e8-1f1f3",
-  a: "0.6"
-}, {
-  n: ["flag-co", "colombia flag"],
-  u: "1f1e8-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-cp", "clipperton island flag"],
-  u: "1f1e8-1f1f5",
-  a: "2.0"
-}, {
-  n: ["flag-cr", "costa rica flag"],
-  u: "1f1e8-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-cu", "cuba flag"],
-  u: "1f1e8-1f1fa",
-  a: "2.0"
-}, {
-  n: ["flag-cv", "cape verde flag"],
-  u: "1f1e8-1f1fb",
-  a: "2.0"
-}, {
-  n: ["flag-cw", "curaçao flag"],
-  u: "1f1e8-1f1fc",
-  a: "2.0"
-}, {
-  n: ["flag-cx", "christmas island flag"],
-  u: "1f1e8-1f1fd",
-  a: "2.0"
-}, {
-  n: ["flag-cy", "cyprus flag"],
-  u: "1f1e8-1f1fe",
-  a: "2.0"
-}, {
-  n: ["flag-cz", "czechia flag"],
-  u: "1f1e8-1f1ff",
-  a: "2.0"
-}, {
-  n: ["de", "flag-de", "germany flag"],
-  u: "1f1e9-1f1ea",
-  a: "0.6"
-}, {
-  n: ["flag-dg", "diego garcia flag"],
-  u: "1f1e9-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-dj", "djibouti flag"],
-  u: "1f1e9-1f1ef",
-  a: "2.0"
-}, {
-  n: ["flag-dk", "denmark flag"],
-  u: "1f1e9-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-dm", "dominica flag"],
-  u: "1f1e9-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-do", "dominican republic flag"],
-  u: "1f1e9-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-dz", "algeria flag"],
-  u: "1f1e9-1f1ff",
-  a: "2.0"
-}, {
-  n: ["flag-ea", "ceuta & melilla flag"],
-  u: "1f1ea-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-ec", "ecuador flag"],
-  u: "1f1ea-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-ee", "estonia flag"],
-  u: "1f1ea-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-eg", "egypt flag"],
-  u: "1f1ea-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-eh", "western sahara flag"],
-  u: "1f1ea-1f1ed",
-  a: "2.0"
-}, {
-  n: ["flag-er", "eritrea flag"],
-  u: "1f1ea-1f1f7",
-  a: "2.0"
-}, {
-  n: ["es", "flag-es", "spain flag"],
-  u: "1f1ea-1f1f8",
-  a: "0.6"
-}, {
-  n: ["flag-et", "ethiopia flag"],
-  u: "1f1ea-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-eu", "european union flag"],
-  u: "1f1ea-1f1fa",
-  a: "2.0"
-}, {
-  n: ["flag-fi", "finland flag"],
-  u: "1f1eb-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-fj", "fiji flag"],
-  u: "1f1eb-1f1ef",
-  a: "2.0"
-}, {
-  n: ["flag-fk", "falkland islands flag"],
-  u: "1f1eb-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-fm", "micronesia flag"],
-  u: "1f1eb-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-fo", "faroe islands flag"],
-  u: "1f1eb-1f1f4",
-  a: "2.0"
-}, {
-  n: ["fr", "flag-fr", "france flag"],
-  u: "1f1eb-1f1f7",
-  a: "0.6"
-}, {
-  n: ["flag-ga", "gabon flag"],
-  u: "1f1ec-1f1e6",
-  a: "2.0"
-}, {
-  n: ["gb", "uk", "flag-gb", "united kingdom flag"],
-  u: "1f1ec-1f1e7",
-  a: "0.6"
-}, {
-  n: ["flag-gd", "grenada flag"],
-  u: "1f1ec-1f1e9",
-  a: "2.0"
-}, {
-  n: ["flag-ge", "georgia flag"],
-  u: "1f1ec-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-gf", "french guiana flag"],
-  u: "1f1ec-1f1eb",
-  a: "2.0"
-}, {
-  n: ["flag-gg", "guernsey flag"],
-  u: "1f1ec-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-gh", "ghana flag"],
-  u: "1f1ec-1f1ed",
-  a: "2.0"
-}, {
-  n: ["flag-gi", "gibraltar flag"],
-  u: "1f1ec-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-gl", "greenland flag"],
-  u: "1f1ec-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-gm", "gambia flag"],
-  u: "1f1ec-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-gn", "guinea flag"],
-  u: "1f1ec-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-gp", "guadeloupe flag"],
-  u: "1f1ec-1f1f5",
-  a: "2.0"
-}, {
-  n: ["flag-gq", "equatorial guinea flag"],
-  u: "1f1ec-1f1f6",
-  a: "2.0"
-}, {
-  n: ["flag-gr", "greece flag"],
-  u: "1f1ec-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-gs", "south georgia & south sandwich islands flag"],
-  u: "1f1ec-1f1f8",
-  a: "2.0"
-}, {
-  n: ["flag-gt", "guatemala flag"],
-  u: "1f1ec-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-gu", "guam flag"],
-  u: "1f1ec-1f1fa",
-  a: "2.0"
-}, {
-  n: ["flag-gw", "guinea-bissau flag"],
-  u: "1f1ec-1f1fc",
-  a: "2.0"
-}, {
-  n: ["flag-gy", "guyana flag"],
-  u: "1f1ec-1f1fe",
-  a: "2.0"
-}, {
-  n: ["flag-hk", "hong kong sar china flag"],
-  u: "1f1ed-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-hm", "heard & mcdonald islands flag"],
-  u: "1f1ed-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-hn", "honduras flag"],
-  u: "1f1ed-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-hr", "croatia flag"],
-  u: "1f1ed-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-ht", "haiti flag"],
-  u: "1f1ed-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-hu", "hungary flag"],
-  u: "1f1ed-1f1fa",
-  a: "2.0"
-}, {
-  n: ["flag-ic", "canary islands flag"],
-  u: "1f1ee-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-id", "indonesia flag"],
-  u: "1f1ee-1f1e9",
-  a: "2.0"
-}, {
-  n: ["flag-ie", "ireland flag"],
-  u: "1f1ee-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-il", "israel flag"],
-  u: "1f1ee-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-im", "isle of man flag"],
-  u: "1f1ee-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-in", "india flag"],
-  u: "1f1ee-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-io", "british indian ocean territory flag"],
-  u: "1f1ee-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-iq", "iraq flag"],
-  u: "1f1ee-1f1f6",
-  a: "2.0"
-}, {
-  n: ["flag-ir", "iran flag"],
-  u: "1f1ee-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-is", "iceland flag"],
-  u: "1f1ee-1f1f8",
-  a: "2.0"
-}, {
-  n: ["it", "flag-it", "italy flag"],
-  u: "1f1ee-1f1f9",
-  a: "0.6"
-}, {
-  n: ["flag-je", "jersey flag"],
-  u: "1f1ef-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-jm", "jamaica flag"],
-  u: "1f1ef-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-jo", "jordan flag"],
-  u: "1f1ef-1f1f4",
-  a: "2.0"
-}, {
-  n: ["jp", "flag-jp", "japan flag"],
-  u: "1f1ef-1f1f5",
-  a: "0.6"
-}, {
-  n: ["flag-ke", "kenya flag"],
-  u: "1f1f0-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-kg", "kyrgyzstan flag"],
-  u: "1f1f0-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-kh", "cambodia flag"],
-  u: "1f1f0-1f1ed",
-  a: "2.0"
-}, {
-  n: ["flag-ki", "kiribati flag"],
-  u: "1f1f0-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-km", "comoros flag"],
-  u: "1f1f0-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-kn", "st. kitts & nevis flag"],
-  u: "1f1f0-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-kp", "north korea flag"],
-  u: "1f1f0-1f1f5",
-  a: "2.0"
-}, {
-  n: ["kr", "flag-kr", "south korea flag"],
-  u: "1f1f0-1f1f7",
-  a: "0.6"
-}, {
-  n: ["flag-kw", "kuwait flag"],
-  u: "1f1f0-1f1fc",
-  a: "2.0"
-}, {
-  n: ["flag-ky", "cayman islands flag"],
-  u: "1f1f0-1f1fe",
-  a: "2.0"
-}, {
-  n: ["flag-kz", "kazakhstan flag"],
-  u: "1f1f0-1f1ff",
-  a: "2.0"
-}, {
-  n: ["flag-la", "laos flag"],
-  u: "1f1f1-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-lb", "lebanon flag"],
-  u: "1f1f1-1f1e7",
-  a: "2.0"
-}, {
-  n: ["flag-lc", "st. lucia flag"],
-  u: "1f1f1-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-li", "liechtenstein flag"],
-  u: "1f1f1-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-lk", "sri lanka flag"],
-  u: "1f1f1-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-lr", "liberia flag"],
-  u: "1f1f1-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-ls", "lesotho flag"],
-  u: "1f1f1-1f1f8",
-  a: "2.0"
-}, {
-  n: ["flag-lt", "lithuania flag"],
-  u: "1f1f1-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-lu", "luxembourg flag"],
-  u: "1f1f1-1f1fa",
-  a: "2.0"
-}, {
-  n: ["flag-lv", "latvia flag"],
-  u: "1f1f1-1f1fb",
-  a: "2.0"
-}, {
-  n: ["flag-ly", "libya flag"],
-  u: "1f1f1-1f1fe",
-  a: "2.0"
-}, {
-  n: ["flag-ma", "morocco flag"],
-  u: "1f1f2-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-mc", "monaco flag"],
-  u: "1f1f2-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-md", "moldova flag"],
-  u: "1f1f2-1f1e9",
-  a: "2.0"
-}, {
-  n: ["flag-me", "montenegro flag"],
-  u: "1f1f2-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-mf", "st. martin flag"],
-  u: "1f1f2-1f1eb",
-  a: "2.0"
-}, {
-  n: ["flag-mg", "madagascar flag"],
-  u: "1f1f2-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-mh", "marshall islands flag"],
-  u: "1f1f2-1f1ed",
-  a: "2.0"
-}, {
-  n: ["flag-mk", "north macedonia flag"],
-  u: "1f1f2-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-ml", "mali flag"],
-  u: "1f1f2-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-mm", "myanmar (burma) flag"],
-  u: "1f1f2-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-mn", "mongolia flag"],
-  u: "1f1f2-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-mo", "macao sar china flag"],
-  u: "1f1f2-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-mp", "northern mariana islands flag"],
-  u: "1f1f2-1f1f5",
-  a: "2.0"
-}, {
-  n: ["flag-mq", "martinique flag"],
-  u: "1f1f2-1f1f6",
-  a: "2.0"
-}, {
-  n: ["flag-mr", "mauritania flag"],
-  u: "1f1f2-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-ms", "montserrat flag"],
-  u: "1f1f2-1f1f8",
-  a: "2.0"
-}, {
-  n: ["flag-mt", "malta flag"],
-  u: "1f1f2-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-mu", "mauritius flag"],
-  u: "1f1f2-1f1fa",
-  a: "2.0"
-}, {
-  n: ["flag-mv", "maldives flag"],
-  u: "1f1f2-1f1fb",
-  a: "2.0"
-}, {
-  n: ["flag-mw", "malawi flag"],
-  u: "1f1f2-1f1fc",
-  a: "2.0"
-}, {
-  n: ["flag-mx", "mexico flag"],
-  u: "1f1f2-1f1fd",
-  a: "2.0"
-}, {
-  n: ["flag-my", "malaysia flag"],
-  u: "1f1f2-1f1fe",
-  a: "2.0"
-}, {
-  n: ["flag-mz", "mozambique flag"],
-  u: "1f1f2-1f1ff",
-  a: "2.0"
-}, {
-  n: ["flag-na", "namibia flag"],
-  u: "1f1f3-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-nc", "new caledonia flag"],
-  u: "1f1f3-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-ne", "niger flag"],
-  u: "1f1f3-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-nf", "norfolk island flag"],
-  u: "1f1f3-1f1eb",
-  a: "2.0"
-}, {
-  n: ["flag-ng", "nigeria flag"],
-  u: "1f1f3-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-ni", "nicaragua flag"],
-  u: "1f1f3-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-nl", "netherlands flag"],
-  u: "1f1f3-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-no", "norway flag"],
-  u: "1f1f3-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-np", "nepal flag"],
-  u: "1f1f3-1f1f5",
-  a: "2.0"
-}, {
-  n: ["flag-nr", "nauru flag"],
-  u: "1f1f3-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-nu", "niue flag"],
-  u: "1f1f3-1f1fa",
-  a: "2.0"
-}, {
-  n: ["flag-nz", "new zealand flag"],
-  u: "1f1f3-1f1ff",
-  a: "2.0"
-}, {
-  n: ["flag-om", "oman flag"],
-  u: "1f1f4-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-pa", "panama flag"],
-  u: "1f1f5-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-pe", "peru flag"],
-  u: "1f1f5-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-pf", "french polynesia flag"],
-  u: "1f1f5-1f1eb",
-  a: "2.0"
-}, {
-  n: ["flag-pg", "papua new guinea flag"],
-  u: "1f1f5-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-ph", "philippines flag"],
-  u: "1f1f5-1f1ed",
-  a: "2.0"
-}, {
-  n: ["flag-pk", "pakistan flag"],
-  u: "1f1f5-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-pl", "poland flag"],
-  u: "1f1f5-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-pm", "st. pierre & miquelon flag"],
-  u: "1f1f5-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-pn", "pitcairn islands flag"],
-  u: "1f1f5-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-pr", "puerto rico flag"],
-  u: "1f1f5-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-ps", "palestinian territories flag"],
-  u: "1f1f5-1f1f8",
-  a: "2.0"
-}, {
-  n: ["flag-pt", "portugal flag"],
-  u: "1f1f5-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-pw", "palau flag"],
-  u: "1f1f5-1f1fc",
-  a: "2.0"
-}, {
-  n: ["flag-py", "paraguay flag"],
-  u: "1f1f5-1f1fe",
-  a: "2.0"
-}, {
-  n: ["flag-qa", "qatar flag"],
-  u: "1f1f6-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-re", "réunion flag"],
-  u: "1f1f7-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-ro", "romania flag"],
-  u: "1f1f7-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-rs", "serbia flag"],
-  u: "1f1f7-1f1f8",
-  a: "2.0"
-}, {
-  n: ["ru", "flag-ru", "russia flag"],
-  u: "1f1f7-1f1fa",
-  a: "0.6"
-}, {
-  n: ["flag-rw", "rwanda flag"],
-  u: "1f1f7-1f1fc",
-  a: "2.0"
-}, {
-  n: ["flag-sa", "saudi arabia flag"],
-  u: "1f1f8-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-sb", "solomon islands flag"],
-  u: "1f1f8-1f1e7",
-  a: "2.0"
-}, {
-  n: ["flag-sc", "seychelles flag"],
-  u: "1f1f8-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-sd", "sudan flag"],
-  u: "1f1f8-1f1e9",
-  a: "2.0"
-}, {
-  n: ["flag-se", "sweden flag"],
-  u: "1f1f8-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-sg", "singapore flag"],
-  u: "1f1f8-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-sh", "st. helena flag"],
-  u: "1f1f8-1f1ed",
-  a: "2.0"
-}, {
-  n: ["flag-si", "slovenia flag"],
-  u: "1f1f8-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-sj", "svalbard & jan mayen flag"],
-  u: "1f1f8-1f1ef",
-  a: "2.0"
-}, {
-  n: ["flag-sk", "slovakia flag"],
-  u: "1f1f8-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-sl", "sierra leone flag"],
-  u: "1f1f8-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-sm", "san marino flag"],
-  u: "1f1f8-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-sn", "senegal flag"],
-  u: "1f1f8-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-so", "somalia flag"],
-  u: "1f1f8-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-sr", "suriname flag"],
-  u: "1f1f8-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-ss", "south sudan flag"],
-  u: "1f1f8-1f1f8",
-  a: "2.0"
-}, {
-  n: ["flag-st", "são tomé & príncipe flag"],
-  u: "1f1f8-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-sv", "el salvador flag"],
-  u: "1f1f8-1f1fb",
-  a: "2.0"
-}, {
-  n: ["flag-sx", "sint maarten flag"],
-  u: "1f1f8-1f1fd",
-  a: "2.0"
-}, {
-  n: ["flag-sy", "syria flag"],
-  u: "1f1f8-1f1fe",
-  a: "2.0"
-}, {
-  n: ["flag-sz", "eswatini flag"],
-  u: "1f1f8-1f1ff",
-  a: "2.0"
-}, {
-  n: ["flag-ta", "tristan da cunha flag"],
-  u: "1f1f9-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-tc", "turks & caicos islands flag"],
-  u: "1f1f9-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-td", "chad flag"],
-  u: "1f1f9-1f1e9",
-  a: "2.0"
-}, {
-  n: ["flag-tf", "french southern territories flag"],
-  u: "1f1f9-1f1eb",
-  a: "2.0"
-}, {
-  n: ["flag-tg", "togo flag"],
-  u: "1f1f9-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-th", "thailand flag"],
-  u: "1f1f9-1f1ed",
-  a: "2.0"
-}, {
-  n: ["flag-tj", "tajikistan flag"],
-  u: "1f1f9-1f1ef",
-  a: "2.0"
-}, {
-  n: ["flag-tk", "tokelau flag"],
-  u: "1f1f9-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-tl", "timor-leste flag"],
-  u: "1f1f9-1f1f1",
-  a: "2.0"
-}, {
-  n: ["flag-tm", "turkmenistan flag"],
-  u: "1f1f9-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-tn", "tunisia flag"],
-  u: "1f1f9-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-to", "tonga flag"],
-  u: "1f1f9-1f1f4",
-  a: "2.0"
-}, {
-  n: ["flag-tr", "türkiye flag"],
-  u: "1f1f9-1f1f7",
-  a: "2.0"
-}, {
-  n: ["flag-tt", "trinidad & tobago flag"],
-  u: "1f1f9-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-tv", "tuvalu flag"],
-  u: "1f1f9-1f1fb",
-  a: "2.0"
-}, {
-  n: ["flag-tw", "taiwan flag"],
-  u: "1f1f9-1f1fc",
-  a: "2.0"
-}, {
-  n: ["flag-tz", "tanzania flag"],
-  u: "1f1f9-1f1ff",
-  a: "2.0"
-}, {
-  n: ["flag-ua", "ukraine flag"],
-  u: "1f1fa-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-ug", "uganda flag"],
-  u: "1f1fa-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-um", "u.s. outlying islands flag"],
-  u: "1f1fa-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-un", "united nations flag"],
-  u: "1f1fa-1f1f3",
-  a: "4.0"
-}, {
-  n: ["us", "flag-us", "united states flag"],
-  u: "1f1fa-1f1f8",
-  a: "0.6"
-}, {
-  n: ["flag-uy", "uruguay flag"],
-  u: "1f1fa-1f1fe",
-  a: "2.0"
-}, {
-  n: ["flag-uz", "uzbekistan flag"],
-  u: "1f1fa-1f1ff",
-  a: "2.0"
-}, {
-  n: ["flag-va", "vatican city flag"],
-  u: "1f1fb-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-vc", "st. vincent & grenadines flag"],
-  u: "1f1fb-1f1e8",
-  a: "2.0"
-}, {
-  n: ["flag-ve", "venezuela flag"],
-  u: "1f1fb-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-vg", "british virgin islands flag"],
-  u: "1f1fb-1f1ec",
-  a: "2.0"
-}, {
-  n: ["flag-vi", "u.s. virgin islands flag"],
-  u: "1f1fb-1f1ee",
-  a: "2.0"
-}, {
-  n: ["flag-vn", "vietnam flag"],
-  u: "1f1fb-1f1f3",
-  a: "2.0"
-}, {
-  n: ["flag-vu", "vanuatu flag"],
-  u: "1f1fb-1f1fa",
-  a: "2.0"
-}, {
-  n: ["flag-wf", "wallis & futuna flag"],
-  u: "1f1fc-1f1eb",
-  a: "2.0"
-}, {
-  n: ["flag-ws", "samoa flag"],
-  u: "1f1fc-1f1f8",
-  a: "2.0"
-}, {
-  n: ["flag-xk", "kosovo flag"],
-  u: "1f1fd-1f1f0",
-  a: "2.0"
-}, {
-  n: ["flag-ye", "yemen flag"],
-  u: "1f1fe-1f1ea",
-  a: "2.0"
-}, {
-  n: ["flag-yt", "mayotte flag"],
-  u: "1f1fe-1f1f9",
-  a: "2.0"
-}, {
-  n: ["flag-za", "south africa flag"],
-  u: "1f1ff-1f1e6",
-  a: "2.0"
-}, {
-  n: ["flag-zm", "zambia flag"],
-  u: "1f1ff-1f1f2",
-  a: "2.0"
-}, {
-  n: ["flag-zw", "zimbabwe flag"],
-  u: "1f1ff-1f1fc",
-  a: "2.0"
-}, {
-  n: ["england flag", "flag-england"],
-  u: "1f3f4-e0067-e0062-e0065-e006e-e0067-e007f",
-  a: "5.0"
-}, {
-  n: ["scotland flag", "flag-scotland"],
-  u: "1f3f4-e0067-e0062-e0073-e0063-e0074-e007f",
-  a: "5.0"
-}, {
-  n: ["wales flag", "flag-wales"],
-  u: "1f3f4-e0067-e0062-e0077-e006c-e0073-e007f",
-  a: "5.0"
-}];
+
+var custom = [
+];
+var smileys_people = [
+	{
+		n: [
+			"grinning",
+			"grinning face"
+		],
+		u: "1f600",
+		a: "1.0"
+	},
+	{
+		n: [
+			"smiley",
+			"smiling face with open mouth"
+		],
+		u: "1f603",
+		a: "0.6"
+	},
+	{
+		n: [
+			"smile",
+			"smiling face with open mouth and smiling eyes"
+		],
+		u: "1f604",
+		a: "0.6"
+	},
+	{
+		n: [
+			"grin",
+			"grinning face with smiling eyes"
+		],
+		u: "1f601",
+		a: "0.6"
+	},
+	{
+		n: [
+			"laughing",
+			"satisfied",
+			"smiling face with open mouth and tightly-closed eyes"
+		],
+		u: "1f606",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sweat smile",
+			"smiling face with open mouth and cold sweat"
+		],
+		u: "1f605",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rolling on the floor laughing"
+		],
+		u: "1f923",
+		a: "3.0"
+	},
+	{
+		n: [
+			"joy",
+			"face with tears of joy"
+		],
+		u: "1f602",
+		a: "0.6"
+	},
+	{
+		n: [
+			"slightly smiling face"
+		],
+		u: "1f642",
+		a: "1.0"
+	},
+	{
+		n: [
+			"upside-down face",
+			"upside down face"
+		],
+		u: "1f643",
+		a: "1.0"
+	},
+	{
+		n: [
+			"melting face"
+		],
+		u: "1fae0",
+		a: "14.0"
+	},
+	{
+		n: [
+			"wink",
+			"winking face"
+		],
+		u: "1f609",
+		a: "0.6"
+	},
+	{
+		n: [
+			"blush",
+			"smiling face with smiling eyes"
+		],
+		u: "1f60a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"innocent",
+			"smiling face with halo"
+		],
+		u: "1f607",
+		a: "1.0"
+	},
+	{
+		n: [
+			"smiling face with 3 hearts",
+			"smiling face with smiling eyes and three hearts"
+		],
+		u: "1f970",
+		a: "11.0"
+	},
+	{
+		n: [
+			"heart eyes",
+			"smiling face with heart-shaped eyes"
+		],
+		u: "1f60d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"star-struck",
+			"grinning face with star eyes"
+		],
+		u: "1f929",
+		a: "5.0"
+	},
+	{
+		n: [
+			"kissing heart",
+			"face throwing a kiss"
+		],
+		u: "1f618",
+		a: "0.6"
+	},
+	{
+		n: [
+			"kissing",
+			"kissing face"
+		],
+		u: "1f617",
+		a: "1.0"
+	},
+	{
+		n: [
+			"relaxed",
+			"white smiling face"
+		],
+		u: "263a-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"kissing closed eyes",
+			"kissing face with closed eyes"
+		],
+		u: "1f61a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"kissing smiling eyes",
+			"kissing face with smiling eyes"
+		],
+		u: "1f619",
+		a: "1.0"
+	},
+	{
+		n: [
+			"smiling face with tear"
+		],
+		u: "1f972",
+		a: "13.0"
+	},
+	{
+		n: [
+			"yum",
+			"face savouring delicious food"
+		],
+		u: "1f60b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"stuck out tongue",
+			"face with stuck-out tongue"
+		],
+		u: "1f61b",
+		a: "1.0"
+	},
+	{
+		n: [
+			"stuck out tongue winking eye",
+			"face with stuck-out tongue and winking eye"
+		],
+		u: "1f61c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"zany face",
+			"grinning face with one large and one small eye"
+		],
+		u: "1f92a",
+		a: "5.0"
+	},
+	{
+		n: [
+			"stuck out tongue closed eyes",
+			"face with stuck-out tongue and tightly-closed eyes"
+		],
+		u: "1f61d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"money-mouth face",
+			"money mouth face"
+		],
+		u: "1f911",
+		a: "1.0"
+	},
+	{
+		n: [
+			"hugging face"
+		],
+		u: "1f917",
+		a: "1.0"
+	},
+	{
+		n: [
+			"face with hand over mouth",
+			"smiling face with smiling eyes and hand covering mouth"
+		],
+		u: "1f92d",
+		a: "5.0"
+	},
+	{
+		n: [
+			"face with open eyes and hand over mouth"
+		],
+		u: "1fae2",
+		a: "14.0"
+	},
+	{
+		n: [
+			"face with peeking eye"
+		],
+		u: "1fae3",
+		a: "14.0"
+	},
+	{
+		n: [
+			"shushing face",
+			"face with finger covering closed lips"
+		],
+		u: "1f92b",
+		a: "5.0"
+	},
+	{
+		n: [
+			"thinking face"
+		],
+		u: "1f914",
+		a: "1.0"
+	},
+	{
+		n: [
+			"saluting face"
+		],
+		u: "1fae1",
+		a: "14.0"
+	},
+	{
+		n: [
+			"zipper-mouth face",
+			"zipper mouth face"
+		],
+		u: "1f910",
+		a: "1.0"
+	},
+	{
+		n: [
+			"face with raised eyebrow",
+			"face with one eyebrow raised"
+		],
+		u: "1f928",
+		a: "5.0"
+	},
+	{
+		n: [
+			"neutral face"
+		],
+		u: "1f610",
+		a: "0.7"
+	},
+	{
+		n: [
+			"expressionless",
+			"expressionless face"
+		],
+		u: "1f611",
+		a: "1.0"
+	},
+	{
+		n: [
+			"no mouth",
+			"face without mouth"
+		],
+		u: "1f636",
+		a: "1.0"
+	},
+	{
+		n: [
+			"dotted line face"
+		],
+		u: "1fae5",
+		a: "14.0"
+	},
+	{
+		n: [
+			"face in clouds"
+		],
+		u: "1f636-200d-1f32b-fe0f",
+		a: "13.1"
+	},
+	{
+		n: [
+			"smirk",
+			"smirking face"
+		],
+		u: "1f60f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"unamused",
+			"unamused face"
+		],
+		u: "1f612",
+		a: "0.6"
+	},
+	{
+		n: [
+			"face with rolling eyes"
+		],
+		u: "1f644",
+		a: "1.0"
+	},
+	{
+		n: [
+			"grimacing",
+			"grimacing face"
+		],
+		u: "1f62c",
+		a: "1.0"
+	},
+	{
+		n: [
+			"face exhaling"
+		],
+		u: "1f62e-200d-1f4a8",
+		a: "13.1"
+	},
+	{
+		n: [
+			"lying face"
+		],
+		u: "1f925",
+		a: "3.0"
+	},
+	{
+		n: [
+			"shaking face"
+		],
+		u: "1fae8",
+		a: "15.0"
+	},
+	{
+		n: [
+			"head shaking horizontally"
+		],
+		u: "1f642-200d-2194-fe0f",
+		a: "15.1"
+	},
+	{
+		n: [
+			"head shaking vertically"
+		],
+		u: "1f642-200d-2195-fe0f",
+		a: "15.1"
+	},
+	{
+		n: [
+			"relieved",
+			"relieved face"
+		],
+		u: "1f60c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pensive",
+			"pensive face"
+		],
+		u: "1f614",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sleepy",
+			"sleepy face"
+		],
+		u: "1f62a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"drooling face"
+		],
+		u: "1f924",
+		a: "3.0"
+	},
+	{
+		n: [
+			"sleeping",
+			"sleeping face"
+		],
+		u: "1f634",
+		a: "1.0"
+	},
+	{
+		n: [
+			"mask",
+			"face with medical mask"
+		],
+		u: "1f637",
+		a: "0.6"
+	},
+	{
+		n: [
+			"face with thermometer"
+		],
+		u: "1f912",
+		a: "1.0"
+	},
+	{
+		n: [
+			"face with head-bandage",
+			"face with head bandage"
+		],
+		u: "1f915",
+		a: "1.0"
+	},
+	{
+		n: [
+			"nauseated face"
+		],
+		u: "1f922",
+		a: "3.0"
+	},
+	{
+		n: [
+			"face vomiting",
+			"face with open mouth vomiting"
+		],
+		u: "1f92e",
+		a: "5.0"
+	},
+	{
+		n: [
+			"sneezing face"
+		],
+		u: "1f927",
+		a: "3.0"
+	},
+	{
+		n: [
+			"hot face",
+			"overheated face"
+		],
+		u: "1f975",
+		a: "11.0"
+	},
+	{
+		n: [
+			"cold face",
+			"freezing face"
+		],
+		u: "1f976",
+		a: "11.0"
+	},
+	{
+		n: [
+			"woozy face",
+			"face with uneven eyes and wavy mouth"
+		],
+		u: "1f974",
+		a: "11.0"
+	},
+	{
+		n: [
+			"dizzy face"
+		],
+		u: "1f635",
+		a: "0.6"
+	},
+	{
+		n: [
+			"face with spiral eyes"
+		],
+		u: "1f635-200d-1f4ab",
+		a: "13.1"
+	},
+	{
+		n: [
+			"exploding head",
+			"shocked face with exploding head"
+		],
+		u: "1f92f",
+		a: "5.0"
+	},
+	{
+		n: [
+			"face with cowboy hat"
+		],
+		u: "1f920",
+		a: "3.0"
+	},
+	{
+		n: [
+			"partying face",
+			"face with party horn and party hat"
+		],
+		u: "1f973",
+		a: "11.0"
+	},
+	{
+		n: [
+			"disguised face"
+		],
+		u: "1f978",
+		a: "13.0"
+	},
+	{
+		n: [
+			"sunglasses",
+			"smiling face with sunglasses"
+		],
+		u: "1f60e",
+		a: "1.0"
+	},
+	{
+		n: [
+			"nerd face"
+		],
+		u: "1f913",
+		a: "1.0"
+	},
+	{
+		n: [
+			"face with monocle"
+		],
+		u: "1f9d0",
+		a: "5.0"
+	},
+	{
+		n: [
+			"confused",
+			"confused face"
+		],
+		u: "1f615",
+		a: "1.0"
+	},
+	{
+		n: [
+			"face with diagonal mouth"
+		],
+		u: "1fae4",
+		a: "14.0"
+	},
+	{
+		n: [
+			"worried",
+			"worried face"
+		],
+		u: "1f61f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"slightly frowning face"
+		],
+		u: "1f641",
+		a: "1.0"
+	},
+	{
+		n: [
+			"frowning face",
+			"white frowning face"
+		],
+		u: "2639-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"open mouth",
+			"face with open mouth"
+		],
+		u: "1f62e",
+		a: "1.0"
+	},
+	{
+		n: [
+			"hushed",
+			"hushed face"
+		],
+		u: "1f62f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"astonished",
+			"astonished face"
+		],
+		u: "1f632",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flushed",
+			"flushed face"
+		],
+		u: "1f633",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pleading face",
+			"face with pleading eyes"
+		],
+		u: "1f97a",
+		a: "11.0"
+	},
+	{
+		n: [
+			"face holding back tears"
+		],
+		u: "1f979",
+		a: "14.0"
+	},
+	{
+		n: [
+			"frowning",
+			"frowning face with open mouth"
+		],
+		u: "1f626",
+		a: "1.0"
+	},
+	{
+		n: [
+			"anguished",
+			"anguished face"
+		],
+		u: "1f627",
+		a: "1.0"
+	},
+	{
+		n: [
+			"fearful",
+			"fearful face"
+		],
+		u: "1f628",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cold sweat",
+			"face with open mouth and cold sweat"
+		],
+		u: "1f630",
+		a: "0.6"
+	},
+	{
+		n: [
+			"disappointed relieved",
+			"disappointed but relieved face"
+		],
+		u: "1f625",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cry",
+			"crying face"
+		],
+		u: "1f622",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sob",
+			"loudly crying face"
+		],
+		u: "1f62d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"scream",
+			"face screaming in fear"
+		],
+		u: "1f631",
+		a: "0.6"
+	},
+	{
+		n: [
+			"confounded",
+			"confounded face"
+		],
+		u: "1f616",
+		a: "0.6"
+	},
+	{
+		n: [
+			"persevere",
+			"persevering face"
+		],
+		u: "1f623",
+		a: "0.6"
+	},
+	{
+		n: [
+			"disappointed",
+			"disappointed face"
+		],
+		u: "1f61e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sweat",
+			"face with cold sweat"
+		],
+		u: "1f613",
+		a: "0.6"
+	},
+	{
+		n: [
+			"weary",
+			"weary face"
+		],
+		u: "1f629",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tired face"
+		],
+		u: "1f62b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"yawning face"
+		],
+		u: "1f971",
+		a: "12.0"
+	},
+	{
+		n: [
+			"triumph",
+			"face with look of triumph"
+		],
+		u: "1f624",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rage",
+			"pouting face"
+		],
+		u: "1f621",
+		a: "0.6"
+	},
+	{
+		n: [
+			"angry",
+			"angry face"
+		],
+		u: "1f620",
+		a: "0.6"
+	},
+	{
+		n: [
+			"face with symbols on mouth",
+			"serious face with symbols covering mouth"
+		],
+		u: "1f92c",
+		a: "5.0"
+	},
+	{
+		n: [
+			"smiling imp",
+			"smiling face with horns"
+		],
+		u: "1f608",
+		a: "1.0"
+	},
+	{
+		n: [
+			"imp"
+		],
+		u: "1f47f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"skull"
+		],
+		u: "1f480",
+		a: "0.6"
+	},
+	{
+		n: [
+			"skull and crossbones"
+		],
+		u: "2620-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"poop",
+			"shit",
+			"hankey",
+			"pile of poo"
+		],
+		u: "1f4a9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clown face"
+		],
+		u: "1f921",
+		a: "3.0"
+	},
+	{
+		n: [
+			"japanese ogre"
+		],
+		u: "1f479",
+		a: "0.6"
+	},
+	{
+		n: [
+			"japanese goblin"
+		],
+		u: "1f47a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ghost"
+		],
+		u: "1f47b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"alien",
+			"extraterrestrial alien"
+		],
+		u: "1f47d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"alien monster",
+			"space invader"
+		],
+		u: "1f47e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"robot face"
+		],
+		u: "1f916",
+		a: "1.0"
+	},
+	{
+		n: [
+			"smiley cat",
+			"smiling cat face with open mouth"
+		],
+		u: "1f63a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"smile cat",
+			"grinning cat face with smiling eyes"
+		],
+		u: "1f638",
+		a: "0.6"
+	},
+	{
+		n: [
+			"joy cat",
+			"cat face with tears of joy"
+		],
+		u: "1f639",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heart eyes cat",
+			"smiling cat face with heart-shaped eyes"
+		],
+		u: "1f63b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"smirk cat",
+			"cat face with wry smile"
+		],
+		u: "1f63c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"kissing cat",
+			"kissing cat face with closed eyes"
+		],
+		u: "1f63d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"scream cat",
+			"weary cat face"
+		],
+		u: "1f640",
+		a: "0.6"
+	},
+	{
+		n: [
+			"crying cat face"
+		],
+		u: "1f63f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pouting cat",
+			"pouting cat face"
+		],
+		u: "1f63e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"see no evil",
+			"see-no-evil monkey"
+		],
+		u: "1f648",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hear no evil",
+			"hear-no-evil monkey"
+		],
+		u: "1f649",
+		a: "0.6"
+	},
+	{
+		n: [
+			"speak no evil",
+			"speak-no-evil monkey"
+		],
+		u: "1f64a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"love letter"
+		],
+		u: "1f48c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cupid",
+			"heart with arrow"
+		],
+		u: "1f498",
+		a: "0.6"
+	},
+	{
+		n: [
+			"gift heart",
+			"heart with ribbon"
+		],
+		u: "1f49d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sparkling heart"
+		],
+		u: "1f496",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heartpulse",
+			"growing heart"
+		],
+		u: "1f497",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heartbeat",
+			"beating heart"
+		],
+		u: "1f493",
+		a: "0.6"
+	},
+	{
+		n: [
+			"revolving hearts"
+		],
+		u: "1f49e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"two hearts"
+		],
+		u: "1f495",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heart decoration"
+		],
+		u: "1f49f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heart exclamation",
+			"heavy heart exclamation mark ornament"
+		],
+		u: "2763-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"broken heart"
+		],
+		u: "1f494",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heart on fire"
+		],
+		u: "2764-fe0f-200d-1f525",
+		a: "13.1"
+	},
+	{
+		n: [
+			"mending heart"
+		],
+		u: "2764-fe0f-200d-1fa79",
+		a: "13.1"
+	},
+	{
+		n: [
+			"heart",
+			"heavy black heart"
+		],
+		u: "2764-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pink heart"
+		],
+		u: "1fa77",
+		a: "15.0"
+	},
+	{
+		n: [
+			"orange heart"
+		],
+		u: "1f9e1",
+		a: "5.0"
+	},
+	{
+		n: [
+			"yellow heart"
+		],
+		u: "1f49b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"green heart"
+		],
+		u: "1f49a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"blue heart"
+		],
+		u: "1f499",
+		a: "0.6"
+	},
+	{
+		n: [
+			"light blue heart"
+		],
+		u: "1fa75",
+		a: "15.0"
+	},
+	{
+		n: [
+			"purple heart"
+		],
+		u: "1f49c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"brown heart"
+		],
+		u: "1f90e",
+		a: "12.0"
+	},
+	{
+		n: [
+			"black heart"
+		],
+		u: "1f5a4",
+		a: "3.0"
+	},
+	{
+		n: [
+			"grey heart"
+		],
+		u: "1fa76",
+		a: "15.0"
+	},
+	{
+		n: [
+			"white heart"
+		],
+		u: "1f90d",
+		a: "12.0"
+	},
+	{
+		n: [
+			"kiss",
+			"kiss mark"
+		],
+		u: "1f48b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"100",
+			"hundred points symbol"
+		],
+		u: "1f4af",
+		a: "0.6"
+	},
+	{
+		n: [
+			"anger",
+			"anger symbol"
+		],
+		u: "1f4a2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"boom",
+			"collision",
+			"collision symbol"
+		],
+		u: "1f4a5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dizzy",
+			"dizzy symbol"
+		],
+		u: "1f4ab",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sweat drops",
+			"splashing sweat symbol"
+		],
+		u: "1f4a6",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dash",
+			"dash symbol"
+		],
+		u: "1f4a8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hole"
+		],
+		u: "1f573-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"speech balloon"
+		],
+		u: "1f4ac",
+		a: "0.6"
+	},
+	{
+		n: [
+			"eye in speech bubble",
+			"eye-in-speech-bubble"
+		],
+		u: "1f441-fe0f-200d-1f5e8-fe0f",
+		a: "2.0"
+	},
+	{
+		n: [
+			"left speech bubble"
+		],
+		u: "1f5e8-fe0f",
+		a: "2.0"
+	},
+	{
+		n: [
+			"right anger bubble"
+		],
+		u: "1f5ef-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"thought balloon"
+		],
+		u: "1f4ad",
+		a: "1.0"
+	},
+	{
+		n: [
+			"zzz",
+			"sleeping symbol"
+		],
+		u: "1f4a4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"wave",
+			"waving hand sign"
+		],
+		u: "1f44b",
+		v: [
+			"1f44b-1f3fb",
+			"1f44b-1f3fc",
+			"1f44b-1f3fd",
+			"1f44b-1f3fe",
+			"1f44b-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"raised back of hand"
+		],
+		u: "1f91a",
+		v: [
+			"1f91a-1f3fb",
+			"1f91a-1f3fc",
+			"1f91a-1f3fd",
+			"1f91a-1f3fe",
+			"1f91a-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"hand with fingers splayed",
+			"raised hand with fingers splayed"
+		],
+		u: "1f590-fe0f",
+		v: [
+			"1f590-1f3fb",
+			"1f590-1f3fc",
+			"1f590-1f3fd",
+			"1f590-1f3fe",
+			"1f590-1f3ff"
+		],
+		a: "0.7"
+	},
+	{
+		n: [
+			"hand",
+			"raised hand"
+		],
+		u: "270b",
+		v: [
+			"270b-1f3fb",
+			"270b-1f3fc",
+			"270b-1f3fd",
+			"270b-1f3fe",
+			"270b-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"spock-hand",
+			"raised hand with part between middle and ring fingers"
+		],
+		u: "1f596",
+		v: [
+			"1f596-1f3fb",
+			"1f596-1f3fc",
+			"1f596-1f3fd",
+			"1f596-1f3fe",
+			"1f596-1f3ff"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"rightwards hand"
+		],
+		u: "1faf1",
+		v: [
+			"1faf1-1f3fb",
+			"1faf1-1f3fc",
+			"1faf1-1f3fd",
+			"1faf1-1f3fe",
+			"1faf1-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"leftwards hand"
+		],
+		u: "1faf2",
+		v: [
+			"1faf2-1f3fb",
+			"1faf2-1f3fc",
+			"1faf2-1f3fd",
+			"1faf2-1f3fe",
+			"1faf2-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"palm down hand"
+		],
+		u: "1faf3",
+		v: [
+			"1faf3-1f3fb",
+			"1faf3-1f3fc",
+			"1faf3-1f3fd",
+			"1faf3-1f3fe",
+			"1faf3-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"palm up hand"
+		],
+		u: "1faf4",
+		v: [
+			"1faf4-1f3fb",
+			"1faf4-1f3fc",
+			"1faf4-1f3fd",
+			"1faf4-1f3fe",
+			"1faf4-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"leftwards pushing hand"
+		],
+		u: "1faf7",
+		v: [
+			"1faf7-1f3fb",
+			"1faf7-1f3fc",
+			"1faf7-1f3fd",
+			"1faf7-1f3fe",
+			"1faf7-1f3ff"
+		],
+		a: "15.0"
+	},
+	{
+		n: [
+			"rightwards pushing hand"
+		],
+		u: "1faf8",
+		v: [
+			"1faf8-1f3fb",
+			"1faf8-1f3fc",
+			"1faf8-1f3fd",
+			"1faf8-1f3fe",
+			"1faf8-1f3ff"
+		],
+		a: "15.0"
+	},
+	{
+		n: [
+			"ok hand",
+			"ok hand sign"
+		],
+		u: "1f44c",
+		v: [
+			"1f44c-1f3fb",
+			"1f44c-1f3fc",
+			"1f44c-1f3fd",
+			"1f44c-1f3fe",
+			"1f44c-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"pinched fingers"
+		],
+		u: "1f90c",
+		v: [
+			"1f90c-1f3fb",
+			"1f90c-1f3fc",
+			"1f90c-1f3fd",
+			"1f90c-1f3fe",
+			"1f90c-1f3ff"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"pinching hand"
+		],
+		u: "1f90f",
+		v: [
+			"1f90f-1f3fb",
+			"1f90f-1f3fc",
+			"1f90f-1f3fd",
+			"1f90f-1f3fe",
+			"1f90f-1f3ff"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"v",
+			"victory hand"
+		],
+		u: "270c-fe0f",
+		v: [
+			"270c-1f3fb",
+			"270c-1f3fc",
+			"270c-1f3fd",
+			"270c-1f3fe",
+			"270c-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"crossed fingers",
+			"hand with index and middle fingers crossed"
+		],
+		u: "1f91e",
+		v: [
+			"1f91e-1f3fb",
+			"1f91e-1f3fc",
+			"1f91e-1f3fd",
+			"1f91e-1f3fe",
+			"1f91e-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"hand with index finger and thumb crossed"
+		],
+		u: "1faf0",
+		v: [
+			"1faf0-1f3fb",
+			"1faf0-1f3fc",
+			"1faf0-1f3fd",
+			"1faf0-1f3fe",
+			"1faf0-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"i love you hand sign"
+		],
+		u: "1f91f",
+		v: [
+			"1f91f-1f3fb",
+			"1f91f-1f3fc",
+			"1f91f-1f3fd",
+			"1f91f-1f3fe",
+			"1f91f-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"the horns",
+			"sign of the horns"
+		],
+		u: "1f918",
+		v: [
+			"1f918-1f3fb",
+			"1f918-1f3fc",
+			"1f918-1f3fd",
+			"1f918-1f3fe",
+			"1f918-1f3ff"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"call me hand"
+		],
+		u: "1f919",
+		v: [
+			"1f919-1f3fb",
+			"1f919-1f3fc",
+			"1f919-1f3fd",
+			"1f919-1f3fe",
+			"1f919-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"point left",
+			"white left pointing backhand index"
+		],
+		u: "1f448",
+		v: [
+			"1f448-1f3fb",
+			"1f448-1f3fc",
+			"1f448-1f3fd",
+			"1f448-1f3fe",
+			"1f448-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"point right",
+			"white right pointing backhand index"
+		],
+		u: "1f449",
+		v: [
+			"1f449-1f3fb",
+			"1f449-1f3fc",
+			"1f449-1f3fd",
+			"1f449-1f3fe",
+			"1f449-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"point up 2",
+			"white up pointing backhand index"
+		],
+		u: "1f446",
+		v: [
+			"1f446-1f3fb",
+			"1f446-1f3fc",
+			"1f446-1f3fd",
+			"1f446-1f3fe",
+			"1f446-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"middle finger",
+			"reversed hand with middle finger extended"
+		],
+		u: "1f595",
+		v: [
+			"1f595-1f3fb",
+			"1f595-1f3fc",
+			"1f595-1f3fd",
+			"1f595-1f3fe",
+			"1f595-1f3ff"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"point down",
+			"white down pointing backhand index"
+		],
+		u: "1f447",
+		v: [
+			"1f447-1f3fb",
+			"1f447-1f3fc",
+			"1f447-1f3fd",
+			"1f447-1f3fe",
+			"1f447-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"point up",
+			"white up pointing index"
+		],
+		u: "261d-fe0f",
+		v: [
+			"261d-1f3fb",
+			"261d-1f3fc",
+			"261d-1f3fd",
+			"261d-1f3fe",
+			"261d-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"index pointing at the viewer"
+		],
+		u: "1faf5",
+		v: [
+			"1faf5-1f3fb",
+			"1faf5-1f3fc",
+			"1faf5-1f3fd",
+			"1faf5-1f3fe",
+			"1faf5-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"+1",
+			"thumbsup",
+			"thumbs up sign"
+		],
+		u: "1f44d",
+		v: [
+			"1f44d-1f3fb",
+			"1f44d-1f3fc",
+			"1f44d-1f3fd",
+			"1f44d-1f3fe",
+			"1f44d-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"-1",
+			"thumbsdown",
+			"thumbs down sign"
+		],
+		u: "1f44e",
+		v: [
+			"1f44e-1f3fb",
+			"1f44e-1f3fc",
+			"1f44e-1f3fd",
+			"1f44e-1f3fe",
+			"1f44e-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"fist",
+			"raised fist"
+		],
+		u: "270a",
+		v: [
+			"270a-1f3fb",
+			"270a-1f3fc",
+			"270a-1f3fd",
+			"270a-1f3fe",
+			"270a-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"punch",
+			"facepunch",
+			"fisted hand sign"
+		],
+		u: "1f44a",
+		v: [
+			"1f44a-1f3fb",
+			"1f44a-1f3fc",
+			"1f44a-1f3fd",
+			"1f44a-1f3fe",
+			"1f44a-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"left-facing fist"
+		],
+		u: "1f91b",
+		v: [
+			"1f91b-1f3fb",
+			"1f91b-1f3fc",
+			"1f91b-1f3fd",
+			"1f91b-1f3fe",
+			"1f91b-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"right-facing fist"
+		],
+		u: "1f91c",
+		v: [
+			"1f91c-1f3fb",
+			"1f91c-1f3fc",
+			"1f91c-1f3fd",
+			"1f91c-1f3fe",
+			"1f91c-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"clap",
+			"clapping hands sign"
+		],
+		u: "1f44f",
+		v: [
+			"1f44f-1f3fb",
+			"1f44f-1f3fc",
+			"1f44f-1f3fd",
+			"1f44f-1f3fe",
+			"1f44f-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"raised hands",
+			"person raising both hands in celebration"
+		],
+		u: "1f64c",
+		v: [
+			"1f64c-1f3fb",
+			"1f64c-1f3fc",
+			"1f64c-1f3fd",
+			"1f64c-1f3fe",
+			"1f64c-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"heart hands"
+		],
+		u: "1faf6",
+		v: [
+			"1faf6-1f3fb",
+			"1faf6-1f3fc",
+			"1faf6-1f3fd",
+			"1faf6-1f3fe",
+			"1faf6-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"open hands",
+			"open hands sign"
+		],
+		u: "1f450",
+		v: [
+			"1f450-1f3fb",
+			"1f450-1f3fc",
+			"1f450-1f3fd",
+			"1f450-1f3fe",
+			"1f450-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"palms up together"
+		],
+		u: "1f932",
+		v: [
+			"1f932-1f3fb",
+			"1f932-1f3fc",
+			"1f932-1f3fd",
+			"1f932-1f3fe",
+			"1f932-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"handshake"
+		],
+		u: "1f91d",
+		v: [
+			"1f91d-1f3fb",
+			"1f91d-1f3fc",
+			"1f91d-1f3fd",
+			"1f91d-1f3fe",
+			"1f91d-1f3ff",
+			"1faf1-1f3fb-200d-1faf2-1f3fc",
+			"1faf1-1f3fb-200d-1faf2-1f3fd",
+			"1faf1-1f3fb-200d-1faf2-1f3fe",
+			"1faf1-1f3fb-200d-1faf2-1f3ff",
+			"1faf1-1f3fc-200d-1faf2-1f3fb",
+			"1faf1-1f3fc-200d-1faf2-1f3fd",
+			"1faf1-1f3fc-200d-1faf2-1f3fe",
+			"1faf1-1f3fc-200d-1faf2-1f3ff",
+			"1faf1-1f3fd-200d-1faf2-1f3fb",
+			"1faf1-1f3fd-200d-1faf2-1f3fc",
+			"1faf1-1f3fd-200d-1faf2-1f3fe",
+			"1faf1-1f3fd-200d-1faf2-1f3ff",
+			"1faf1-1f3fe-200d-1faf2-1f3fb",
+			"1faf1-1f3fe-200d-1faf2-1f3fc",
+			"1faf1-1f3fe-200d-1faf2-1f3fd",
+			"1faf1-1f3fe-200d-1faf2-1f3ff",
+			"1faf1-1f3ff-200d-1faf2-1f3fb",
+			"1faf1-1f3ff-200d-1faf2-1f3fc",
+			"1faf1-1f3ff-200d-1faf2-1f3fd",
+			"1faf1-1f3ff-200d-1faf2-1f3fe"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"pray",
+			"person with folded hands"
+		],
+		u: "1f64f",
+		v: [
+			"1f64f-1f3fb",
+			"1f64f-1f3fc",
+			"1f64f-1f3fd",
+			"1f64f-1f3fe",
+			"1f64f-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"writing hand"
+		],
+		u: "270d-fe0f",
+		v: [
+			"270d-1f3fb",
+			"270d-1f3fc",
+			"270d-1f3fd",
+			"270d-1f3fe",
+			"270d-1f3ff"
+		],
+		a: "0.7"
+	},
+	{
+		n: [
+			"nail care",
+			"nail polish"
+		],
+		u: "1f485",
+		v: [
+			"1f485-1f3fb",
+			"1f485-1f3fc",
+			"1f485-1f3fd",
+			"1f485-1f3fe",
+			"1f485-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"selfie"
+		],
+		u: "1f933",
+		v: [
+			"1f933-1f3fb",
+			"1f933-1f3fc",
+			"1f933-1f3fd",
+			"1f933-1f3fe",
+			"1f933-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"muscle",
+			"flexed biceps"
+		],
+		u: "1f4aa",
+		v: [
+			"1f4aa-1f3fb",
+			"1f4aa-1f3fc",
+			"1f4aa-1f3fd",
+			"1f4aa-1f3fe",
+			"1f4aa-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"mechanical arm"
+		],
+		u: "1f9be",
+		a: "12.0"
+	},
+	{
+		n: [
+			"mechanical leg"
+		],
+		u: "1f9bf",
+		a: "12.0"
+	},
+	{
+		n: [
+			"leg"
+		],
+		u: "1f9b5",
+		v: [
+			"1f9b5-1f3fb",
+			"1f9b5-1f3fc",
+			"1f9b5-1f3fd",
+			"1f9b5-1f3fe",
+			"1f9b5-1f3ff"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"foot"
+		],
+		u: "1f9b6",
+		v: [
+			"1f9b6-1f3fb",
+			"1f9b6-1f3fc",
+			"1f9b6-1f3fd",
+			"1f9b6-1f3fe",
+			"1f9b6-1f3ff"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"ear"
+		],
+		u: "1f442",
+		v: [
+			"1f442-1f3fb",
+			"1f442-1f3fc",
+			"1f442-1f3fd",
+			"1f442-1f3fe",
+			"1f442-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"ear with hearing aid"
+		],
+		u: "1f9bb",
+		v: [
+			"1f9bb-1f3fb",
+			"1f9bb-1f3fc",
+			"1f9bb-1f3fd",
+			"1f9bb-1f3fe",
+			"1f9bb-1f3ff"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"nose"
+		],
+		u: "1f443",
+		v: [
+			"1f443-1f3fb",
+			"1f443-1f3fc",
+			"1f443-1f3fd",
+			"1f443-1f3fe",
+			"1f443-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"brain"
+		],
+		u: "1f9e0",
+		a: "5.0"
+	},
+	{
+		n: [
+			"anatomical heart"
+		],
+		u: "1fac0",
+		a: "13.0"
+	},
+	{
+		n: [
+			"lungs"
+		],
+		u: "1fac1",
+		a: "13.0"
+	},
+	{
+		n: [
+			"tooth"
+		],
+		u: "1f9b7",
+		a: "11.0"
+	},
+	{
+		n: [
+			"bone"
+		],
+		u: "1f9b4",
+		a: "11.0"
+	},
+	{
+		n: [
+			"eyes"
+		],
+		u: "1f440",
+		a: "0.6"
+	},
+	{
+		n: [
+			"eye"
+		],
+		u: "1f441-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"tongue"
+		],
+		u: "1f445",
+		a: "0.6"
+	},
+	{
+		n: [
+			"lips",
+			"mouth"
+		],
+		u: "1f444",
+		a: "0.6"
+	},
+	{
+		n: [
+			"biting lip"
+		],
+		u: "1fae6",
+		a: "14.0"
+	},
+	{
+		n: [
+			"baby"
+		],
+		u: "1f476",
+		v: [
+			"1f476-1f3fb",
+			"1f476-1f3fc",
+			"1f476-1f3fd",
+			"1f476-1f3fe",
+			"1f476-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"child"
+		],
+		u: "1f9d2",
+		v: [
+			"1f9d2-1f3fb",
+			"1f9d2-1f3fc",
+			"1f9d2-1f3fd",
+			"1f9d2-1f3fe",
+			"1f9d2-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"boy"
+		],
+		u: "1f466",
+		v: [
+			"1f466-1f3fb",
+			"1f466-1f3fc",
+			"1f466-1f3fd",
+			"1f466-1f3fe",
+			"1f466-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"girl"
+		],
+		u: "1f467",
+		v: [
+			"1f467-1f3fb",
+			"1f467-1f3fc",
+			"1f467-1f3fd",
+			"1f467-1f3fe",
+			"1f467-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"adult"
+		],
+		u: "1f9d1",
+		v: [
+			"1f9d1-1f3fb",
+			"1f9d1-1f3fc",
+			"1f9d1-1f3fd",
+			"1f9d1-1f3fe",
+			"1f9d1-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"person with blond hair"
+		],
+		u: "1f471",
+		v: [
+			"1f471-1f3fb",
+			"1f471-1f3fc",
+			"1f471-1f3fd",
+			"1f471-1f3fe",
+			"1f471-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man"
+		],
+		u: "1f468",
+		v: [
+			"1f468-1f3fb",
+			"1f468-1f3fc",
+			"1f468-1f3fd",
+			"1f468-1f3fe",
+			"1f468-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"bearded person"
+		],
+		u: "1f9d4",
+		v: [
+			"1f9d4-1f3fb",
+			"1f9d4-1f3fc",
+			"1f9d4-1f3fd",
+			"1f9d4-1f3fe",
+			"1f9d4-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"man: beard",
+			"man with beard"
+		],
+		u: "1f9d4-200d-2642-fe0f",
+		v: [
+			"1f9d4-1f3fb-200d-2642-fe0f",
+			"1f9d4-1f3fc-200d-2642-fe0f",
+			"1f9d4-1f3fd-200d-2642-fe0f",
+			"1f9d4-1f3fe-200d-2642-fe0f",
+			"1f9d4-1f3ff-200d-2642-fe0f"
+		],
+		a: "13.1"
+	},
+	{
+		n: [
+			"woman: beard",
+			"woman with beard"
+		],
+		u: "1f9d4-200d-2640-fe0f",
+		v: [
+			"1f9d4-1f3fb-200d-2640-fe0f",
+			"1f9d4-1f3fc-200d-2640-fe0f",
+			"1f9d4-1f3fd-200d-2640-fe0f",
+			"1f9d4-1f3fe-200d-2640-fe0f",
+			"1f9d4-1f3ff-200d-2640-fe0f"
+		],
+		a: "13.1"
+	},
+	{
+		n: [
+			"man: red hair",
+			"red haired man"
+		],
+		u: "1f468-200d-1f9b0",
+		v: [
+			"1f468-1f3fb-200d-1f9b0",
+			"1f468-1f3fc-200d-1f9b0",
+			"1f468-1f3fd-200d-1f9b0",
+			"1f468-1f3fe-200d-1f9b0",
+			"1f468-1f3ff-200d-1f9b0"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"man: curly hair",
+			"curly haired man"
+		],
+		u: "1f468-200d-1f9b1",
+		v: [
+			"1f468-1f3fb-200d-1f9b1",
+			"1f468-1f3fc-200d-1f9b1",
+			"1f468-1f3fd-200d-1f9b1",
+			"1f468-1f3fe-200d-1f9b1",
+			"1f468-1f3ff-200d-1f9b1"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"man: white hair",
+			"white haired man"
+		],
+		u: "1f468-200d-1f9b3",
+		v: [
+			"1f468-1f3fb-200d-1f9b3",
+			"1f468-1f3fc-200d-1f9b3",
+			"1f468-1f3fd-200d-1f9b3",
+			"1f468-1f3fe-200d-1f9b3",
+			"1f468-1f3ff-200d-1f9b3"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"bald man",
+			"man: bald"
+		],
+		u: "1f468-200d-1f9b2",
+		v: [
+			"1f468-1f3fb-200d-1f9b2",
+			"1f468-1f3fc-200d-1f9b2",
+			"1f468-1f3fd-200d-1f9b2",
+			"1f468-1f3fe-200d-1f9b2",
+			"1f468-1f3ff-200d-1f9b2"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"woman"
+		],
+		u: "1f469",
+		v: [
+			"1f469-1f3fb",
+			"1f469-1f3fc",
+			"1f469-1f3fd",
+			"1f469-1f3fe",
+			"1f469-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"woman: red hair",
+			"red haired woman"
+		],
+		u: "1f469-200d-1f9b0",
+		v: [
+			"1f469-1f3fb-200d-1f9b0",
+			"1f469-1f3fc-200d-1f9b0",
+			"1f469-1f3fd-200d-1f9b0",
+			"1f469-1f3fe-200d-1f9b0",
+			"1f469-1f3ff-200d-1f9b0"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"person: red hair",
+			"red haired person"
+		],
+		u: "1f9d1-200d-1f9b0",
+		v: [
+			"1f9d1-1f3fb-200d-1f9b0",
+			"1f9d1-1f3fc-200d-1f9b0",
+			"1f9d1-1f3fd-200d-1f9b0",
+			"1f9d1-1f3fe-200d-1f9b0",
+			"1f9d1-1f3ff-200d-1f9b0"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"woman: curly hair",
+			"curly haired woman"
+		],
+		u: "1f469-200d-1f9b1",
+		v: [
+			"1f469-1f3fb-200d-1f9b1",
+			"1f469-1f3fc-200d-1f9b1",
+			"1f469-1f3fd-200d-1f9b1",
+			"1f469-1f3fe-200d-1f9b1",
+			"1f469-1f3ff-200d-1f9b1"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"person: curly hair",
+			"curly haired person"
+		],
+		u: "1f9d1-200d-1f9b1",
+		v: [
+			"1f9d1-1f3fb-200d-1f9b1",
+			"1f9d1-1f3fc-200d-1f9b1",
+			"1f9d1-1f3fd-200d-1f9b1",
+			"1f9d1-1f3fe-200d-1f9b1",
+			"1f9d1-1f3ff-200d-1f9b1"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"woman: white hair",
+			"white haired woman"
+		],
+		u: "1f469-200d-1f9b3",
+		v: [
+			"1f469-1f3fb-200d-1f9b3",
+			"1f469-1f3fc-200d-1f9b3",
+			"1f469-1f3fd-200d-1f9b3",
+			"1f469-1f3fe-200d-1f9b3",
+			"1f469-1f3ff-200d-1f9b3"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"person: white hair",
+			"white haired person"
+		],
+		u: "1f9d1-200d-1f9b3",
+		v: [
+			"1f9d1-1f3fb-200d-1f9b3",
+			"1f9d1-1f3fc-200d-1f9b3",
+			"1f9d1-1f3fd-200d-1f9b3",
+			"1f9d1-1f3fe-200d-1f9b3",
+			"1f9d1-1f3ff-200d-1f9b3"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"bald woman",
+			"woman: bald"
+		],
+		u: "1f469-200d-1f9b2",
+		v: [
+			"1f469-1f3fb-200d-1f9b2",
+			"1f469-1f3fc-200d-1f9b2",
+			"1f469-1f3fd-200d-1f9b2",
+			"1f469-1f3fe-200d-1f9b2",
+			"1f469-1f3ff-200d-1f9b2"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"bald person",
+			"person: bald"
+		],
+		u: "1f9d1-200d-1f9b2",
+		v: [
+			"1f9d1-1f3fb-200d-1f9b2",
+			"1f9d1-1f3fc-200d-1f9b2",
+			"1f9d1-1f3fd-200d-1f9b2",
+			"1f9d1-1f3fe-200d-1f9b2",
+			"1f9d1-1f3ff-200d-1f9b2"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"woman: blond hair",
+			"blond-haired-woman"
+		],
+		u: "1f471-200d-2640-fe0f",
+		v: [
+			"1f471-1f3fb-200d-2640-fe0f",
+			"1f471-1f3fc-200d-2640-fe0f",
+			"1f471-1f3fd-200d-2640-fe0f",
+			"1f471-1f3fe-200d-2640-fe0f",
+			"1f471-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"man: blond hair",
+			"blond-haired-man"
+		],
+		u: "1f471-200d-2642-fe0f",
+		v: [
+			"1f471-1f3fb-200d-2642-fe0f",
+			"1f471-1f3fc-200d-2642-fe0f",
+			"1f471-1f3fd-200d-2642-fe0f",
+			"1f471-1f3fe-200d-2642-fe0f",
+			"1f471-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"older adult"
+		],
+		u: "1f9d3",
+		v: [
+			"1f9d3-1f3fb",
+			"1f9d3-1f3fc",
+			"1f9d3-1f3fd",
+			"1f9d3-1f3fe",
+			"1f9d3-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"older man"
+		],
+		u: "1f474",
+		v: [
+			"1f474-1f3fb",
+			"1f474-1f3fc",
+			"1f474-1f3fd",
+			"1f474-1f3fe",
+			"1f474-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"older woman"
+		],
+		u: "1f475",
+		v: [
+			"1f475-1f3fb",
+			"1f475-1f3fc",
+			"1f475-1f3fd",
+			"1f475-1f3fe",
+			"1f475-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"person frowning"
+		],
+		u: "1f64d",
+		v: [
+			"1f64d-1f3fb",
+			"1f64d-1f3fc",
+			"1f64d-1f3fd",
+			"1f64d-1f3fe",
+			"1f64d-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man frowning",
+			"man-frowning"
+		],
+		u: "1f64d-200d-2642-fe0f",
+		v: [
+			"1f64d-1f3fb-200d-2642-fe0f",
+			"1f64d-1f3fc-200d-2642-fe0f",
+			"1f64d-1f3fd-200d-2642-fe0f",
+			"1f64d-1f3fe-200d-2642-fe0f",
+			"1f64d-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman frowning",
+			"woman-frowning"
+		],
+		u: "1f64d-200d-2640-fe0f",
+		v: [
+			"1f64d-1f3fb-200d-2640-fe0f",
+			"1f64d-1f3fc-200d-2640-fe0f",
+			"1f64d-1f3fd-200d-2640-fe0f",
+			"1f64d-1f3fe-200d-2640-fe0f",
+			"1f64d-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"person with pouting face"
+		],
+		u: "1f64e",
+		v: [
+			"1f64e-1f3fb",
+			"1f64e-1f3fc",
+			"1f64e-1f3fd",
+			"1f64e-1f3fe",
+			"1f64e-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man pouting",
+			"man-pouting"
+		],
+		u: "1f64e-200d-2642-fe0f",
+		v: [
+			"1f64e-1f3fb-200d-2642-fe0f",
+			"1f64e-1f3fc-200d-2642-fe0f",
+			"1f64e-1f3fd-200d-2642-fe0f",
+			"1f64e-1f3fe-200d-2642-fe0f",
+			"1f64e-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman pouting",
+			"woman-pouting"
+		],
+		u: "1f64e-200d-2640-fe0f",
+		v: [
+			"1f64e-1f3fb-200d-2640-fe0f",
+			"1f64e-1f3fc-200d-2640-fe0f",
+			"1f64e-1f3fd-200d-2640-fe0f",
+			"1f64e-1f3fe-200d-2640-fe0f",
+			"1f64e-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"no good",
+			"face with no good gesture"
+		],
+		u: "1f645",
+		v: [
+			"1f645-1f3fb",
+			"1f645-1f3fc",
+			"1f645-1f3fd",
+			"1f645-1f3fe",
+			"1f645-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man gesturing no",
+			"man-gesturing-no"
+		],
+		u: "1f645-200d-2642-fe0f",
+		v: [
+			"1f645-1f3fb-200d-2642-fe0f",
+			"1f645-1f3fc-200d-2642-fe0f",
+			"1f645-1f3fd-200d-2642-fe0f",
+			"1f645-1f3fe-200d-2642-fe0f",
+			"1f645-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman gesturing no",
+			"woman-gesturing-no"
+		],
+		u: "1f645-200d-2640-fe0f",
+		v: [
+			"1f645-1f3fb-200d-2640-fe0f",
+			"1f645-1f3fc-200d-2640-fe0f",
+			"1f645-1f3fd-200d-2640-fe0f",
+			"1f645-1f3fe-200d-2640-fe0f",
+			"1f645-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"ok woman",
+			"face with ok gesture"
+		],
+		u: "1f646",
+		v: [
+			"1f646-1f3fb",
+			"1f646-1f3fc",
+			"1f646-1f3fd",
+			"1f646-1f3fe",
+			"1f646-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man gesturing ok",
+			"man-gesturing-ok"
+		],
+		u: "1f646-200d-2642-fe0f",
+		v: [
+			"1f646-1f3fb-200d-2642-fe0f",
+			"1f646-1f3fc-200d-2642-fe0f",
+			"1f646-1f3fd-200d-2642-fe0f",
+			"1f646-1f3fe-200d-2642-fe0f",
+			"1f646-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman gesturing ok",
+			"woman-gesturing-ok"
+		],
+		u: "1f646-200d-2640-fe0f",
+		v: [
+			"1f646-1f3fb-200d-2640-fe0f",
+			"1f646-1f3fc-200d-2640-fe0f",
+			"1f646-1f3fd-200d-2640-fe0f",
+			"1f646-1f3fe-200d-2640-fe0f",
+			"1f646-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"information desk person"
+		],
+		u: "1f481",
+		v: [
+			"1f481-1f3fb",
+			"1f481-1f3fc",
+			"1f481-1f3fd",
+			"1f481-1f3fe",
+			"1f481-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man tipping hand",
+			"man-tipping-hand"
+		],
+		u: "1f481-200d-2642-fe0f",
+		v: [
+			"1f481-1f3fb-200d-2642-fe0f",
+			"1f481-1f3fc-200d-2642-fe0f",
+			"1f481-1f3fd-200d-2642-fe0f",
+			"1f481-1f3fe-200d-2642-fe0f",
+			"1f481-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman tipping hand",
+			"woman-tipping-hand"
+		],
+		u: "1f481-200d-2640-fe0f",
+		v: [
+			"1f481-1f3fb-200d-2640-fe0f",
+			"1f481-1f3fc-200d-2640-fe0f",
+			"1f481-1f3fd-200d-2640-fe0f",
+			"1f481-1f3fe-200d-2640-fe0f",
+			"1f481-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"raising hand",
+			"happy person raising one hand"
+		],
+		u: "1f64b",
+		v: [
+			"1f64b-1f3fb",
+			"1f64b-1f3fc",
+			"1f64b-1f3fd",
+			"1f64b-1f3fe",
+			"1f64b-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man raising hand",
+			"man-raising-hand"
+		],
+		u: "1f64b-200d-2642-fe0f",
+		v: [
+			"1f64b-1f3fb-200d-2642-fe0f",
+			"1f64b-1f3fc-200d-2642-fe0f",
+			"1f64b-1f3fd-200d-2642-fe0f",
+			"1f64b-1f3fe-200d-2642-fe0f",
+			"1f64b-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman raising hand",
+			"woman-raising-hand"
+		],
+		u: "1f64b-200d-2640-fe0f",
+		v: [
+			"1f64b-1f3fb-200d-2640-fe0f",
+			"1f64b-1f3fc-200d-2640-fe0f",
+			"1f64b-1f3fd-200d-2640-fe0f",
+			"1f64b-1f3fe-200d-2640-fe0f",
+			"1f64b-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"deaf person"
+		],
+		u: "1f9cf",
+		v: [
+			"1f9cf-1f3fb",
+			"1f9cf-1f3fc",
+			"1f9cf-1f3fd",
+			"1f9cf-1f3fe",
+			"1f9cf-1f3ff"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"deaf man"
+		],
+		u: "1f9cf-200d-2642-fe0f",
+		v: [
+			"1f9cf-1f3fb-200d-2642-fe0f",
+			"1f9cf-1f3fc-200d-2642-fe0f",
+			"1f9cf-1f3fd-200d-2642-fe0f",
+			"1f9cf-1f3fe-200d-2642-fe0f",
+			"1f9cf-1f3ff-200d-2642-fe0f"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"deaf woman"
+		],
+		u: "1f9cf-200d-2640-fe0f",
+		v: [
+			"1f9cf-1f3fb-200d-2640-fe0f",
+			"1f9cf-1f3fc-200d-2640-fe0f",
+			"1f9cf-1f3fd-200d-2640-fe0f",
+			"1f9cf-1f3fe-200d-2640-fe0f",
+			"1f9cf-1f3ff-200d-2640-fe0f"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"bow",
+			"person bowing deeply"
+		],
+		u: "1f647",
+		v: [
+			"1f647-1f3fb",
+			"1f647-1f3fc",
+			"1f647-1f3fd",
+			"1f647-1f3fe",
+			"1f647-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man bowing",
+			"man-bowing"
+		],
+		u: "1f647-200d-2642-fe0f",
+		v: [
+			"1f647-1f3fb-200d-2642-fe0f",
+			"1f647-1f3fc-200d-2642-fe0f",
+			"1f647-1f3fd-200d-2642-fe0f",
+			"1f647-1f3fe-200d-2642-fe0f",
+			"1f647-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman bowing",
+			"woman-bowing"
+		],
+		u: "1f647-200d-2640-fe0f",
+		v: [
+			"1f647-1f3fb-200d-2640-fe0f",
+			"1f647-1f3fc-200d-2640-fe0f",
+			"1f647-1f3fd-200d-2640-fe0f",
+			"1f647-1f3fe-200d-2640-fe0f",
+			"1f647-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"face palm"
+		],
+		u: "1f926",
+		v: [
+			"1f926-1f3fb",
+			"1f926-1f3fc",
+			"1f926-1f3fd",
+			"1f926-1f3fe",
+			"1f926-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"man facepalming",
+			"man-facepalming"
+		],
+		u: "1f926-200d-2642-fe0f",
+		v: [
+			"1f926-1f3fb-200d-2642-fe0f",
+			"1f926-1f3fc-200d-2642-fe0f",
+			"1f926-1f3fd-200d-2642-fe0f",
+			"1f926-1f3fe-200d-2642-fe0f",
+			"1f926-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman facepalming",
+			"woman-facepalming"
+		],
+		u: "1f926-200d-2640-fe0f",
+		v: [
+			"1f926-1f3fb-200d-2640-fe0f",
+			"1f926-1f3fc-200d-2640-fe0f",
+			"1f926-1f3fd-200d-2640-fe0f",
+			"1f926-1f3fe-200d-2640-fe0f",
+			"1f926-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"shrug"
+		],
+		u: "1f937",
+		v: [
+			"1f937-1f3fb",
+			"1f937-1f3fc",
+			"1f937-1f3fd",
+			"1f937-1f3fe",
+			"1f937-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"man shrugging",
+			"man-shrugging"
+		],
+		u: "1f937-200d-2642-fe0f",
+		v: [
+			"1f937-1f3fb-200d-2642-fe0f",
+			"1f937-1f3fc-200d-2642-fe0f",
+			"1f937-1f3fd-200d-2642-fe0f",
+			"1f937-1f3fe-200d-2642-fe0f",
+			"1f937-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman shrugging",
+			"woman-shrugging"
+		],
+		u: "1f937-200d-2640-fe0f",
+		v: [
+			"1f937-1f3fb-200d-2640-fe0f",
+			"1f937-1f3fc-200d-2640-fe0f",
+			"1f937-1f3fd-200d-2640-fe0f",
+			"1f937-1f3fe-200d-2640-fe0f",
+			"1f937-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"health worker"
+		],
+		u: "1f9d1-200d-2695-fe0f",
+		v: [
+			"1f9d1-1f3fb-200d-2695-fe0f",
+			"1f9d1-1f3fc-200d-2695-fe0f",
+			"1f9d1-1f3fd-200d-2695-fe0f",
+			"1f9d1-1f3fe-200d-2695-fe0f",
+			"1f9d1-1f3ff-200d-2695-fe0f"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"male-doctor",
+			"man health worker"
+		],
+		u: "1f468-200d-2695-fe0f",
+		v: [
+			"1f468-1f3fb-200d-2695-fe0f",
+			"1f468-1f3fc-200d-2695-fe0f",
+			"1f468-1f3fd-200d-2695-fe0f",
+			"1f468-1f3fe-200d-2695-fe0f",
+			"1f468-1f3ff-200d-2695-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"female-doctor",
+			"woman health worker"
+		],
+		u: "1f469-200d-2695-fe0f",
+		v: [
+			"1f469-1f3fb-200d-2695-fe0f",
+			"1f469-1f3fc-200d-2695-fe0f",
+			"1f469-1f3fd-200d-2695-fe0f",
+			"1f469-1f3fe-200d-2695-fe0f",
+			"1f469-1f3ff-200d-2695-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"student"
+		],
+		u: "1f9d1-200d-1f393",
+		v: [
+			"1f9d1-1f3fb-200d-1f393",
+			"1f9d1-1f3fc-200d-1f393",
+			"1f9d1-1f3fd-200d-1f393",
+			"1f9d1-1f3fe-200d-1f393",
+			"1f9d1-1f3ff-200d-1f393"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man student",
+			"male-student"
+		],
+		u: "1f468-200d-1f393",
+		v: [
+			"1f468-1f3fb-200d-1f393",
+			"1f468-1f3fc-200d-1f393",
+			"1f468-1f3fd-200d-1f393",
+			"1f468-1f3fe-200d-1f393",
+			"1f468-1f3ff-200d-1f393"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman student",
+			"female-student"
+		],
+		u: "1f469-200d-1f393",
+		v: [
+			"1f469-1f3fb-200d-1f393",
+			"1f469-1f3fc-200d-1f393",
+			"1f469-1f3fd-200d-1f393",
+			"1f469-1f3fe-200d-1f393",
+			"1f469-1f3ff-200d-1f393"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"teacher"
+		],
+		u: "1f9d1-200d-1f3eb",
+		v: [
+			"1f9d1-1f3fb-200d-1f3eb",
+			"1f9d1-1f3fc-200d-1f3eb",
+			"1f9d1-1f3fd-200d-1f3eb",
+			"1f9d1-1f3fe-200d-1f3eb",
+			"1f9d1-1f3ff-200d-1f3eb"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man teacher",
+			"male-teacher"
+		],
+		u: "1f468-200d-1f3eb",
+		v: [
+			"1f468-1f3fb-200d-1f3eb",
+			"1f468-1f3fc-200d-1f3eb",
+			"1f468-1f3fd-200d-1f3eb",
+			"1f468-1f3fe-200d-1f3eb",
+			"1f468-1f3ff-200d-1f3eb"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman teacher",
+			"female-teacher"
+		],
+		u: "1f469-200d-1f3eb",
+		v: [
+			"1f469-1f3fb-200d-1f3eb",
+			"1f469-1f3fc-200d-1f3eb",
+			"1f469-1f3fd-200d-1f3eb",
+			"1f469-1f3fe-200d-1f3eb",
+			"1f469-1f3ff-200d-1f3eb"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"judge"
+		],
+		u: "1f9d1-200d-2696-fe0f",
+		v: [
+			"1f9d1-1f3fb-200d-2696-fe0f",
+			"1f9d1-1f3fc-200d-2696-fe0f",
+			"1f9d1-1f3fd-200d-2696-fe0f",
+			"1f9d1-1f3fe-200d-2696-fe0f",
+			"1f9d1-1f3ff-200d-2696-fe0f"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man judge",
+			"male-judge"
+		],
+		u: "1f468-200d-2696-fe0f",
+		v: [
+			"1f468-1f3fb-200d-2696-fe0f",
+			"1f468-1f3fc-200d-2696-fe0f",
+			"1f468-1f3fd-200d-2696-fe0f",
+			"1f468-1f3fe-200d-2696-fe0f",
+			"1f468-1f3ff-200d-2696-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman judge",
+			"female-judge"
+		],
+		u: "1f469-200d-2696-fe0f",
+		v: [
+			"1f469-1f3fb-200d-2696-fe0f",
+			"1f469-1f3fc-200d-2696-fe0f",
+			"1f469-1f3fd-200d-2696-fe0f",
+			"1f469-1f3fe-200d-2696-fe0f",
+			"1f469-1f3ff-200d-2696-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"farmer"
+		],
+		u: "1f9d1-200d-1f33e",
+		v: [
+			"1f9d1-1f3fb-200d-1f33e",
+			"1f9d1-1f3fc-200d-1f33e",
+			"1f9d1-1f3fd-200d-1f33e",
+			"1f9d1-1f3fe-200d-1f33e",
+			"1f9d1-1f3ff-200d-1f33e"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man farmer",
+			"male-farmer"
+		],
+		u: "1f468-200d-1f33e",
+		v: [
+			"1f468-1f3fb-200d-1f33e",
+			"1f468-1f3fc-200d-1f33e",
+			"1f468-1f3fd-200d-1f33e",
+			"1f468-1f3fe-200d-1f33e",
+			"1f468-1f3ff-200d-1f33e"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman farmer",
+			"female-farmer"
+		],
+		u: "1f469-200d-1f33e",
+		v: [
+			"1f469-1f3fb-200d-1f33e",
+			"1f469-1f3fc-200d-1f33e",
+			"1f469-1f3fd-200d-1f33e",
+			"1f469-1f3fe-200d-1f33e",
+			"1f469-1f3ff-200d-1f33e"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"cook"
+		],
+		u: "1f9d1-200d-1f373",
+		v: [
+			"1f9d1-1f3fb-200d-1f373",
+			"1f9d1-1f3fc-200d-1f373",
+			"1f9d1-1f3fd-200d-1f373",
+			"1f9d1-1f3fe-200d-1f373",
+			"1f9d1-1f3ff-200d-1f373"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man cook",
+			"male-cook"
+		],
+		u: "1f468-200d-1f373",
+		v: [
+			"1f468-1f3fb-200d-1f373",
+			"1f468-1f3fc-200d-1f373",
+			"1f468-1f3fd-200d-1f373",
+			"1f468-1f3fe-200d-1f373",
+			"1f468-1f3ff-200d-1f373"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman cook",
+			"female-cook"
+		],
+		u: "1f469-200d-1f373",
+		v: [
+			"1f469-1f3fb-200d-1f373",
+			"1f469-1f3fc-200d-1f373",
+			"1f469-1f3fd-200d-1f373",
+			"1f469-1f3fe-200d-1f373",
+			"1f469-1f3ff-200d-1f373"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"mechanic"
+		],
+		u: "1f9d1-200d-1f527",
+		v: [
+			"1f9d1-1f3fb-200d-1f527",
+			"1f9d1-1f3fc-200d-1f527",
+			"1f9d1-1f3fd-200d-1f527",
+			"1f9d1-1f3fe-200d-1f527",
+			"1f9d1-1f3ff-200d-1f527"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man mechanic",
+			"male-mechanic"
+		],
+		u: "1f468-200d-1f527",
+		v: [
+			"1f468-1f3fb-200d-1f527",
+			"1f468-1f3fc-200d-1f527",
+			"1f468-1f3fd-200d-1f527",
+			"1f468-1f3fe-200d-1f527",
+			"1f468-1f3ff-200d-1f527"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman mechanic",
+			"female-mechanic"
+		],
+		u: "1f469-200d-1f527",
+		v: [
+			"1f469-1f3fb-200d-1f527",
+			"1f469-1f3fc-200d-1f527",
+			"1f469-1f3fd-200d-1f527",
+			"1f469-1f3fe-200d-1f527",
+			"1f469-1f3ff-200d-1f527"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"factory worker"
+		],
+		u: "1f9d1-200d-1f3ed",
+		v: [
+			"1f9d1-1f3fb-200d-1f3ed",
+			"1f9d1-1f3fc-200d-1f3ed",
+			"1f9d1-1f3fd-200d-1f3ed",
+			"1f9d1-1f3fe-200d-1f3ed",
+			"1f9d1-1f3ff-200d-1f3ed"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man factory worker",
+			"male-factory-worker"
+		],
+		u: "1f468-200d-1f3ed",
+		v: [
+			"1f468-1f3fb-200d-1f3ed",
+			"1f468-1f3fc-200d-1f3ed",
+			"1f468-1f3fd-200d-1f3ed",
+			"1f468-1f3fe-200d-1f3ed",
+			"1f468-1f3ff-200d-1f3ed"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman factory worker",
+			"female-factory-worker"
+		],
+		u: "1f469-200d-1f3ed",
+		v: [
+			"1f469-1f3fb-200d-1f3ed",
+			"1f469-1f3fc-200d-1f3ed",
+			"1f469-1f3fd-200d-1f3ed",
+			"1f469-1f3fe-200d-1f3ed",
+			"1f469-1f3ff-200d-1f3ed"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"office worker"
+		],
+		u: "1f9d1-200d-1f4bc",
+		v: [
+			"1f9d1-1f3fb-200d-1f4bc",
+			"1f9d1-1f3fc-200d-1f4bc",
+			"1f9d1-1f3fd-200d-1f4bc",
+			"1f9d1-1f3fe-200d-1f4bc",
+			"1f9d1-1f3ff-200d-1f4bc"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man office worker",
+			"male-office-worker"
+		],
+		u: "1f468-200d-1f4bc",
+		v: [
+			"1f468-1f3fb-200d-1f4bc",
+			"1f468-1f3fc-200d-1f4bc",
+			"1f468-1f3fd-200d-1f4bc",
+			"1f468-1f3fe-200d-1f4bc",
+			"1f468-1f3ff-200d-1f4bc"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman office worker",
+			"female-office-worker"
+		],
+		u: "1f469-200d-1f4bc",
+		v: [
+			"1f469-1f3fb-200d-1f4bc",
+			"1f469-1f3fc-200d-1f4bc",
+			"1f469-1f3fd-200d-1f4bc",
+			"1f469-1f3fe-200d-1f4bc",
+			"1f469-1f3ff-200d-1f4bc"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"scientist"
+		],
+		u: "1f9d1-200d-1f52c",
+		v: [
+			"1f9d1-1f3fb-200d-1f52c",
+			"1f9d1-1f3fc-200d-1f52c",
+			"1f9d1-1f3fd-200d-1f52c",
+			"1f9d1-1f3fe-200d-1f52c",
+			"1f9d1-1f3ff-200d-1f52c"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man scientist",
+			"male-scientist"
+		],
+		u: "1f468-200d-1f52c",
+		v: [
+			"1f468-1f3fb-200d-1f52c",
+			"1f468-1f3fc-200d-1f52c",
+			"1f468-1f3fd-200d-1f52c",
+			"1f468-1f3fe-200d-1f52c",
+			"1f468-1f3ff-200d-1f52c"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman scientist",
+			"female-scientist"
+		],
+		u: "1f469-200d-1f52c",
+		v: [
+			"1f469-1f3fb-200d-1f52c",
+			"1f469-1f3fc-200d-1f52c",
+			"1f469-1f3fd-200d-1f52c",
+			"1f469-1f3fe-200d-1f52c",
+			"1f469-1f3ff-200d-1f52c"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"technologist"
+		],
+		u: "1f9d1-200d-1f4bb",
+		v: [
+			"1f9d1-1f3fb-200d-1f4bb",
+			"1f9d1-1f3fc-200d-1f4bb",
+			"1f9d1-1f3fd-200d-1f4bb",
+			"1f9d1-1f3fe-200d-1f4bb",
+			"1f9d1-1f3ff-200d-1f4bb"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man technologist",
+			"male-technologist"
+		],
+		u: "1f468-200d-1f4bb",
+		v: [
+			"1f468-1f3fb-200d-1f4bb",
+			"1f468-1f3fc-200d-1f4bb",
+			"1f468-1f3fd-200d-1f4bb",
+			"1f468-1f3fe-200d-1f4bb",
+			"1f468-1f3ff-200d-1f4bb"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman technologist",
+			"female-technologist"
+		],
+		u: "1f469-200d-1f4bb",
+		v: [
+			"1f469-1f3fb-200d-1f4bb",
+			"1f469-1f3fc-200d-1f4bb",
+			"1f469-1f3fd-200d-1f4bb",
+			"1f469-1f3fe-200d-1f4bb",
+			"1f469-1f3ff-200d-1f4bb"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"singer"
+		],
+		u: "1f9d1-200d-1f3a4",
+		v: [
+			"1f9d1-1f3fb-200d-1f3a4",
+			"1f9d1-1f3fc-200d-1f3a4",
+			"1f9d1-1f3fd-200d-1f3a4",
+			"1f9d1-1f3fe-200d-1f3a4",
+			"1f9d1-1f3ff-200d-1f3a4"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man singer",
+			"male-singer"
+		],
+		u: "1f468-200d-1f3a4",
+		v: [
+			"1f468-1f3fb-200d-1f3a4",
+			"1f468-1f3fc-200d-1f3a4",
+			"1f468-1f3fd-200d-1f3a4",
+			"1f468-1f3fe-200d-1f3a4",
+			"1f468-1f3ff-200d-1f3a4"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman singer",
+			"female-singer"
+		],
+		u: "1f469-200d-1f3a4",
+		v: [
+			"1f469-1f3fb-200d-1f3a4",
+			"1f469-1f3fc-200d-1f3a4",
+			"1f469-1f3fd-200d-1f3a4",
+			"1f469-1f3fe-200d-1f3a4",
+			"1f469-1f3ff-200d-1f3a4"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"artist"
+		],
+		u: "1f9d1-200d-1f3a8",
+		v: [
+			"1f9d1-1f3fb-200d-1f3a8",
+			"1f9d1-1f3fc-200d-1f3a8",
+			"1f9d1-1f3fd-200d-1f3a8",
+			"1f9d1-1f3fe-200d-1f3a8",
+			"1f9d1-1f3ff-200d-1f3a8"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man artist",
+			"male-artist"
+		],
+		u: "1f468-200d-1f3a8",
+		v: [
+			"1f468-1f3fb-200d-1f3a8",
+			"1f468-1f3fc-200d-1f3a8",
+			"1f468-1f3fd-200d-1f3a8",
+			"1f468-1f3fe-200d-1f3a8",
+			"1f468-1f3ff-200d-1f3a8"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman artist",
+			"female-artist"
+		],
+		u: "1f469-200d-1f3a8",
+		v: [
+			"1f469-1f3fb-200d-1f3a8",
+			"1f469-1f3fc-200d-1f3a8",
+			"1f469-1f3fd-200d-1f3a8",
+			"1f469-1f3fe-200d-1f3a8",
+			"1f469-1f3ff-200d-1f3a8"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"pilot"
+		],
+		u: "1f9d1-200d-2708-fe0f",
+		v: [
+			"1f9d1-1f3fb-200d-2708-fe0f",
+			"1f9d1-1f3fc-200d-2708-fe0f",
+			"1f9d1-1f3fd-200d-2708-fe0f",
+			"1f9d1-1f3fe-200d-2708-fe0f",
+			"1f9d1-1f3ff-200d-2708-fe0f"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man pilot",
+			"male-pilot"
+		],
+		u: "1f468-200d-2708-fe0f",
+		v: [
+			"1f468-1f3fb-200d-2708-fe0f",
+			"1f468-1f3fc-200d-2708-fe0f",
+			"1f468-1f3fd-200d-2708-fe0f",
+			"1f468-1f3fe-200d-2708-fe0f",
+			"1f468-1f3ff-200d-2708-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman pilot",
+			"female-pilot"
+		],
+		u: "1f469-200d-2708-fe0f",
+		v: [
+			"1f469-1f3fb-200d-2708-fe0f",
+			"1f469-1f3fc-200d-2708-fe0f",
+			"1f469-1f3fd-200d-2708-fe0f",
+			"1f469-1f3fe-200d-2708-fe0f",
+			"1f469-1f3ff-200d-2708-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"astronaut"
+		],
+		u: "1f9d1-200d-1f680",
+		v: [
+			"1f9d1-1f3fb-200d-1f680",
+			"1f9d1-1f3fc-200d-1f680",
+			"1f9d1-1f3fd-200d-1f680",
+			"1f9d1-1f3fe-200d-1f680",
+			"1f9d1-1f3ff-200d-1f680"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man astronaut",
+			"male-astronaut"
+		],
+		u: "1f468-200d-1f680",
+		v: [
+			"1f468-1f3fb-200d-1f680",
+			"1f468-1f3fc-200d-1f680",
+			"1f468-1f3fd-200d-1f680",
+			"1f468-1f3fe-200d-1f680",
+			"1f468-1f3ff-200d-1f680"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman astronaut",
+			"female-astronaut"
+		],
+		u: "1f469-200d-1f680",
+		v: [
+			"1f469-1f3fb-200d-1f680",
+			"1f469-1f3fc-200d-1f680",
+			"1f469-1f3fd-200d-1f680",
+			"1f469-1f3fe-200d-1f680",
+			"1f469-1f3ff-200d-1f680"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"firefighter"
+		],
+		u: "1f9d1-200d-1f692",
+		v: [
+			"1f9d1-1f3fb-200d-1f692",
+			"1f9d1-1f3fc-200d-1f692",
+			"1f9d1-1f3fd-200d-1f692",
+			"1f9d1-1f3fe-200d-1f692",
+			"1f9d1-1f3ff-200d-1f692"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"man firefighter",
+			"male-firefighter"
+		],
+		u: "1f468-200d-1f692",
+		v: [
+			"1f468-1f3fb-200d-1f692",
+			"1f468-1f3fc-200d-1f692",
+			"1f468-1f3fd-200d-1f692",
+			"1f468-1f3fe-200d-1f692",
+			"1f468-1f3ff-200d-1f692"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman firefighter",
+			"female-firefighter"
+		],
+		u: "1f469-200d-1f692",
+		v: [
+			"1f469-1f3fb-200d-1f692",
+			"1f469-1f3fc-200d-1f692",
+			"1f469-1f3fd-200d-1f692",
+			"1f469-1f3fe-200d-1f692",
+			"1f469-1f3ff-200d-1f692"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"cop",
+			"police officer"
+		],
+		u: "1f46e",
+		v: [
+			"1f46e-1f3fb",
+			"1f46e-1f3fc",
+			"1f46e-1f3fd",
+			"1f46e-1f3fe",
+			"1f46e-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man police officer",
+			"male-police-officer"
+		],
+		u: "1f46e-200d-2642-fe0f",
+		v: [
+			"1f46e-1f3fb-200d-2642-fe0f",
+			"1f46e-1f3fc-200d-2642-fe0f",
+			"1f46e-1f3fd-200d-2642-fe0f",
+			"1f46e-1f3fe-200d-2642-fe0f",
+			"1f46e-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman police officer",
+			"female-police-officer"
+		],
+		u: "1f46e-200d-2640-fe0f",
+		v: [
+			"1f46e-1f3fb-200d-2640-fe0f",
+			"1f46e-1f3fc-200d-2640-fe0f",
+			"1f46e-1f3fd-200d-2640-fe0f",
+			"1f46e-1f3fe-200d-2640-fe0f",
+			"1f46e-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"detective",
+			"sleuth or spy"
+		],
+		u: "1f575-fe0f",
+		v: [
+			"1f575-1f3fb",
+			"1f575-1f3fc",
+			"1f575-1f3fd",
+			"1f575-1f3fe",
+			"1f575-1f3ff"
+		],
+		a: "0.7"
+	},
+	{
+		n: [
+			"man detective",
+			"male-detective"
+		],
+		u: "1f575-fe0f-200d-2642-fe0f",
+		v: [
+			"1f575-1f3fb-200d-2642-fe0f",
+			"1f575-1f3fc-200d-2642-fe0f",
+			"1f575-1f3fd-200d-2642-fe0f",
+			"1f575-1f3fe-200d-2642-fe0f",
+			"1f575-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman detective",
+			"female-detective"
+		],
+		u: "1f575-fe0f-200d-2640-fe0f",
+		v: [
+			"1f575-1f3fb-200d-2640-fe0f",
+			"1f575-1f3fc-200d-2640-fe0f",
+			"1f575-1f3fd-200d-2640-fe0f",
+			"1f575-1f3fe-200d-2640-fe0f",
+			"1f575-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"guardsman"
+		],
+		u: "1f482",
+		v: [
+			"1f482-1f3fb",
+			"1f482-1f3fc",
+			"1f482-1f3fd",
+			"1f482-1f3fe",
+			"1f482-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man guard",
+			"male-guard"
+		],
+		u: "1f482-200d-2642-fe0f",
+		v: [
+			"1f482-1f3fb-200d-2642-fe0f",
+			"1f482-1f3fc-200d-2642-fe0f",
+			"1f482-1f3fd-200d-2642-fe0f",
+			"1f482-1f3fe-200d-2642-fe0f",
+			"1f482-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman guard",
+			"female-guard"
+		],
+		u: "1f482-200d-2640-fe0f",
+		v: [
+			"1f482-1f3fb-200d-2640-fe0f",
+			"1f482-1f3fc-200d-2640-fe0f",
+			"1f482-1f3fd-200d-2640-fe0f",
+			"1f482-1f3fe-200d-2640-fe0f",
+			"1f482-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"ninja"
+		],
+		u: "1f977",
+		v: [
+			"1f977-1f3fb",
+			"1f977-1f3fc",
+			"1f977-1f3fd",
+			"1f977-1f3fe",
+			"1f977-1f3ff"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"construction worker"
+		],
+		u: "1f477",
+		v: [
+			"1f477-1f3fb",
+			"1f477-1f3fc",
+			"1f477-1f3fd",
+			"1f477-1f3fe",
+			"1f477-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man construction worker",
+			"male-construction-worker"
+		],
+		u: "1f477-200d-2642-fe0f",
+		v: [
+			"1f477-1f3fb-200d-2642-fe0f",
+			"1f477-1f3fc-200d-2642-fe0f",
+			"1f477-1f3fd-200d-2642-fe0f",
+			"1f477-1f3fe-200d-2642-fe0f",
+			"1f477-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman construction worker",
+			"female-construction-worker"
+		],
+		u: "1f477-200d-2640-fe0f",
+		v: [
+			"1f477-1f3fb-200d-2640-fe0f",
+			"1f477-1f3fc-200d-2640-fe0f",
+			"1f477-1f3fd-200d-2640-fe0f",
+			"1f477-1f3fe-200d-2640-fe0f",
+			"1f477-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"person with crown"
+		],
+		u: "1fac5",
+		v: [
+			"1fac5-1f3fb",
+			"1fac5-1f3fc",
+			"1fac5-1f3fd",
+			"1fac5-1f3fe",
+			"1fac5-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"prince"
+		],
+		u: "1f934",
+		v: [
+			"1f934-1f3fb",
+			"1f934-1f3fc",
+			"1f934-1f3fd",
+			"1f934-1f3fe",
+			"1f934-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"princess"
+		],
+		u: "1f478",
+		v: [
+			"1f478-1f3fb",
+			"1f478-1f3fc",
+			"1f478-1f3fd",
+			"1f478-1f3fe",
+			"1f478-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man with turban"
+		],
+		u: "1f473",
+		v: [
+			"1f473-1f3fb",
+			"1f473-1f3fc",
+			"1f473-1f3fd",
+			"1f473-1f3fe",
+			"1f473-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man wearing turban",
+			"man-wearing-turban"
+		],
+		u: "1f473-200d-2642-fe0f",
+		v: [
+			"1f473-1f3fb-200d-2642-fe0f",
+			"1f473-1f3fc-200d-2642-fe0f",
+			"1f473-1f3fd-200d-2642-fe0f",
+			"1f473-1f3fe-200d-2642-fe0f",
+			"1f473-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman wearing turban",
+			"woman-wearing-turban"
+		],
+		u: "1f473-200d-2640-fe0f",
+		v: [
+			"1f473-1f3fb-200d-2640-fe0f",
+			"1f473-1f3fc-200d-2640-fe0f",
+			"1f473-1f3fd-200d-2640-fe0f",
+			"1f473-1f3fe-200d-2640-fe0f",
+			"1f473-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"man with gua pi mao"
+		],
+		u: "1f472",
+		v: [
+			"1f472-1f3fb",
+			"1f472-1f3fc",
+			"1f472-1f3fd",
+			"1f472-1f3fe",
+			"1f472-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"person with headscarf"
+		],
+		u: "1f9d5",
+		v: [
+			"1f9d5-1f3fb",
+			"1f9d5-1f3fc",
+			"1f9d5-1f3fd",
+			"1f9d5-1f3fe",
+			"1f9d5-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"man in tuxedo",
+			"person in tuxedo"
+		],
+		u: "1f935",
+		v: [
+			"1f935-1f3fb",
+			"1f935-1f3fc",
+			"1f935-1f3fd",
+			"1f935-1f3fe",
+			"1f935-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"man in tuxedo"
+		],
+		u: "1f935-200d-2642-fe0f",
+		v: [
+			"1f935-1f3fb-200d-2642-fe0f",
+			"1f935-1f3fc-200d-2642-fe0f",
+			"1f935-1f3fd-200d-2642-fe0f",
+			"1f935-1f3fe-200d-2642-fe0f",
+			"1f935-1f3ff-200d-2642-fe0f"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"woman in tuxedo"
+		],
+		u: "1f935-200d-2640-fe0f",
+		v: [
+			"1f935-1f3fb-200d-2640-fe0f",
+			"1f935-1f3fc-200d-2640-fe0f",
+			"1f935-1f3fd-200d-2640-fe0f",
+			"1f935-1f3fe-200d-2640-fe0f",
+			"1f935-1f3ff-200d-2640-fe0f"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"bride with veil"
+		],
+		u: "1f470",
+		v: [
+			"1f470-1f3fb",
+			"1f470-1f3fc",
+			"1f470-1f3fd",
+			"1f470-1f3fe",
+			"1f470-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man with veil"
+		],
+		u: "1f470-200d-2642-fe0f",
+		v: [
+			"1f470-1f3fb-200d-2642-fe0f",
+			"1f470-1f3fc-200d-2642-fe0f",
+			"1f470-1f3fd-200d-2642-fe0f",
+			"1f470-1f3fe-200d-2642-fe0f",
+			"1f470-1f3ff-200d-2642-fe0f"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"woman with veil"
+		],
+		u: "1f470-200d-2640-fe0f",
+		v: [
+			"1f470-1f3fb-200d-2640-fe0f",
+			"1f470-1f3fc-200d-2640-fe0f",
+			"1f470-1f3fd-200d-2640-fe0f",
+			"1f470-1f3fe-200d-2640-fe0f",
+			"1f470-1f3ff-200d-2640-fe0f"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"pregnant woman"
+		],
+		u: "1f930",
+		v: [
+			"1f930-1f3fb",
+			"1f930-1f3fc",
+			"1f930-1f3fd",
+			"1f930-1f3fe",
+			"1f930-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"pregnant man"
+		],
+		u: "1fac3",
+		v: [
+			"1fac3-1f3fb",
+			"1fac3-1f3fc",
+			"1fac3-1f3fd",
+			"1fac3-1f3fe",
+			"1fac3-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"pregnant person"
+		],
+		u: "1fac4",
+		v: [
+			"1fac4-1f3fb",
+			"1fac4-1f3fc",
+			"1fac4-1f3fd",
+			"1fac4-1f3fe",
+			"1fac4-1f3ff"
+		],
+		a: "14.0"
+	},
+	{
+		n: [
+			"breast-feeding"
+		],
+		u: "1f931",
+		v: [
+			"1f931-1f3fb",
+			"1f931-1f3fc",
+			"1f931-1f3fd",
+			"1f931-1f3fe",
+			"1f931-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman feeding baby"
+		],
+		u: "1f469-200d-1f37c",
+		v: [
+			"1f469-1f3fb-200d-1f37c",
+			"1f469-1f3fc-200d-1f37c",
+			"1f469-1f3fd-200d-1f37c",
+			"1f469-1f3fe-200d-1f37c",
+			"1f469-1f3ff-200d-1f37c"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"man feeding baby"
+		],
+		u: "1f468-200d-1f37c",
+		v: [
+			"1f468-1f3fb-200d-1f37c",
+			"1f468-1f3fc-200d-1f37c",
+			"1f468-1f3fd-200d-1f37c",
+			"1f468-1f3fe-200d-1f37c",
+			"1f468-1f3ff-200d-1f37c"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"person feeding baby"
+		],
+		u: "1f9d1-200d-1f37c",
+		v: [
+			"1f9d1-1f3fb-200d-1f37c",
+			"1f9d1-1f3fc-200d-1f37c",
+			"1f9d1-1f3fd-200d-1f37c",
+			"1f9d1-1f3fe-200d-1f37c",
+			"1f9d1-1f3ff-200d-1f37c"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"angel",
+			"baby angel"
+		],
+		u: "1f47c",
+		v: [
+			"1f47c-1f3fb",
+			"1f47c-1f3fc",
+			"1f47c-1f3fd",
+			"1f47c-1f3fe",
+			"1f47c-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"santa",
+			"father christmas"
+		],
+		u: "1f385",
+		v: [
+			"1f385-1f3fb",
+			"1f385-1f3fc",
+			"1f385-1f3fd",
+			"1f385-1f3fe",
+			"1f385-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"mrs claus",
+			"mother christmas"
+		],
+		u: "1f936",
+		v: [
+			"1f936-1f3fb",
+			"1f936-1f3fc",
+			"1f936-1f3fd",
+			"1f936-1f3fe",
+			"1f936-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"mx claus"
+		],
+		u: "1f9d1-200d-1f384",
+		v: [
+			"1f9d1-1f3fb-200d-1f384",
+			"1f9d1-1f3fc-200d-1f384",
+			"1f9d1-1f3fd-200d-1f384",
+			"1f9d1-1f3fe-200d-1f384",
+			"1f9d1-1f3ff-200d-1f384"
+		],
+		a: "13.0"
+	},
+	{
+		n: [
+			"superhero"
+		],
+		u: "1f9b8",
+		v: [
+			"1f9b8-1f3fb",
+			"1f9b8-1f3fc",
+			"1f9b8-1f3fd",
+			"1f9b8-1f3fe",
+			"1f9b8-1f3ff"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"man superhero",
+			"male superhero"
+		],
+		u: "1f9b8-200d-2642-fe0f",
+		v: [
+			"1f9b8-1f3fb-200d-2642-fe0f",
+			"1f9b8-1f3fc-200d-2642-fe0f",
+			"1f9b8-1f3fd-200d-2642-fe0f",
+			"1f9b8-1f3fe-200d-2642-fe0f",
+			"1f9b8-1f3ff-200d-2642-fe0f"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"woman superhero",
+			"female superhero"
+		],
+		u: "1f9b8-200d-2640-fe0f",
+		v: [
+			"1f9b8-1f3fb-200d-2640-fe0f",
+			"1f9b8-1f3fc-200d-2640-fe0f",
+			"1f9b8-1f3fd-200d-2640-fe0f",
+			"1f9b8-1f3fe-200d-2640-fe0f",
+			"1f9b8-1f3ff-200d-2640-fe0f"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"supervillain"
+		],
+		u: "1f9b9",
+		v: [
+			"1f9b9-1f3fb",
+			"1f9b9-1f3fc",
+			"1f9b9-1f3fd",
+			"1f9b9-1f3fe",
+			"1f9b9-1f3ff"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"man supervillain",
+			"male supervillain"
+		],
+		u: "1f9b9-200d-2642-fe0f",
+		v: [
+			"1f9b9-1f3fb-200d-2642-fe0f",
+			"1f9b9-1f3fc-200d-2642-fe0f",
+			"1f9b9-1f3fd-200d-2642-fe0f",
+			"1f9b9-1f3fe-200d-2642-fe0f",
+			"1f9b9-1f3ff-200d-2642-fe0f"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"woman supervillain",
+			"female supervillain"
+		],
+		u: "1f9b9-200d-2640-fe0f",
+		v: [
+			"1f9b9-1f3fb-200d-2640-fe0f",
+			"1f9b9-1f3fc-200d-2640-fe0f",
+			"1f9b9-1f3fd-200d-2640-fe0f",
+			"1f9b9-1f3fe-200d-2640-fe0f",
+			"1f9b9-1f3ff-200d-2640-fe0f"
+		],
+		a: "11.0"
+	},
+	{
+		n: [
+			"mage"
+		],
+		u: "1f9d9",
+		v: [
+			"1f9d9-1f3fb",
+			"1f9d9-1f3fc",
+			"1f9d9-1f3fd",
+			"1f9d9-1f3fe",
+			"1f9d9-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"man mage",
+			"male mage"
+		],
+		u: "1f9d9-200d-2642-fe0f",
+		v: [
+			"1f9d9-1f3fb-200d-2642-fe0f",
+			"1f9d9-1f3fc-200d-2642-fe0f",
+			"1f9d9-1f3fd-200d-2642-fe0f",
+			"1f9d9-1f3fe-200d-2642-fe0f",
+			"1f9d9-1f3ff-200d-2642-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman mage",
+			"female mage"
+		],
+		u: "1f9d9-200d-2640-fe0f",
+		v: [
+			"1f9d9-1f3fb-200d-2640-fe0f",
+			"1f9d9-1f3fc-200d-2640-fe0f",
+			"1f9d9-1f3fd-200d-2640-fe0f",
+			"1f9d9-1f3fe-200d-2640-fe0f",
+			"1f9d9-1f3ff-200d-2640-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"fairy"
+		],
+		u: "1f9da",
+		v: [
+			"1f9da-1f3fb",
+			"1f9da-1f3fc",
+			"1f9da-1f3fd",
+			"1f9da-1f3fe",
+			"1f9da-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"man fairy",
+			"male fairy"
+		],
+		u: "1f9da-200d-2642-fe0f",
+		v: [
+			"1f9da-1f3fb-200d-2642-fe0f",
+			"1f9da-1f3fc-200d-2642-fe0f",
+			"1f9da-1f3fd-200d-2642-fe0f",
+			"1f9da-1f3fe-200d-2642-fe0f",
+			"1f9da-1f3ff-200d-2642-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman fairy",
+			"female fairy"
+		],
+		u: "1f9da-200d-2640-fe0f",
+		v: [
+			"1f9da-1f3fb-200d-2640-fe0f",
+			"1f9da-1f3fc-200d-2640-fe0f",
+			"1f9da-1f3fd-200d-2640-fe0f",
+			"1f9da-1f3fe-200d-2640-fe0f",
+			"1f9da-1f3ff-200d-2640-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"vampire"
+		],
+		u: "1f9db",
+		v: [
+			"1f9db-1f3fb",
+			"1f9db-1f3fc",
+			"1f9db-1f3fd",
+			"1f9db-1f3fe",
+			"1f9db-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"man vampire",
+			"male vampire"
+		],
+		u: "1f9db-200d-2642-fe0f",
+		v: [
+			"1f9db-1f3fb-200d-2642-fe0f",
+			"1f9db-1f3fc-200d-2642-fe0f",
+			"1f9db-1f3fd-200d-2642-fe0f",
+			"1f9db-1f3fe-200d-2642-fe0f",
+			"1f9db-1f3ff-200d-2642-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman vampire",
+			"female vampire"
+		],
+		u: "1f9db-200d-2640-fe0f",
+		v: [
+			"1f9db-1f3fb-200d-2640-fe0f",
+			"1f9db-1f3fc-200d-2640-fe0f",
+			"1f9db-1f3fd-200d-2640-fe0f",
+			"1f9db-1f3fe-200d-2640-fe0f",
+			"1f9db-1f3ff-200d-2640-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"merperson"
+		],
+		u: "1f9dc",
+		v: [
+			"1f9dc-1f3fb",
+			"1f9dc-1f3fc",
+			"1f9dc-1f3fd",
+			"1f9dc-1f3fe",
+			"1f9dc-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"merman"
+		],
+		u: "1f9dc-200d-2642-fe0f",
+		v: [
+			"1f9dc-1f3fb-200d-2642-fe0f",
+			"1f9dc-1f3fc-200d-2642-fe0f",
+			"1f9dc-1f3fd-200d-2642-fe0f",
+			"1f9dc-1f3fe-200d-2642-fe0f",
+			"1f9dc-1f3ff-200d-2642-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"mermaid"
+		],
+		u: "1f9dc-200d-2640-fe0f",
+		v: [
+			"1f9dc-1f3fb-200d-2640-fe0f",
+			"1f9dc-1f3fc-200d-2640-fe0f",
+			"1f9dc-1f3fd-200d-2640-fe0f",
+			"1f9dc-1f3fe-200d-2640-fe0f",
+			"1f9dc-1f3ff-200d-2640-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"elf"
+		],
+		u: "1f9dd",
+		v: [
+			"1f9dd-1f3fb",
+			"1f9dd-1f3fc",
+			"1f9dd-1f3fd",
+			"1f9dd-1f3fe",
+			"1f9dd-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"man elf",
+			"male elf"
+		],
+		u: "1f9dd-200d-2642-fe0f",
+		v: [
+			"1f9dd-1f3fb-200d-2642-fe0f",
+			"1f9dd-1f3fc-200d-2642-fe0f",
+			"1f9dd-1f3fd-200d-2642-fe0f",
+			"1f9dd-1f3fe-200d-2642-fe0f",
+			"1f9dd-1f3ff-200d-2642-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman elf",
+			"female elf"
+		],
+		u: "1f9dd-200d-2640-fe0f",
+		v: [
+			"1f9dd-1f3fb-200d-2640-fe0f",
+			"1f9dd-1f3fc-200d-2640-fe0f",
+			"1f9dd-1f3fd-200d-2640-fe0f",
+			"1f9dd-1f3fe-200d-2640-fe0f",
+			"1f9dd-1f3ff-200d-2640-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"genie"
+		],
+		u: "1f9de",
+		a: "5.0"
+	},
+	{
+		n: [
+			"man genie",
+			"male genie"
+		],
+		u: "1f9de-200d-2642-fe0f",
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman genie",
+			"female genie"
+		],
+		u: "1f9de-200d-2640-fe0f",
+		a: "5.0"
+	},
+	{
+		n: [
+			"zombie"
+		],
+		u: "1f9df",
+		a: "5.0"
+	},
+	{
+		n: [
+			"man zombie",
+			"male zombie"
+		],
+		u: "1f9df-200d-2642-fe0f",
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman zombie",
+			"female zombie"
+		],
+		u: "1f9df-200d-2640-fe0f",
+		a: "5.0"
+	},
+	{
+		n: [
+			"troll"
+		],
+		u: "1f9cc",
+		a: "14.0"
+	},
+	{
+		n: [
+			"massage",
+			"face massage"
+		],
+		u: "1f486",
+		v: [
+			"1f486-1f3fb",
+			"1f486-1f3fc",
+			"1f486-1f3fd",
+			"1f486-1f3fe",
+			"1f486-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man getting massage",
+			"man-getting-massage"
+		],
+		u: "1f486-200d-2642-fe0f",
+		v: [
+			"1f486-1f3fb-200d-2642-fe0f",
+			"1f486-1f3fc-200d-2642-fe0f",
+			"1f486-1f3fd-200d-2642-fe0f",
+			"1f486-1f3fe-200d-2642-fe0f",
+			"1f486-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman getting massage",
+			"woman-getting-massage"
+		],
+		u: "1f486-200d-2640-fe0f",
+		v: [
+			"1f486-1f3fb-200d-2640-fe0f",
+			"1f486-1f3fc-200d-2640-fe0f",
+			"1f486-1f3fd-200d-2640-fe0f",
+			"1f486-1f3fe-200d-2640-fe0f",
+			"1f486-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"haircut"
+		],
+		u: "1f487",
+		v: [
+			"1f487-1f3fb",
+			"1f487-1f3fc",
+			"1f487-1f3fd",
+			"1f487-1f3fe",
+			"1f487-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man getting haircut",
+			"man-getting-haircut"
+		],
+		u: "1f487-200d-2642-fe0f",
+		v: [
+			"1f487-1f3fb-200d-2642-fe0f",
+			"1f487-1f3fc-200d-2642-fe0f",
+			"1f487-1f3fd-200d-2642-fe0f",
+			"1f487-1f3fe-200d-2642-fe0f",
+			"1f487-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman getting haircut",
+			"woman-getting-haircut"
+		],
+		u: "1f487-200d-2640-fe0f",
+		v: [
+			"1f487-1f3fb-200d-2640-fe0f",
+			"1f487-1f3fc-200d-2640-fe0f",
+			"1f487-1f3fd-200d-2640-fe0f",
+			"1f487-1f3fe-200d-2640-fe0f",
+			"1f487-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"walking",
+			"pedestrian"
+		],
+		u: "1f6b6",
+		v: [
+			"1f6b6-1f3fb",
+			"1f6b6-1f3fc",
+			"1f6b6-1f3fd",
+			"1f6b6-1f3fe",
+			"1f6b6-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man walking",
+			"man-walking"
+		],
+		u: "1f6b6-200d-2642-fe0f",
+		v: [
+			"1f6b6-1f3fb-200d-2642-fe0f",
+			"1f6b6-1f3fc-200d-2642-fe0f",
+			"1f6b6-1f3fd-200d-2642-fe0f",
+			"1f6b6-1f3fe-200d-2642-fe0f",
+			"1f6b6-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman walking",
+			"woman-walking"
+		],
+		u: "1f6b6-200d-2640-fe0f",
+		v: [
+			"1f6b6-1f3fb-200d-2640-fe0f",
+			"1f6b6-1f3fc-200d-2640-fe0f",
+			"1f6b6-1f3fd-200d-2640-fe0f",
+			"1f6b6-1f3fe-200d-2640-fe0f",
+			"1f6b6-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"person walking facing right"
+		],
+		u: "1f6b6-200d-27a1-fe0f",
+		v: [
+			"1f6b6-1f3fb-200d-27a1-fe0f",
+			"1f6b6-1f3fc-200d-27a1-fe0f",
+			"1f6b6-1f3fd-200d-27a1-fe0f",
+			"1f6b6-1f3fe-200d-27a1-fe0f",
+			"1f6b6-1f3ff-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"woman walking facing right"
+		],
+		u: "1f6b6-200d-2640-fe0f-200d-27a1-fe0f",
+		v: [
+			"1f6b6-1f3fb-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f6b6-1f3fc-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f6b6-1f3fd-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f6b6-1f3fe-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f6b6-1f3ff-200d-2640-fe0f-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"man walking facing right"
+		],
+		u: "1f6b6-200d-2642-fe0f-200d-27a1-fe0f",
+		v: [
+			"1f6b6-1f3fb-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f6b6-1f3fc-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f6b6-1f3fd-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f6b6-1f3fe-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f6b6-1f3ff-200d-2642-fe0f-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"standing person"
+		],
+		u: "1f9cd",
+		v: [
+			"1f9cd-1f3fb",
+			"1f9cd-1f3fc",
+			"1f9cd-1f3fd",
+			"1f9cd-1f3fe",
+			"1f9cd-1f3ff"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"man standing"
+		],
+		u: "1f9cd-200d-2642-fe0f",
+		v: [
+			"1f9cd-1f3fb-200d-2642-fe0f",
+			"1f9cd-1f3fc-200d-2642-fe0f",
+			"1f9cd-1f3fd-200d-2642-fe0f",
+			"1f9cd-1f3fe-200d-2642-fe0f",
+			"1f9cd-1f3ff-200d-2642-fe0f"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"woman standing"
+		],
+		u: "1f9cd-200d-2640-fe0f",
+		v: [
+			"1f9cd-1f3fb-200d-2640-fe0f",
+			"1f9cd-1f3fc-200d-2640-fe0f",
+			"1f9cd-1f3fd-200d-2640-fe0f",
+			"1f9cd-1f3fe-200d-2640-fe0f",
+			"1f9cd-1f3ff-200d-2640-fe0f"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"kneeling person"
+		],
+		u: "1f9ce",
+		v: [
+			"1f9ce-1f3fb",
+			"1f9ce-1f3fc",
+			"1f9ce-1f3fd",
+			"1f9ce-1f3fe",
+			"1f9ce-1f3ff"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"man kneeling"
+		],
+		u: "1f9ce-200d-2642-fe0f",
+		v: [
+			"1f9ce-1f3fb-200d-2642-fe0f",
+			"1f9ce-1f3fc-200d-2642-fe0f",
+			"1f9ce-1f3fd-200d-2642-fe0f",
+			"1f9ce-1f3fe-200d-2642-fe0f",
+			"1f9ce-1f3ff-200d-2642-fe0f"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"woman kneeling"
+		],
+		u: "1f9ce-200d-2640-fe0f",
+		v: [
+			"1f9ce-1f3fb-200d-2640-fe0f",
+			"1f9ce-1f3fc-200d-2640-fe0f",
+			"1f9ce-1f3fd-200d-2640-fe0f",
+			"1f9ce-1f3fe-200d-2640-fe0f",
+			"1f9ce-1f3ff-200d-2640-fe0f"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"person kneeling facing right"
+		],
+		u: "1f9ce-200d-27a1-fe0f",
+		v: [
+			"1f9ce-1f3fb-200d-27a1-fe0f",
+			"1f9ce-1f3fc-200d-27a1-fe0f",
+			"1f9ce-1f3fd-200d-27a1-fe0f",
+			"1f9ce-1f3fe-200d-27a1-fe0f",
+			"1f9ce-1f3ff-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"woman kneeling facing right"
+		],
+		u: "1f9ce-200d-2640-fe0f-200d-27a1-fe0f",
+		v: [
+			"1f9ce-1f3fb-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f9ce-1f3fc-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f9ce-1f3fd-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f9ce-1f3fe-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f9ce-1f3ff-200d-2640-fe0f-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"man kneeling facing right"
+		],
+		u: "1f9ce-200d-2642-fe0f-200d-27a1-fe0f",
+		v: [
+			"1f9ce-1f3fb-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f9ce-1f3fc-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f9ce-1f3fd-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f9ce-1f3fe-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f9ce-1f3ff-200d-2642-fe0f-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"person with white cane",
+			"person with probing cane"
+		],
+		u: "1f9d1-200d-1f9af",
+		v: [
+			"1f9d1-1f3fb-200d-1f9af",
+			"1f9d1-1f3fc-200d-1f9af",
+			"1f9d1-1f3fd-200d-1f9af",
+			"1f9d1-1f3fe-200d-1f9af",
+			"1f9d1-1f3ff-200d-1f9af"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"person with white cane facing right"
+		],
+		u: "1f9d1-200d-1f9af-200d-27a1-fe0f",
+		v: [
+			"1f9d1-1f3fb-200d-1f9af-200d-27a1-fe0f",
+			"1f9d1-1f3fc-200d-1f9af-200d-27a1-fe0f",
+			"1f9d1-1f3fd-200d-1f9af-200d-27a1-fe0f",
+			"1f9d1-1f3fe-200d-1f9af-200d-27a1-fe0f",
+			"1f9d1-1f3ff-200d-1f9af-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"man with white cane",
+			"man with probing cane"
+		],
+		u: "1f468-200d-1f9af",
+		v: [
+			"1f468-1f3fb-200d-1f9af",
+			"1f468-1f3fc-200d-1f9af",
+			"1f468-1f3fd-200d-1f9af",
+			"1f468-1f3fe-200d-1f9af",
+			"1f468-1f3ff-200d-1f9af"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"man with white cane facing right"
+		],
+		u: "1f468-200d-1f9af-200d-27a1-fe0f",
+		v: [
+			"1f468-1f3fb-200d-1f9af-200d-27a1-fe0f",
+			"1f468-1f3fc-200d-1f9af-200d-27a1-fe0f",
+			"1f468-1f3fd-200d-1f9af-200d-27a1-fe0f",
+			"1f468-1f3fe-200d-1f9af-200d-27a1-fe0f",
+			"1f468-1f3ff-200d-1f9af-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"woman with white cane",
+			"woman with probing cane"
+		],
+		u: "1f469-200d-1f9af",
+		v: [
+			"1f469-1f3fb-200d-1f9af",
+			"1f469-1f3fc-200d-1f9af",
+			"1f469-1f3fd-200d-1f9af",
+			"1f469-1f3fe-200d-1f9af",
+			"1f469-1f3ff-200d-1f9af"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"woman with white cane facing right"
+		],
+		u: "1f469-200d-1f9af-200d-27a1-fe0f",
+		v: [
+			"1f469-1f3fb-200d-1f9af-200d-27a1-fe0f",
+			"1f469-1f3fc-200d-1f9af-200d-27a1-fe0f",
+			"1f469-1f3fd-200d-1f9af-200d-27a1-fe0f",
+			"1f469-1f3fe-200d-1f9af-200d-27a1-fe0f",
+			"1f469-1f3ff-200d-1f9af-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"person in motorized wheelchair"
+		],
+		u: "1f9d1-200d-1f9bc",
+		v: [
+			"1f9d1-1f3fb-200d-1f9bc",
+			"1f9d1-1f3fc-200d-1f9bc",
+			"1f9d1-1f3fd-200d-1f9bc",
+			"1f9d1-1f3fe-200d-1f9bc",
+			"1f9d1-1f3ff-200d-1f9bc"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"person in motorized wheelchair facing right"
+		],
+		u: "1f9d1-200d-1f9bc-200d-27a1-fe0f",
+		v: [
+			"1f9d1-1f3fb-200d-1f9bc-200d-27a1-fe0f",
+			"1f9d1-1f3fc-200d-1f9bc-200d-27a1-fe0f",
+			"1f9d1-1f3fd-200d-1f9bc-200d-27a1-fe0f",
+			"1f9d1-1f3fe-200d-1f9bc-200d-27a1-fe0f",
+			"1f9d1-1f3ff-200d-1f9bc-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"man in motorized wheelchair"
+		],
+		u: "1f468-200d-1f9bc",
+		v: [
+			"1f468-1f3fb-200d-1f9bc",
+			"1f468-1f3fc-200d-1f9bc",
+			"1f468-1f3fd-200d-1f9bc",
+			"1f468-1f3fe-200d-1f9bc",
+			"1f468-1f3ff-200d-1f9bc"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"man in motorized wheelchair facing right"
+		],
+		u: "1f468-200d-1f9bc-200d-27a1-fe0f",
+		v: [
+			"1f468-1f3fb-200d-1f9bc-200d-27a1-fe0f",
+			"1f468-1f3fc-200d-1f9bc-200d-27a1-fe0f",
+			"1f468-1f3fd-200d-1f9bc-200d-27a1-fe0f",
+			"1f468-1f3fe-200d-1f9bc-200d-27a1-fe0f",
+			"1f468-1f3ff-200d-1f9bc-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"woman in motorized wheelchair"
+		],
+		u: "1f469-200d-1f9bc",
+		v: [
+			"1f469-1f3fb-200d-1f9bc",
+			"1f469-1f3fc-200d-1f9bc",
+			"1f469-1f3fd-200d-1f9bc",
+			"1f469-1f3fe-200d-1f9bc",
+			"1f469-1f3ff-200d-1f9bc"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"woman in motorized wheelchair facing right"
+		],
+		u: "1f469-200d-1f9bc-200d-27a1-fe0f",
+		v: [
+			"1f469-1f3fb-200d-1f9bc-200d-27a1-fe0f",
+			"1f469-1f3fc-200d-1f9bc-200d-27a1-fe0f",
+			"1f469-1f3fd-200d-1f9bc-200d-27a1-fe0f",
+			"1f469-1f3fe-200d-1f9bc-200d-27a1-fe0f",
+			"1f469-1f3ff-200d-1f9bc-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"person in manual wheelchair"
+		],
+		u: "1f9d1-200d-1f9bd",
+		v: [
+			"1f9d1-1f3fb-200d-1f9bd",
+			"1f9d1-1f3fc-200d-1f9bd",
+			"1f9d1-1f3fd-200d-1f9bd",
+			"1f9d1-1f3fe-200d-1f9bd",
+			"1f9d1-1f3ff-200d-1f9bd"
+		],
+		a: "12.1"
+	},
+	{
+		n: [
+			"person in manual wheelchair facing right"
+		],
+		u: "1f9d1-200d-1f9bd-200d-27a1-fe0f",
+		v: [
+			"1f9d1-1f3fb-200d-1f9bd-200d-27a1-fe0f",
+			"1f9d1-1f3fc-200d-1f9bd-200d-27a1-fe0f",
+			"1f9d1-1f3fd-200d-1f9bd-200d-27a1-fe0f",
+			"1f9d1-1f3fe-200d-1f9bd-200d-27a1-fe0f",
+			"1f9d1-1f3ff-200d-1f9bd-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"man in manual wheelchair"
+		],
+		u: "1f468-200d-1f9bd",
+		v: [
+			"1f468-1f3fb-200d-1f9bd",
+			"1f468-1f3fc-200d-1f9bd",
+			"1f468-1f3fd-200d-1f9bd",
+			"1f468-1f3fe-200d-1f9bd",
+			"1f468-1f3ff-200d-1f9bd"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"man in manual wheelchair facing right"
+		],
+		u: "1f468-200d-1f9bd-200d-27a1-fe0f",
+		v: [
+			"1f468-1f3fb-200d-1f9bd-200d-27a1-fe0f",
+			"1f468-1f3fc-200d-1f9bd-200d-27a1-fe0f",
+			"1f468-1f3fd-200d-1f9bd-200d-27a1-fe0f",
+			"1f468-1f3fe-200d-1f9bd-200d-27a1-fe0f",
+			"1f468-1f3ff-200d-1f9bd-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"woman in manual wheelchair"
+		],
+		u: "1f469-200d-1f9bd",
+		v: [
+			"1f469-1f3fb-200d-1f9bd",
+			"1f469-1f3fc-200d-1f9bd",
+			"1f469-1f3fd-200d-1f9bd",
+			"1f469-1f3fe-200d-1f9bd",
+			"1f469-1f3ff-200d-1f9bd"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"woman in manual wheelchair facing right"
+		],
+		u: "1f469-200d-1f9bd-200d-27a1-fe0f",
+		v: [
+			"1f469-1f3fb-200d-1f9bd-200d-27a1-fe0f",
+			"1f469-1f3fc-200d-1f9bd-200d-27a1-fe0f",
+			"1f469-1f3fd-200d-1f9bd-200d-27a1-fe0f",
+			"1f469-1f3fe-200d-1f9bd-200d-27a1-fe0f",
+			"1f469-1f3ff-200d-1f9bd-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"runner",
+			"running"
+		],
+		u: "1f3c3",
+		v: [
+			"1f3c3-1f3fb",
+			"1f3c3-1f3fc",
+			"1f3c3-1f3fd",
+			"1f3c3-1f3fe",
+			"1f3c3-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man running",
+			"man-running"
+		],
+		u: "1f3c3-200d-2642-fe0f",
+		v: [
+			"1f3c3-1f3fb-200d-2642-fe0f",
+			"1f3c3-1f3fc-200d-2642-fe0f",
+			"1f3c3-1f3fd-200d-2642-fe0f",
+			"1f3c3-1f3fe-200d-2642-fe0f",
+			"1f3c3-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman running",
+			"woman-running"
+		],
+		u: "1f3c3-200d-2640-fe0f",
+		v: [
+			"1f3c3-1f3fb-200d-2640-fe0f",
+			"1f3c3-1f3fc-200d-2640-fe0f",
+			"1f3c3-1f3fd-200d-2640-fe0f",
+			"1f3c3-1f3fe-200d-2640-fe0f",
+			"1f3c3-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"person running facing right"
+		],
+		u: "1f3c3-200d-27a1-fe0f",
+		v: [
+			"1f3c3-1f3fb-200d-27a1-fe0f",
+			"1f3c3-1f3fc-200d-27a1-fe0f",
+			"1f3c3-1f3fd-200d-27a1-fe0f",
+			"1f3c3-1f3fe-200d-27a1-fe0f",
+			"1f3c3-1f3ff-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"woman running facing right"
+		],
+		u: "1f3c3-200d-2640-fe0f-200d-27a1-fe0f",
+		v: [
+			"1f3c3-1f3fb-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f3c3-1f3fc-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f3c3-1f3fd-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f3c3-1f3fe-200d-2640-fe0f-200d-27a1-fe0f",
+			"1f3c3-1f3ff-200d-2640-fe0f-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"man running facing right"
+		],
+		u: "1f3c3-200d-2642-fe0f-200d-27a1-fe0f",
+		v: [
+			"1f3c3-1f3fb-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f3c3-1f3fc-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f3c3-1f3fd-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f3c3-1f3fe-200d-2642-fe0f-200d-27a1-fe0f",
+			"1f3c3-1f3ff-200d-2642-fe0f-200d-27a1-fe0f"
+		],
+		a: "15.1"
+	},
+	{
+		n: [
+			"dancer"
+		],
+		u: "1f483",
+		v: [
+			"1f483-1f3fb",
+			"1f483-1f3fc",
+			"1f483-1f3fd",
+			"1f483-1f3fe",
+			"1f483-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man dancing"
+		],
+		u: "1f57a",
+		v: [
+			"1f57a-1f3fb",
+			"1f57a-1f3fc",
+			"1f57a-1f3fd",
+			"1f57a-1f3fe",
+			"1f57a-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"person in suit levitating",
+			"man in business suit levitating"
+		],
+		u: "1f574-fe0f",
+		v: [
+			"1f574-1f3fb",
+			"1f574-1f3fc",
+			"1f574-1f3fd",
+			"1f574-1f3fe",
+			"1f574-1f3ff"
+		],
+		a: "0.7"
+	},
+	{
+		n: [
+			"dancers",
+			"woman with bunny ears"
+		],
+		u: "1f46f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"men with bunny ears",
+			"men-with-bunny-ears-partying",
+			"man-with-bunny-ears-partying"
+		],
+		u: "1f46f-200d-2642-fe0f",
+		a: "4.0"
+	},
+	{
+		n: [
+			"women with bunny ears",
+			"women-with-bunny-ears-partying",
+			"woman-with-bunny-ears-partying"
+		],
+		u: "1f46f-200d-2640-fe0f",
+		a: "4.0"
+	},
+	{
+		n: [
+			"person in steamy room"
+		],
+		u: "1f9d6",
+		v: [
+			"1f9d6-1f3fb",
+			"1f9d6-1f3fc",
+			"1f9d6-1f3fd",
+			"1f9d6-1f3fe",
+			"1f9d6-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"man in steamy room"
+		],
+		u: "1f9d6-200d-2642-fe0f",
+		v: [
+			"1f9d6-1f3fb-200d-2642-fe0f",
+			"1f9d6-1f3fc-200d-2642-fe0f",
+			"1f9d6-1f3fd-200d-2642-fe0f",
+			"1f9d6-1f3fe-200d-2642-fe0f",
+			"1f9d6-1f3ff-200d-2642-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman in steamy room"
+		],
+		u: "1f9d6-200d-2640-fe0f",
+		v: [
+			"1f9d6-1f3fb-200d-2640-fe0f",
+			"1f9d6-1f3fc-200d-2640-fe0f",
+			"1f9d6-1f3fd-200d-2640-fe0f",
+			"1f9d6-1f3fe-200d-2640-fe0f",
+			"1f9d6-1f3ff-200d-2640-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"person climbing"
+		],
+		u: "1f9d7",
+		v: [
+			"1f9d7-1f3fb",
+			"1f9d7-1f3fc",
+			"1f9d7-1f3fd",
+			"1f9d7-1f3fe",
+			"1f9d7-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"man climbing"
+		],
+		u: "1f9d7-200d-2642-fe0f",
+		v: [
+			"1f9d7-1f3fb-200d-2642-fe0f",
+			"1f9d7-1f3fc-200d-2642-fe0f",
+			"1f9d7-1f3fd-200d-2642-fe0f",
+			"1f9d7-1f3fe-200d-2642-fe0f",
+			"1f9d7-1f3ff-200d-2642-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman climbing"
+		],
+		u: "1f9d7-200d-2640-fe0f",
+		v: [
+			"1f9d7-1f3fb-200d-2640-fe0f",
+			"1f9d7-1f3fc-200d-2640-fe0f",
+			"1f9d7-1f3fd-200d-2640-fe0f",
+			"1f9d7-1f3fe-200d-2640-fe0f",
+			"1f9d7-1f3ff-200d-2640-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"fencer"
+		],
+		u: "1f93a",
+		a: "3.0"
+	},
+	{
+		n: [
+			"horse racing"
+		],
+		u: "1f3c7",
+		v: [
+			"1f3c7-1f3fb",
+			"1f3c7-1f3fc",
+			"1f3c7-1f3fd",
+			"1f3c7-1f3fe",
+			"1f3c7-1f3ff"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"skier"
+		],
+		u: "26f7-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"snowboarder"
+		],
+		u: "1f3c2",
+		v: [
+			"1f3c2-1f3fb",
+			"1f3c2-1f3fc",
+			"1f3c2-1f3fd",
+			"1f3c2-1f3fe",
+			"1f3c2-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"golfer",
+			"person golfing"
+		],
+		u: "1f3cc-fe0f",
+		v: [
+			"1f3cc-1f3fb",
+			"1f3cc-1f3fc",
+			"1f3cc-1f3fd",
+			"1f3cc-1f3fe",
+			"1f3cc-1f3ff"
+		],
+		a: "0.7"
+	},
+	{
+		n: [
+			"man golfing",
+			"man-golfing"
+		],
+		u: "1f3cc-fe0f-200d-2642-fe0f",
+		v: [
+			"1f3cc-1f3fb-200d-2642-fe0f",
+			"1f3cc-1f3fc-200d-2642-fe0f",
+			"1f3cc-1f3fd-200d-2642-fe0f",
+			"1f3cc-1f3fe-200d-2642-fe0f",
+			"1f3cc-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman golfing",
+			"woman-golfing"
+		],
+		u: "1f3cc-fe0f-200d-2640-fe0f",
+		v: [
+			"1f3cc-1f3fb-200d-2640-fe0f",
+			"1f3cc-1f3fc-200d-2640-fe0f",
+			"1f3cc-1f3fd-200d-2640-fe0f",
+			"1f3cc-1f3fe-200d-2640-fe0f",
+			"1f3cc-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"surfer"
+		],
+		u: "1f3c4",
+		v: [
+			"1f3c4-1f3fb",
+			"1f3c4-1f3fc",
+			"1f3c4-1f3fd",
+			"1f3c4-1f3fe",
+			"1f3c4-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man surfing",
+			"man-surfing"
+		],
+		u: "1f3c4-200d-2642-fe0f",
+		v: [
+			"1f3c4-1f3fb-200d-2642-fe0f",
+			"1f3c4-1f3fc-200d-2642-fe0f",
+			"1f3c4-1f3fd-200d-2642-fe0f",
+			"1f3c4-1f3fe-200d-2642-fe0f",
+			"1f3c4-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman surfing",
+			"woman-surfing"
+		],
+		u: "1f3c4-200d-2640-fe0f",
+		v: [
+			"1f3c4-1f3fb-200d-2640-fe0f",
+			"1f3c4-1f3fc-200d-2640-fe0f",
+			"1f3c4-1f3fd-200d-2640-fe0f",
+			"1f3c4-1f3fe-200d-2640-fe0f",
+			"1f3c4-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"rowboat"
+		],
+		u: "1f6a3",
+		v: [
+			"1f6a3-1f3fb",
+			"1f6a3-1f3fc",
+			"1f6a3-1f3fd",
+			"1f6a3-1f3fe",
+			"1f6a3-1f3ff"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"man rowing boat",
+			"man-rowing-boat"
+		],
+		u: "1f6a3-200d-2642-fe0f",
+		v: [
+			"1f6a3-1f3fb-200d-2642-fe0f",
+			"1f6a3-1f3fc-200d-2642-fe0f",
+			"1f6a3-1f3fd-200d-2642-fe0f",
+			"1f6a3-1f3fe-200d-2642-fe0f",
+			"1f6a3-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman rowing boat",
+			"woman-rowing-boat"
+		],
+		u: "1f6a3-200d-2640-fe0f",
+		v: [
+			"1f6a3-1f3fb-200d-2640-fe0f",
+			"1f6a3-1f3fc-200d-2640-fe0f",
+			"1f6a3-1f3fd-200d-2640-fe0f",
+			"1f6a3-1f3fe-200d-2640-fe0f",
+			"1f6a3-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"swimmer"
+		],
+		u: "1f3ca",
+		v: [
+			"1f3ca-1f3fb",
+			"1f3ca-1f3fc",
+			"1f3ca-1f3fd",
+			"1f3ca-1f3fe",
+			"1f3ca-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"man swimming",
+			"man-swimming"
+		],
+		u: "1f3ca-200d-2642-fe0f",
+		v: [
+			"1f3ca-1f3fb-200d-2642-fe0f",
+			"1f3ca-1f3fc-200d-2642-fe0f",
+			"1f3ca-1f3fd-200d-2642-fe0f",
+			"1f3ca-1f3fe-200d-2642-fe0f",
+			"1f3ca-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman swimming",
+			"woman-swimming"
+		],
+		u: "1f3ca-200d-2640-fe0f",
+		v: [
+			"1f3ca-1f3fb-200d-2640-fe0f",
+			"1f3ca-1f3fc-200d-2640-fe0f",
+			"1f3ca-1f3fd-200d-2640-fe0f",
+			"1f3ca-1f3fe-200d-2640-fe0f",
+			"1f3ca-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"person with ball",
+			"person bouncing ball"
+		],
+		u: "26f9-fe0f",
+		v: [
+			"26f9-1f3fb",
+			"26f9-1f3fc",
+			"26f9-1f3fd",
+			"26f9-1f3fe",
+			"26f9-1f3ff"
+		],
+		a: "0.7"
+	},
+	{
+		n: [
+			"man bouncing ball",
+			"man-bouncing-ball"
+		],
+		u: "26f9-fe0f-200d-2642-fe0f",
+		v: [
+			"26f9-1f3fb-200d-2642-fe0f",
+			"26f9-1f3fc-200d-2642-fe0f",
+			"26f9-1f3fd-200d-2642-fe0f",
+			"26f9-1f3fe-200d-2642-fe0f",
+			"26f9-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman bouncing ball",
+			"woman-bouncing-ball"
+		],
+		u: "26f9-fe0f-200d-2640-fe0f",
+		v: [
+			"26f9-1f3fb-200d-2640-fe0f",
+			"26f9-1f3fc-200d-2640-fe0f",
+			"26f9-1f3fd-200d-2640-fe0f",
+			"26f9-1f3fe-200d-2640-fe0f",
+			"26f9-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"weight lifter",
+			"person lifting weights"
+		],
+		u: "1f3cb-fe0f",
+		v: [
+			"1f3cb-1f3fb",
+			"1f3cb-1f3fc",
+			"1f3cb-1f3fd",
+			"1f3cb-1f3fe",
+			"1f3cb-1f3ff"
+		],
+		a: "0.7"
+	},
+	{
+		n: [
+			"man lifting weights",
+			"man-lifting-weights"
+		],
+		u: "1f3cb-fe0f-200d-2642-fe0f",
+		v: [
+			"1f3cb-1f3fb-200d-2642-fe0f",
+			"1f3cb-1f3fc-200d-2642-fe0f",
+			"1f3cb-1f3fd-200d-2642-fe0f",
+			"1f3cb-1f3fe-200d-2642-fe0f",
+			"1f3cb-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman lifting weights",
+			"woman-lifting-weights"
+		],
+		u: "1f3cb-fe0f-200d-2640-fe0f",
+		v: [
+			"1f3cb-1f3fb-200d-2640-fe0f",
+			"1f3cb-1f3fc-200d-2640-fe0f",
+			"1f3cb-1f3fd-200d-2640-fe0f",
+			"1f3cb-1f3fe-200d-2640-fe0f",
+			"1f3cb-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"bicyclist"
+		],
+		u: "1f6b4",
+		v: [
+			"1f6b4-1f3fb",
+			"1f6b4-1f3fc",
+			"1f6b4-1f3fd",
+			"1f6b4-1f3fe",
+			"1f6b4-1f3ff"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"man biking",
+			"man-biking"
+		],
+		u: "1f6b4-200d-2642-fe0f",
+		v: [
+			"1f6b4-1f3fb-200d-2642-fe0f",
+			"1f6b4-1f3fc-200d-2642-fe0f",
+			"1f6b4-1f3fd-200d-2642-fe0f",
+			"1f6b4-1f3fe-200d-2642-fe0f",
+			"1f6b4-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman biking",
+			"woman-biking"
+		],
+		u: "1f6b4-200d-2640-fe0f",
+		v: [
+			"1f6b4-1f3fb-200d-2640-fe0f",
+			"1f6b4-1f3fc-200d-2640-fe0f",
+			"1f6b4-1f3fd-200d-2640-fe0f",
+			"1f6b4-1f3fe-200d-2640-fe0f",
+			"1f6b4-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"mountain bicyclist"
+		],
+		u: "1f6b5",
+		v: [
+			"1f6b5-1f3fb",
+			"1f6b5-1f3fc",
+			"1f6b5-1f3fd",
+			"1f6b5-1f3fe",
+			"1f6b5-1f3ff"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"man mountain biking",
+			"man-mountain-biking"
+		],
+		u: "1f6b5-200d-2642-fe0f",
+		v: [
+			"1f6b5-1f3fb-200d-2642-fe0f",
+			"1f6b5-1f3fc-200d-2642-fe0f",
+			"1f6b5-1f3fd-200d-2642-fe0f",
+			"1f6b5-1f3fe-200d-2642-fe0f",
+			"1f6b5-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman mountain biking",
+			"woman-mountain-biking"
+		],
+		u: "1f6b5-200d-2640-fe0f",
+		v: [
+			"1f6b5-1f3fb-200d-2640-fe0f",
+			"1f6b5-1f3fc-200d-2640-fe0f",
+			"1f6b5-1f3fd-200d-2640-fe0f",
+			"1f6b5-1f3fe-200d-2640-fe0f",
+			"1f6b5-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"person doing cartwheel"
+		],
+		u: "1f938",
+		v: [
+			"1f938-1f3fb",
+			"1f938-1f3fc",
+			"1f938-1f3fd",
+			"1f938-1f3fe",
+			"1f938-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"man cartwheeling",
+			"man-cartwheeling"
+		],
+		u: "1f938-200d-2642-fe0f",
+		v: [
+			"1f938-1f3fb-200d-2642-fe0f",
+			"1f938-1f3fc-200d-2642-fe0f",
+			"1f938-1f3fd-200d-2642-fe0f",
+			"1f938-1f3fe-200d-2642-fe0f",
+			"1f938-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman cartwheeling",
+			"woman-cartwheeling"
+		],
+		u: "1f938-200d-2640-fe0f",
+		v: [
+			"1f938-1f3fb-200d-2640-fe0f",
+			"1f938-1f3fc-200d-2640-fe0f",
+			"1f938-1f3fd-200d-2640-fe0f",
+			"1f938-1f3fe-200d-2640-fe0f",
+			"1f938-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"wrestlers"
+		],
+		u: "1f93c",
+		a: "3.0"
+	},
+	{
+		n: [
+			"men wrestling",
+			"man-wrestling"
+		],
+		u: "1f93c-200d-2642-fe0f",
+		a: "4.0"
+	},
+	{
+		n: [
+			"women wrestling",
+			"woman-wrestling"
+		],
+		u: "1f93c-200d-2640-fe0f",
+		a: "4.0"
+	},
+	{
+		n: [
+			"water polo"
+		],
+		u: "1f93d",
+		v: [
+			"1f93d-1f3fb",
+			"1f93d-1f3fc",
+			"1f93d-1f3fd",
+			"1f93d-1f3fe",
+			"1f93d-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"man playing water polo",
+			"man-playing-water-polo"
+		],
+		u: "1f93d-200d-2642-fe0f",
+		v: [
+			"1f93d-1f3fb-200d-2642-fe0f",
+			"1f93d-1f3fc-200d-2642-fe0f",
+			"1f93d-1f3fd-200d-2642-fe0f",
+			"1f93d-1f3fe-200d-2642-fe0f",
+			"1f93d-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman playing water polo",
+			"woman-playing-water-polo"
+		],
+		u: "1f93d-200d-2640-fe0f",
+		v: [
+			"1f93d-1f3fb-200d-2640-fe0f",
+			"1f93d-1f3fc-200d-2640-fe0f",
+			"1f93d-1f3fd-200d-2640-fe0f",
+			"1f93d-1f3fe-200d-2640-fe0f",
+			"1f93d-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"handball"
+		],
+		u: "1f93e",
+		v: [
+			"1f93e-1f3fb",
+			"1f93e-1f3fc",
+			"1f93e-1f3fd",
+			"1f93e-1f3fe",
+			"1f93e-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"man playing handball",
+			"man-playing-handball"
+		],
+		u: "1f93e-200d-2642-fe0f",
+		v: [
+			"1f93e-1f3fb-200d-2642-fe0f",
+			"1f93e-1f3fc-200d-2642-fe0f",
+			"1f93e-1f3fd-200d-2642-fe0f",
+			"1f93e-1f3fe-200d-2642-fe0f",
+			"1f93e-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman playing handball",
+			"woman-playing-handball"
+		],
+		u: "1f93e-200d-2640-fe0f",
+		v: [
+			"1f93e-1f3fb-200d-2640-fe0f",
+			"1f93e-1f3fc-200d-2640-fe0f",
+			"1f93e-1f3fd-200d-2640-fe0f",
+			"1f93e-1f3fe-200d-2640-fe0f",
+			"1f93e-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"juggling"
+		],
+		u: "1f939",
+		v: [
+			"1f939-1f3fb",
+			"1f939-1f3fc",
+			"1f939-1f3fd",
+			"1f939-1f3fe",
+			"1f939-1f3ff"
+		],
+		a: "3.0"
+	},
+	{
+		n: [
+			"man juggling",
+			"man-juggling"
+		],
+		u: "1f939-200d-2642-fe0f",
+		v: [
+			"1f939-1f3fb-200d-2642-fe0f",
+			"1f939-1f3fc-200d-2642-fe0f",
+			"1f939-1f3fd-200d-2642-fe0f",
+			"1f939-1f3fe-200d-2642-fe0f",
+			"1f939-1f3ff-200d-2642-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman juggling",
+			"woman-juggling"
+		],
+		u: "1f939-200d-2640-fe0f",
+		v: [
+			"1f939-1f3fb-200d-2640-fe0f",
+			"1f939-1f3fc-200d-2640-fe0f",
+			"1f939-1f3fd-200d-2640-fe0f",
+			"1f939-1f3fe-200d-2640-fe0f",
+			"1f939-1f3ff-200d-2640-fe0f"
+		],
+		a: "4.0"
+	},
+	{
+		n: [
+			"person in lotus position"
+		],
+		u: "1f9d8",
+		v: [
+			"1f9d8-1f3fb",
+			"1f9d8-1f3fc",
+			"1f9d8-1f3fd",
+			"1f9d8-1f3fe",
+			"1f9d8-1f3ff"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"man in lotus position"
+		],
+		u: "1f9d8-200d-2642-fe0f",
+		v: [
+			"1f9d8-1f3fb-200d-2642-fe0f",
+			"1f9d8-1f3fc-200d-2642-fe0f",
+			"1f9d8-1f3fd-200d-2642-fe0f",
+			"1f9d8-1f3fe-200d-2642-fe0f",
+			"1f9d8-1f3ff-200d-2642-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"woman in lotus position"
+		],
+		u: "1f9d8-200d-2640-fe0f",
+		v: [
+			"1f9d8-1f3fb-200d-2640-fe0f",
+			"1f9d8-1f3fc-200d-2640-fe0f",
+			"1f9d8-1f3fd-200d-2640-fe0f",
+			"1f9d8-1f3fe-200d-2640-fe0f",
+			"1f9d8-1f3ff-200d-2640-fe0f"
+		],
+		a: "5.0"
+	},
+	{
+		n: [
+			"bath"
+		],
+		u: "1f6c0",
+		v: [
+			"1f6c0-1f3fb",
+			"1f6c0-1f3fc",
+			"1f6c0-1f3fd",
+			"1f6c0-1f3fe",
+			"1f6c0-1f3ff"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"sleeping accommodation"
+		],
+		u: "1f6cc",
+		v: [
+			"1f6cc-1f3fb",
+			"1f6cc-1f3fc",
+			"1f6cc-1f3fd",
+			"1f6cc-1f3fe",
+			"1f6cc-1f3ff"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"people holding hands"
+		],
+		u: "1f9d1-200d-1f91d-200d-1f9d1",
+		v: [
+			"1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3ff",
+			"1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3ff",
+			"1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3ff",
+			"1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3ff",
+			"1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3fb",
+			"1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3fc",
+			"1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3fd",
+			"1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3fe",
+			"1f9d1-1f3ff-200d-1f91d-200d-1f9d1-1f3ff"
+		],
+		a: "12.0"
+	},
+	{
+		n: [
+			"women holding hands",
+			"two women holding hands"
+		],
+		u: "1f46d",
+		v: [
+			"1f46d-1f3fb",
+			"1f46d-1f3fc",
+			"1f46d-1f3fd",
+			"1f46d-1f3fe",
+			"1f46d-1f3ff",
+			"1f469-1f3fb-200d-1f91d-200d-1f469-1f3fc",
+			"1f469-1f3fb-200d-1f91d-200d-1f469-1f3fd",
+			"1f469-1f3fb-200d-1f91d-200d-1f469-1f3fe",
+			"1f469-1f3fb-200d-1f91d-200d-1f469-1f3ff",
+			"1f469-1f3fc-200d-1f91d-200d-1f469-1f3fb",
+			"1f469-1f3fc-200d-1f91d-200d-1f469-1f3fd",
+			"1f469-1f3fc-200d-1f91d-200d-1f469-1f3fe",
+			"1f469-1f3fc-200d-1f91d-200d-1f469-1f3ff",
+			"1f469-1f3fd-200d-1f91d-200d-1f469-1f3fb",
+			"1f469-1f3fd-200d-1f91d-200d-1f469-1f3fc",
+			"1f469-1f3fd-200d-1f91d-200d-1f469-1f3fe",
+			"1f469-1f3fd-200d-1f91d-200d-1f469-1f3ff",
+			"1f469-1f3fe-200d-1f91d-200d-1f469-1f3fb",
+			"1f469-1f3fe-200d-1f91d-200d-1f469-1f3fc",
+			"1f469-1f3fe-200d-1f91d-200d-1f469-1f3fd",
+			"1f469-1f3fe-200d-1f91d-200d-1f469-1f3ff",
+			"1f469-1f3ff-200d-1f91d-200d-1f469-1f3fb",
+			"1f469-1f3ff-200d-1f91d-200d-1f469-1f3fc",
+			"1f469-1f3ff-200d-1f91d-200d-1f469-1f3fd",
+			"1f469-1f3ff-200d-1f91d-200d-1f469-1f3fe"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"couple",
+			"man and woman holding hands",
+			"woman and man holding hands"
+		],
+		u: "1f46b",
+		v: [
+			"1f46b-1f3fb",
+			"1f46b-1f3fc",
+			"1f46b-1f3fd",
+			"1f46b-1f3fe",
+			"1f46b-1f3ff",
+			"1f469-1f3fb-200d-1f91d-200d-1f468-1f3fc",
+			"1f469-1f3fb-200d-1f91d-200d-1f468-1f3fd",
+			"1f469-1f3fb-200d-1f91d-200d-1f468-1f3fe",
+			"1f469-1f3fb-200d-1f91d-200d-1f468-1f3ff",
+			"1f469-1f3fc-200d-1f91d-200d-1f468-1f3fb",
+			"1f469-1f3fc-200d-1f91d-200d-1f468-1f3fd",
+			"1f469-1f3fc-200d-1f91d-200d-1f468-1f3fe",
+			"1f469-1f3fc-200d-1f91d-200d-1f468-1f3ff",
+			"1f469-1f3fd-200d-1f91d-200d-1f468-1f3fb",
+			"1f469-1f3fd-200d-1f91d-200d-1f468-1f3fc",
+			"1f469-1f3fd-200d-1f91d-200d-1f468-1f3fe",
+			"1f469-1f3fd-200d-1f91d-200d-1f468-1f3ff",
+			"1f469-1f3fe-200d-1f91d-200d-1f468-1f3fb",
+			"1f469-1f3fe-200d-1f91d-200d-1f468-1f3fc",
+			"1f469-1f3fe-200d-1f91d-200d-1f468-1f3fd",
+			"1f469-1f3fe-200d-1f91d-200d-1f468-1f3ff",
+			"1f469-1f3ff-200d-1f91d-200d-1f468-1f3fb",
+			"1f469-1f3ff-200d-1f91d-200d-1f468-1f3fc",
+			"1f469-1f3ff-200d-1f91d-200d-1f468-1f3fd",
+			"1f469-1f3ff-200d-1f91d-200d-1f468-1f3fe"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"men holding hands",
+			"two men holding hands"
+		],
+		u: "1f46c",
+		v: [
+			"1f46c-1f3fb",
+			"1f46c-1f3fc",
+			"1f46c-1f3fd",
+			"1f46c-1f3fe",
+			"1f46c-1f3ff",
+			"1f468-1f3fb-200d-1f91d-200d-1f468-1f3fc",
+			"1f468-1f3fb-200d-1f91d-200d-1f468-1f3fd",
+			"1f468-1f3fb-200d-1f91d-200d-1f468-1f3fe",
+			"1f468-1f3fb-200d-1f91d-200d-1f468-1f3ff",
+			"1f468-1f3fc-200d-1f91d-200d-1f468-1f3fb",
+			"1f468-1f3fc-200d-1f91d-200d-1f468-1f3fd",
+			"1f468-1f3fc-200d-1f91d-200d-1f468-1f3fe",
+			"1f468-1f3fc-200d-1f91d-200d-1f468-1f3ff",
+			"1f468-1f3fd-200d-1f91d-200d-1f468-1f3fb",
+			"1f468-1f3fd-200d-1f91d-200d-1f468-1f3fc",
+			"1f468-1f3fd-200d-1f91d-200d-1f468-1f3fe",
+			"1f468-1f3fd-200d-1f91d-200d-1f468-1f3ff",
+			"1f468-1f3fe-200d-1f91d-200d-1f468-1f3fb",
+			"1f468-1f3fe-200d-1f91d-200d-1f468-1f3fc",
+			"1f468-1f3fe-200d-1f91d-200d-1f468-1f3fd",
+			"1f468-1f3fe-200d-1f91d-200d-1f468-1f3ff",
+			"1f468-1f3ff-200d-1f91d-200d-1f468-1f3fb",
+			"1f468-1f3ff-200d-1f91d-200d-1f468-1f3fc",
+			"1f468-1f3ff-200d-1f91d-200d-1f468-1f3fd",
+			"1f468-1f3ff-200d-1f91d-200d-1f468-1f3fe"
+		],
+		a: "1.0"
+	},
+	{
+		n: [
+			"kiss",
+			"couplekiss"
+		],
+		u: "1f48f",
+		v: [
+			"1f48f-1f3fb",
+			"1f48f-1f3fc",
+			"1f48f-1f3fd",
+			"1f48f-1f3fe",
+			"1f48f-1f3ff",
+			"1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3ff",
+			"1f9d1-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3ff",
+			"1f9d1-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3ff",
+			"1f9d1-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3ff",
+			"1f9d1-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fb",
+			"1f9d1-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fc",
+			"1f9d1-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fd",
+			"1f9d1-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f9d1-1f3fe"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"woman-kiss-man",
+			"kiss: woman, man"
+		],
+		u: "1f469-200d-2764-fe0f-200d-1f48b-200d-1f468",
+		v: [
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff"
+		],
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-kiss-man",
+			"kiss: man, man"
+		],
+		u: "1f468-200d-2764-fe0f-200d-1f48b-200d-1f468",
+		v: [
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fb",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fc",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fd",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3fe",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f468-1f3ff"
+		],
+		a: "2.0"
+	},
+	{
+		n: [
+			"woman-kiss-woman",
+			"kiss: woman, woman"
+		],
+		u: "1f469-200d-2764-fe0f-200d-1f48b-200d-1f469",
+		v: [
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fb",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fc",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fd",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3fe",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f48b-200d-1f469-1f3ff"
+		],
+		a: "2.0"
+	},
+	{
+		n: [
+			"couple with heart"
+		],
+		u: "1f491",
+		v: [
+			"1f491-1f3fb",
+			"1f491-1f3fc",
+			"1f491-1f3fd",
+			"1f491-1f3fe",
+			"1f491-1f3ff",
+			"1f9d1-1f3fb-200d-2764-fe0f-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fb-200d-2764-fe0f-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fb-200d-2764-fe0f-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fb-200d-2764-fe0f-200d-1f9d1-1f3ff",
+			"1f9d1-1f3fc-200d-2764-fe0f-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fc-200d-2764-fe0f-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fc-200d-2764-fe0f-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fc-200d-2764-fe0f-200d-1f9d1-1f3ff",
+			"1f9d1-1f3fd-200d-2764-fe0f-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fd-200d-2764-fe0f-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fd-200d-2764-fe0f-200d-1f9d1-1f3fe",
+			"1f9d1-1f3fd-200d-2764-fe0f-200d-1f9d1-1f3ff",
+			"1f9d1-1f3fe-200d-2764-fe0f-200d-1f9d1-1f3fb",
+			"1f9d1-1f3fe-200d-2764-fe0f-200d-1f9d1-1f3fc",
+			"1f9d1-1f3fe-200d-2764-fe0f-200d-1f9d1-1f3fd",
+			"1f9d1-1f3fe-200d-2764-fe0f-200d-1f9d1-1f3ff",
+			"1f9d1-1f3ff-200d-2764-fe0f-200d-1f9d1-1f3fb",
+			"1f9d1-1f3ff-200d-2764-fe0f-200d-1f9d1-1f3fc",
+			"1f9d1-1f3ff-200d-2764-fe0f-200d-1f9d1-1f3fd",
+			"1f9d1-1f3ff-200d-2764-fe0f-200d-1f9d1-1f3fe"
+		],
+		a: "0.6"
+	},
+	{
+		n: [
+			"woman-heart-man",
+			"couple with heart: woman, man"
+		],
+		u: "1f469-200d-2764-fe0f-200d-1f468",
+		v: [
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f468-1f3ff",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f468-1f3ff",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f468-1f3ff",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f468-1f3ff",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f468-1f3ff"
+		],
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-heart-man",
+			"couple with heart: man, man"
+		],
+		u: "1f468-200d-2764-fe0f-200d-1f468",
+		v: [
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3ff",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f468-1f3fc-200d-2764-fe0f-200d-1f468-1f3ff",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f468-1f3fd-200d-2764-fe0f-200d-1f468-1f3ff",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f468-1f3fe-200d-2764-fe0f-200d-1f468-1f3ff",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3fb",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3fc",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3fd",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3fe",
+			"1f468-1f3ff-200d-2764-fe0f-200d-1f468-1f3ff"
+		],
+		a: "2.0"
+	},
+	{
+		n: [
+			"woman-heart-woman",
+			"couple with heart: woman, woman"
+		],
+		u: "1f469-200d-2764-fe0f-200d-1f469",
+		v: [
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3fb",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3fc",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3fd",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3fe",
+			"1f469-1f3fb-200d-2764-fe0f-200d-1f469-1f3ff",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3fb",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3fc",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3fd",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3fe",
+			"1f469-1f3fc-200d-2764-fe0f-200d-1f469-1f3ff",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3fb",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3fc",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3fd",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3fe",
+			"1f469-1f3fd-200d-2764-fe0f-200d-1f469-1f3ff",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3fb",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3fc",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3fd",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3fe",
+			"1f469-1f3fe-200d-2764-fe0f-200d-1f469-1f3ff",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3fb",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3fc",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3fd",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3fe",
+			"1f469-1f3ff-200d-2764-fe0f-200d-1f469-1f3ff"
+		],
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-woman-boy",
+			"family: man, woman, boy"
+		],
+		u: "1f468-200d-1f469-200d-1f466",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-woman-girl",
+			"family: man, woman, girl"
+		],
+		u: "1f468-200d-1f469-200d-1f467",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-woman-girl-boy",
+			"family: man, woman, girl, boy"
+		],
+		u: "1f468-200d-1f469-200d-1f467-200d-1f466",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-woman-boy-boy",
+			"family: man, woman, boy, boy"
+		],
+		u: "1f468-200d-1f469-200d-1f466-200d-1f466",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-woman-girl-girl",
+			"family: man, woman, girl, girl"
+		],
+		u: "1f468-200d-1f469-200d-1f467-200d-1f467",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-man-boy",
+			"family: man, man, boy"
+		],
+		u: "1f468-200d-1f468-200d-1f466",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-man-girl",
+			"family: man, man, girl"
+		],
+		u: "1f468-200d-1f468-200d-1f467",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-man-girl-boy",
+			"family: man, man, girl, boy"
+		],
+		u: "1f468-200d-1f468-200d-1f467-200d-1f466",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-man-boy-boy",
+			"family: man, man, boy, boy"
+		],
+		u: "1f468-200d-1f468-200d-1f466-200d-1f466",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-man-girl-girl",
+			"family: man, man, girl, girl"
+		],
+		u: "1f468-200d-1f468-200d-1f467-200d-1f467",
+		a: "2.0"
+	},
+	{
+		n: [
+			"woman-woman-boy",
+			"family: woman, woman, boy"
+		],
+		u: "1f469-200d-1f469-200d-1f466",
+		a: "2.0"
+	},
+	{
+		n: [
+			"woman-woman-girl",
+			"family: woman, woman, girl"
+		],
+		u: "1f469-200d-1f469-200d-1f467",
+		a: "2.0"
+	},
+	{
+		n: [
+			"woman-woman-girl-boy",
+			"family: woman, woman, girl, boy"
+		],
+		u: "1f469-200d-1f469-200d-1f467-200d-1f466",
+		a: "2.0"
+	},
+	{
+		n: [
+			"woman-woman-boy-boy",
+			"family: woman, woman, boy, boy"
+		],
+		u: "1f469-200d-1f469-200d-1f466-200d-1f466",
+		a: "2.0"
+	},
+	{
+		n: [
+			"woman-woman-girl-girl",
+			"family: woman, woman, girl, girl"
+		],
+		u: "1f469-200d-1f469-200d-1f467-200d-1f467",
+		a: "2.0"
+	},
+	{
+		n: [
+			"man-boy",
+			"family: man, boy"
+		],
+		u: "1f468-200d-1f466",
+		a: "4.0"
+	},
+	{
+		n: [
+			"man-boy-boy",
+			"family: man, boy, boy"
+		],
+		u: "1f468-200d-1f466-200d-1f466",
+		a: "4.0"
+	},
+	{
+		n: [
+			"man-girl",
+			"family: man, girl"
+		],
+		u: "1f468-200d-1f467",
+		a: "4.0"
+	},
+	{
+		n: [
+			"man-girl-boy",
+			"family: man, girl, boy"
+		],
+		u: "1f468-200d-1f467-200d-1f466",
+		a: "4.0"
+	},
+	{
+		n: [
+			"man-girl-girl",
+			"family: man, girl, girl"
+		],
+		u: "1f468-200d-1f467-200d-1f467",
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman-boy",
+			"family: woman, boy"
+		],
+		u: "1f469-200d-1f466",
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman-boy-boy",
+			"family: woman, boy, boy"
+		],
+		u: "1f469-200d-1f466-200d-1f466",
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman-girl",
+			"family: woman, girl"
+		],
+		u: "1f469-200d-1f467",
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman-girl-boy",
+			"family: woman, girl, boy"
+		],
+		u: "1f469-200d-1f467-200d-1f466",
+		a: "4.0"
+	},
+	{
+		n: [
+			"woman-girl-girl",
+			"family: woman, girl, girl"
+		],
+		u: "1f469-200d-1f467-200d-1f467",
+		a: "4.0"
+	},
+	{
+		n: [
+			"speaking head",
+			"speaking head in silhouette"
+		],
+		u: "1f5e3-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"bust in silhouette"
+		],
+		u: "1f464",
+		a: "0.6"
+	},
+	{
+		n: [
+			"busts in silhouette"
+		],
+		u: "1f465",
+		a: "1.0"
+	},
+	{
+		n: [
+			"people hugging"
+		],
+		u: "1fac2",
+		a: "13.0"
+	},
+	{
+		n: [
+			"family"
+		],
+		u: "1f46a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"family adult adult child",
+			"family: adult, adult, child"
+		],
+		u: "1f9d1-200d-1f9d1-200d-1f9d2",
+		a: "15.1"
+	},
+	{
+		n: [
+			"family adult adult child child",
+			"family: adult, adult, child, child"
+		],
+		u: "1f9d1-200d-1f9d1-200d-1f9d2-200d-1f9d2",
+		a: "15.1"
+	},
+	{
+		n: [
+			"family adult child",
+			"family: adult, child"
+		],
+		u: "1f9d1-200d-1f9d2",
+		a: "15.1"
+	},
+	{
+		n: [
+			"family adult child child",
+			"family: adult, child, child"
+		],
+		u: "1f9d1-200d-1f9d2-200d-1f9d2",
+		a: "15.1"
+	},
+	{
+		n: [
+			"footprints"
+		],
+		u: "1f463",
+		a: "0.6"
+	}
+];
+var animals_nature = [
+	{
+		n: [
+			"monkey face"
+		],
+		u: "1f435",
+		a: "0.6"
+	},
+	{
+		n: [
+			"monkey"
+		],
+		u: "1f412",
+		a: "0.6"
+	},
+	{
+		n: [
+			"gorilla"
+		],
+		u: "1f98d",
+		a: "3.0"
+	},
+	{
+		n: [
+			"orangutan"
+		],
+		u: "1f9a7",
+		a: "12.0"
+	},
+	{
+		n: [
+			"dog",
+			"dog face"
+		],
+		u: "1f436",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dog",
+			"dog2"
+		],
+		u: "1f415",
+		a: "0.7"
+	},
+	{
+		n: [
+			"guide dog"
+		],
+		u: "1f9ae",
+		a: "12.0"
+	},
+	{
+		n: [
+			"service dog"
+		],
+		u: "1f415-200d-1f9ba",
+		a: "12.0"
+	},
+	{
+		n: [
+			"poodle"
+		],
+		u: "1f429",
+		a: "0.6"
+	},
+	{
+		n: [
+			"wolf",
+			"wolf face"
+		],
+		u: "1f43a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fox face"
+		],
+		u: "1f98a",
+		a: "3.0"
+	},
+	{
+		n: [
+			"raccoon"
+		],
+		u: "1f99d",
+		a: "11.0"
+	},
+	{
+		n: [
+			"cat",
+			"cat face"
+		],
+		u: "1f431",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cat",
+			"cat2"
+		],
+		u: "1f408",
+		a: "0.7"
+	},
+	{
+		n: [
+			"black cat"
+		],
+		u: "1f408-200d-2b1b",
+		a: "13.0"
+	},
+	{
+		n: [
+			"lion face"
+		],
+		u: "1f981",
+		a: "1.0"
+	},
+	{
+		n: [
+			"tiger",
+			"tiger face"
+		],
+		u: "1f42f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tiger",
+			"tiger2"
+		],
+		u: "1f405",
+		a: "1.0"
+	},
+	{
+		n: [
+			"leopard"
+		],
+		u: "1f406",
+		a: "1.0"
+	},
+	{
+		n: [
+			"horse",
+			"horse face"
+		],
+		u: "1f434",
+		a: "0.6"
+	},
+	{
+		n: [
+			"moose"
+		],
+		u: "1face",
+		a: "15.0"
+	},
+	{
+		n: [
+			"donkey"
+		],
+		u: "1facf",
+		a: "15.0"
+	},
+	{
+		n: [
+			"horse",
+			"racehorse"
+		],
+		u: "1f40e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"unicorn face"
+		],
+		u: "1f984",
+		a: "1.0"
+	},
+	{
+		n: [
+			"zebra face"
+		],
+		u: "1f993",
+		a: "5.0"
+	},
+	{
+		n: [
+			"deer"
+		],
+		u: "1f98c",
+		a: "3.0"
+	},
+	{
+		n: [
+			"bison"
+		],
+		u: "1f9ac",
+		a: "13.0"
+	},
+	{
+		n: [
+			"cow",
+			"cow face"
+		],
+		u: "1f42e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ox"
+		],
+		u: "1f402",
+		a: "1.0"
+	},
+	{
+		n: [
+			"water buffalo"
+		],
+		u: "1f403",
+		a: "1.0"
+	},
+	{
+		n: [
+			"cow",
+			"cow2"
+		],
+		u: "1f404",
+		a: "1.0"
+	},
+	{
+		n: [
+			"pig",
+			"pig face"
+		],
+		u: "1f437",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pig",
+			"pig2"
+		],
+		u: "1f416",
+		a: "1.0"
+	},
+	{
+		n: [
+			"boar"
+		],
+		u: "1f417",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pig nose"
+		],
+		u: "1f43d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ram"
+		],
+		u: "1f40f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"sheep"
+		],
+		u: "1f411",
+		a: "0.6"
+	},
+	{
+		n: [
+			"goat"
+		],
+		u: "1f410",
+		a: "1.0"
+	},
+	{
+		n: [
+			"dromedary camel"
+		],
+		u: "1f42a",
+		a: "1.0"
+	},
+	{
+		n: [
+			"camel",
+			"bactrian camel"
+		],
+		u: "1f42b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"llama"
+		],
+		u: "1f999",
+		a: "11.0"
+	},
+	{
+		n: [
+			"giraffe face"
+		],
+		u: "1f992",
+		a: "5.0"
+	},
+	{
+		n: [
+			"elephant"
+		],
+		u: "1f418",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mammoth"
+		],
+		u: "1f9a3",
+		a: "13.0"
+	},
+	{
+		n: [
+			"rhinoceros"
+		],
+		u: "1f98f",
+		a: "3.0"
+	},
+	{
+		n: [
+			"hippopotamus"
+		],
+		u: "1f99b",
+		a: "11.0"
+	},
+	{
+		n: [
+			"mouse",
+			"mouse face"
+		],
+		u: "1f42d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mouse",
+			"mouse2"
+		],
+		u: "1f401",
+		a: "1.0"
+	},
+	{
+		n: [
+			"rat"
+		],
+		u: "1f400",
+		a: "1.0"
+	},
+	{
+		n: [
+			"hamster",
+			"hamster face"
+		],
+		u: "1f439",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rabbit",
+			"rabbit face"
+		],
+		u: "1f430",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rabbit",
+			"rabbit2"
+		],
+		u: "1f407",
+		a: "1.0"
+	},
+	{
+		n: [
+			"chipmunk"
+		],
+		u: "1f43f-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"beaver"
+		],
+		u: "1f9ab",
+		a: "13.0"
+	},
+	{
+		n: [
+			"hedgehog"
+		],
+		u: "1f994",
+		a: "5.0"
+	},
+	{
+		n: [
+			"bat"
+		],
+		u: "1f987",
+		a: "3.0"
+	},
+	{
+		n: [
+			"bear",
+			"bear face"
+		],
+		u: "1f43b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"polar bear"
+		],
+		u: "1f43b-200d-2744-fe0f",
+		a: "13.0"
+	},
+	{
+		n: [
+			"koala"
+		],
+		u: "1f428",
+		a: "0.6"
+	},
+	{
+		n: [
+			"panda face"
+		],
+		u: "1f43c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sloth"
+		],
+		u: "1f9a5",
+		a: "12.0"
+	},
+	{
+		n: [
+			"otter"
+		],
+		u: "1f9a6",
+		a: "12.0"
+	},
+	{
+		n: [
+			"skunk"
+		],
+		u: "1f9a8",
+		a: "12.0"
+	},
+	{
+		n: [
+			"kangaroo"
+		],
+		u: "1f998",
+		a: "11.0"
+	},
+	{
+		n: [
+			"badger"
+		],
+		u: "1f9a1",
+		a: "11.0"
+	},
+	{
+		n: [
+			"feet",
+			"paw prints"
+		],
+		u: "1f43e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"turkey"
+		],
+		u: "1f983",
+		a: "1.0"
+	},
+	{
+		n: [
+			"chicken"
+		],
+		u: "1f414",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rooster"
+		],
+		u: "1f413",
+		a: "1.0"
+	},
+	{
+		n: [
+			"hatching chick"
+		],
+		u: "1f423",
+		a: "0.6"
+	},
+	{
+		n: [
+			"baby chick"
+		],
+		u: "1f424",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hatched chick",
+			"front-facing baby chick"
+		],
+		u: "1f425",
+		a: "0.6"
+	},
+	{
+		n: [
+			"bird"
+		],
+		u: "1f426",
+		a: "0.6"
+	},
+	{
+		n: [
+			"penguin"
+		],
+		u: "1f427",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dove",
+			"dove of peace"
+		],
+		u: "1f54a-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"eagle"
+		],
+		u: "1f985",
+		a: "3.0"
+	},
+	{
+		n: [
+			"duck"
+		],
+		u: "1f986",
+		a: "3.0"
+	},
+	{
+		n: [
+			"swan"
+		],
+		u: "1f9a2",
+		a: "11.0"
+	},
+	{
+		n: [
+			"owl"
+		],
+		u: "1f989",
+		a: "3.0"
+	},
+	{
+		n: [
+			"dodo"
+		],
+		u: "1f9a4",
+		a: "13.0"
+	},
+	{
+		n: [
+			"feather"
+		],
+		u: "1fab6",
+		a: "13.0"
+	},
+	{
+		n: [
+			"flamingo"
+		],
+		u: "1f9a9",
+		a: "12.0"
+	},
+	{
+		n: [
+			"peacock"
+		],
+		u: "1f99a",
+		a: "11.0"
+	},
+	{
+		n: [
+			"parrot"
+		],
+		u: "1f99c",
+		a: "11.0"
+	},
+	{
+		n: [
+			"wing"
+		],
+		u: "1fabd",
+		a: "15.0"
+	},
+	{
+		n: [
+			"black bird"
+		],
+		u: "1f426-200d-2b1b",
+		a: "15.0"
+	},
+	{
+		n: [
+			"goose"
+		],
+		u: "1fabf",
+		a: "15.0"
+	},
+	{
+		n: [
+			"phoenix"
+		],
+		u: "1f426-200d-1f525",
+		a: "15.1"
+	},
+	{
+		n: [
+			"frog",
+			"frog face"
+		],
+		u: "1f438",
+		a: "0.6"
+	},
+	{
+		n: [
+			"crocodile"
+		],
+		u: "1f40a",
+		a: "1.0"
+	},
+	{
+		n: [
+			"turtle"
+		],
+		u: "1f422",
+		a: "0.6"
+	},
+	{
+		n: [
+			"lizard"
+		],
+		u: "1f98e",
+		a: "3.0"
+	},
+	{
+		n: [
+			"snake"
+		],
+		u: "1f40d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dragon face"
+		],
+		u: "1f432",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dragon"
+		],
+		u: "1f409",
+		a: "1.0"
+	},
+	{
+		n: [
+			"sauropod"
+		],
+		u: "1f995",
+		a: "5.0"
+	},
+	{
+		n: [
+			"t-rex"
+		],
+		u: "1f996",
+		a: "5.0"
+	},
+	{
+		n: [
+			"whale",
+			"spouting whale"
+		],
+		u: "1f433",
+		a: "0.6"
+	},
+	{
+		n: [
+			"whale",
+			"whale2"
+		],
+		u: "1f40b",
+		a: "1.0"
+	},
+	{
+		n: [
+			"dolphin",
+			"flipper"
+		],
+		u: "1f42c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"seal"
+		],
+		u: "1f9ad",
+		a: "13.0"
+	},
+	{
+		n: [
+			"fish"
+		],
+		u: "1f41f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tropical fish"
+		],
+		u: "1f420",
+		a: "0.6"
+	},
+	{
+		n: [
+			"blowfish"
+		],
+		u: "1f421",
+		a: "0.6"
+	},
+	{
+		n: [
+			"shark"
+		],
+		u: "1f988",
+		a: "3.0"
+	},
+	{
+		n: [
+			"octopus"
+		],
+		u: "1f419",
+		a: "0.6"
+	},
+	{
+		n: [
+			"shell",
+			"spiral shell"
+		],
+		u: "1f41a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"coral"
+		],
+		u: "1fab8",
+		a: "14.0"
+	},
+	{
+		n: [
+			"jellyfish"
+		],
+		u: "1fabc",
+		a: "15.0"
+	},
+	{
+		n: [
+			"snail"
+		],
+		u: "1f40c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"butterfly"
+		],
+		u: "1f98b",
+		a: "3.0"
+	},
+	{
+		n: [
+			"bug"
+		],
+		u: "1f41b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ant"
+		],
+		u: "1f41c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"bee",
+			"honeybee"
+		],
+		u: "1f41d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"beetle"
+		],
+		u: "1fab2",
+		a: "13.0"
+	},
+	{
+		n: [
+			"ladybug",
+			"lady beetle"
+		],
+		u: "1f41e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cricket"
+		],
+		u: "1f997",
+		a: "5.0"
+	},
+	{
+		n: [
+			"cockroach"
+		],
+		u: "1fab3",
+		a: "13.0"
+	},
+	{
+		n: [
+			"spider"
+		],
+		u: "1f577-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"spider web"
+		],
+		u: "1f578-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"scorpion"
+		],
+		u: "1f982",
+		a: "1.0"
+	},
+	{
+		n: [
+			"mosquito"
+		],
+		u: "1f99f",
+		a: "11.0"
+	},
+	{
+		n: [
+			"fly"
+		],
+		u: "1fab0",
+		a: "13.0"
+	},
+	{
+		n: [
+			"worm"
+		],
+		u: "1fab1",
+		a: "13.0"
+	},
+	{
+		n: [
+			"microbe"
+		],
+		u: "1f9a0",
+		a: "11.0"
+	},
+	{
+		n: [
+			"bouquet"
+		],
+		u: "1f490",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cherry blossom"
+		],
+		u: "1f338",
+		a: "0.6"
+	},
+	{
+		n: [
+			"white flower"
+		],
+		u: "1f4ae",
+		a: "0.6"
+	},
+	{
+		n: [
+			"lotus"
+		],
+		u: "1fab7",
+		a: "14.0"
+	},
+	{
+		n: [
+			"rosette"
+		],
+		u: "1f3f5-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"rose"
+		],
+		u: "1f339",
+		a: "0.6"
+	},
+	{
+		n: [
+			"wilted flower"
+		],
+		u: "1f940",
+		a: "3.0"
+	},
+	{
+		n: [
+			"hibiscus"
+		],
+		u: "1f33a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sunflower"
+		],
+		u: "1f33b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"blossom"
+		],
+		u: "1f33c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tulip"
+		],
+		u: "1f337",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hyacinth"
+		],
+		u: "1fabb",
+		a: "15.0"
+	},
+	{
+		n: [
+			"seedling"
+		],
+		u: "1f331",
+		a: "0.6"
+	},
+	{
+		n: [
+			"potted plant"
+		],
+		u: "1fab4",
+		a: "13.0"
+	},
+	{
+		n: [
+			"evergreen tree"
+		],
+		u: "1f332",
+		a: "1.0"
+	},
+	{
+		n: [
+			"deciduous tree"
+		],
+		u: "1f333",
+		a: "1.0"
+	},
+	{
+		n: [
+			"palm tree"
+		],
+		u: "1f334",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cactus"
+		],
+		u: "1f335",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ear of rice"
+		],
+		u: "1f33e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"herb"
+		],
+		u: "1f33f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"shamrock"
+		],
+		u: "2618-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"four leaf clover"
+		],
+		u: "1f340",
+		a: "0.6"
+	},
+	{
+		n: [
+			"maple leaf"
+		],
+		u: "1f341",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fallen leaf"
+		],
+		u: "1f342",
+		a: "0.6"
+	},
+	{
+		n: [
+			"leaves",
+			"leaf fluttering in wind"
+		],
+		u: "1f343",
+		a: "0.6"
+	},
+	{
+		n: [
+			"empty nest"
+		],
+		u: "1fab9",
+		a: "14.0"
+	},
+	{
+		n: [
+			"nest with eggs"
+		],
+		u: "1faba",
+		a: "14.0"
+	},
+	{
+		n: [
+			"mushroom"
+		],
+		u: "1f344",
+		a: "0.6"
+	}
+];
+var food_drink = [
+	{
+		n: [
+			"grapes"
+		],
+		u: "1f347",
+		a: "0.6"
+	},
+	{
+		n: [
+			"melon"
+		],
+		u: "1f348",
+		a: "0.6"
+	},
+	{
+		n: [
+			"watermelon"
+		],
+		u: "1f349",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tangerine"
+		],
+		u: "1f34a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"lemon"
+		],
+		u: "1f34b",
+		a: "1.0"
+	},
+	{
+		n: [
+			"lime"
+		],
+		u: "1f34b-200d-1f7e9",
+		a: "15.1"
+	},
+	{
+		n: [
+			"banana"
+		],
+		u: "1f34c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pineapple"
+		],
+		u: "1f34d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mango"
+		],
+		u: "1f96d",
+		a: "11.0"
+	},
+	{
+		n: [
+			"apple",
+			"red apple"
+		],
+		u: "1f34e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"green apple"
+		],
+		u: "1f34f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pear"
+		],
+		u: "1f350",
+		a: "1.0"
+	},
+	{
+		n: [
+			"peach"
+		],
+		u: "1f351",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cherries"
+		],
+		u: "1f352",
+		a: "0.6"
+	},
+	{
+		n: [
+			"strawberry"
+		],
+		u: "1f353",
+		a: "0.6"
+	},
+	{
+		n: [
+			"blueberries"
+		],
+		u: "1fad0",
+		a: "13.0"
+	},
+	{
+		n: [
+			"kiwifruit"
+		],
+		u: "1f95d",
+		a: "3.0"
+	},
+	{
+		n: [
+			"tomato"
+		],
+		u: "1f345",
+		a: "0.6"
+	},
+	{
+		n: [
+			"olive"
+		],
+		u: "1fad2",
+		a: "13.0"
+	},
+	{
+		n: [
+			"coconut"
+		],
+		u: "1f965",
+		a: "5.0"
+	},
+	{
+		n: [
+			"avocado"
+		],
+		u: "1f951",
+		a: "3.0"
+	},
+	{
+		n: [
+			"eggplant",
+			"aubergine"
+		],
+		u: "1f346",
+		a: "0.6"
+	},
+	{
+		n: [
+			"potato"
+		],
+		u: "1f954",
+		a: "3.0"
+	},
+	{
+		n: [
+			"carrot"
+		],
+		u: "1f955",
+		a: "3.0"
+	},
+	{
+		n: [
+			"corn",
+			"ear of maize"
+		],
+		u: "1f33d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hot pepper"
+		],
+		u: "1f336-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"bell pepper"
+		],
+		u: "1fad1",
+		a: "13.0"
+	},
+	{
+		n: [
+			"cucumber"
+		],
+		u: "1f952",
+		a: "3.0"
+	},
+	{
+		n: [
+			"leafy green"
+		],
+		u: "1f96c",
+		a: "11.0"
+	},
+	{
+		n: [
+			"broccoli"
+		],
+		u: "1f966",
+		a: "5.0"
+	},
+	{
+		n: [
+			"garlic"
+		],
+		u: "1f9c4",
+		a: "12.0"
+	},
+	{
+		n: [
+			"onion"
+		],
+		u: "1f9c5",
+		a: "12.0"
+	},
+	{
+		n: [
+			"peanuts"
+		],
+		u: "1f95c",
+		a: "3.0"
+	},
+	{
+		n: [
+			"beans"
+		],
+		u: "1fad8",
+		a: "14.0"
+	},
+	{
+		n: [
+			"chestnut"
+		],
+		u: "1f330",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ginger root"
+		],
+		u: "1fada",
+		a: "15.0"
+	},
+	{
+		n: [
+			"pea pod"
+		],
+		u: "1fadb",
+		a: "15.0"
+	},
+	{
+		n: [
+			"brown mushroom"
+		],
+		u: "1f344-200d-1f7eb",
+		a: "15.1"
+	},
+	{
+		n: [
+			"bread"
+		],
+		u: "1f35e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"croissant"
+		],
+		u: "1f950",
+		a: "3.0"
+	},
+	{
+		n: [
+			"baguette bread"
+		],
+		u: "1f956",
+		a: "3.0"
+	},
+	{
+		n: [
+			"flatbread"
+		],
+		u: "1fad3",
+		a: "13.0"
+	},
+	{
+		n: [
+			"pretzel"
+		],
+		u: "1f968",
+		a: "5.0"
+	},
+	{
+		n: [
+			"bagel"
+		],
+		u: "1f96f",
+		a: "11.0"
+	},
+	{
+		n: [
+			"pancakes"
+		],
+		u: "1f95e",
+		a: "3.0"
+	},
+	{
+		n: [
+			"waffle"
+		],
+		u: "1f9c7",
+		a: "12.0"
+	},
+	{
+		n: [
+			"cheese wedge"
+		],
+		u: "1f9c0",
+		a: "1.0"
+	},
+	{
+		n: [
+			"meat on bone"
+		],
+		u: "1f356",
+		a: "0.6"
+	},
+	{
+		n: [
+			"poultry leg"
+		],
+		u: "1f357",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cut of meat"
+		],
+		u: "1f969",
+		a: "5.0"
+	},
+	{
+		n: [
+			"bacon"
+		],
+		u: "1f953",
+		a: "3.0"
+	},
+	{
+		n: [
+			"hamburger"
+		],
+		u: "1f354",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fries",
+			"french fries"
+		],
+		u: "1f35f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pizza",
+			"slice of pizza"
+		],
+		u: "1f355",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hotdog",
+			"hot dog"
+		],
+		u: "1f32d",
+		a: "1.0"
+	},
+	{
+		n: [
+			"sandwich"
+		],
+		u: "1f96a",
+		a: "5.0"
+	},
+	{
+		n: [
+			"taco"
+		],
+		u: "1f32e",
+		a: "1.0"
+	},
+	{
+		n: [
+			"burrito"
+		],
+		u: "1f32f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"tamale"
+		],
+		u: "1fad4",
+		a: "13.0"
+	},
+	{
+		n: [
+			"stuffed flatbread"
+		],
+		u: "1f959",
+		a: "3.0"
+	},
+	{
+		n: [
+			"falafel"
+		],
+		u: "1f9c6",
+		a: "12.0"
+	},
+	{
+		n: [
+			"egg"
+		],
+		u: "1f95a",
+		a: "3.0"
+	},
+	{
+		n: [
+			"cooking",
+			"fried egg"
+		],
+		u: "1f373",
+		a: "0.6"
+	},
+	{
+		n: [
+			"shallow pan of food"
+		],
+		u: "1f958",
+		a: "3.0"
+	},
+	{
+		n: [
+			"stew",
+			"pot of food"
+		],
+		u: "1f372",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fondue"
+		],
+		u: "1fad5",
+		a: "13.0"
+	},
+	{
+		n: [
+			"bowl with spoon"
+		],
+		u: "1f963",
+		a: "5.0"
+	},
+	{
+		n: [
+			"green salad"
+		],
+		u: "1f957",
+		a: "3.0"
+	},
+	{
+		n: [
+			"popcorn"
+		],
+		u: "1f37f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"butter"
+		],
+		u: "1f9c8",
+		a: "12.0"
+	},
+	{
+		n: [
+			"salt",
+			"salt shaker"
+		],
+		u: "1f9c2",
+		a: "11.0"
+	},
+	{
+		n: [
+			"canned food"
+		],
+		u: "1f96b",
+		a: "5.0"
+	},
+	{
+		n: [
+			"bento",
+			"bento box"
+		],
+		u: "1f371",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rice cracker"
+		],
+		u: "1f358",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rice ball"
+		],
+		u: "1f359",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rice",
+			"cooked rice"
+		],
+		u: "1f35a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"curry",
+			"curry and rice"
+		],
+		u: "1f35b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ramen",
+			"steaming bowl"
+		],
+		u: "1f35c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"spaghetti"
+		],
+		u: "1f35d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sweet potato",
+			"roasted sweet potato"
+		],
+		u: "1f360",
+		a: "0.6"
+	},
+	{
+		n: [
+			"oden"
+		],
+		u: "1f362",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sushi"
+		],
+		u: "1f363",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fried shrimp"
+		],
+		u: "1f364",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fish cake",
+			"fish cake with swirl design"
+		],
+		u: "1f365",
+		a: "0.6"
+	},
+	{
+		n: [
+			"moon cake"
+		],
+		u: "1f96e",
+		a: "11.0"
+	},
+	{
+		n: [
+			"dango"
+		],
+		u: "1f361",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dumpling"
+		],
+		u: "1f95f",
+		a: "5.0"
+	},
+	{
+		n: [
+			"fortune cookie"
+		],
+		u: "1f960",
+		a: "5.0"
+	},
+	{
+		n: [
+			"takeout box"
+		],
+		u: "1f961",
+		a: "5.0"
+	},
+	{
+		n: [
+			"crab"
+		],
+		u: "1f980",
+		a: "1.0"
+	},
+	{
+		n: [
+			"lobster"
+		],
+		u: "1f99e",
+		a: "11.0"
+	},
+	{
+		n: [
+			"shrimp"
+		],
+		u: "1f990",
+		a: "3.0"
+	},
+	{
+		n: [
+			"squid"
+		],
+		u: "1f991",
+		a: "3.0"
+	},
+	{
+		n: [
+			"oyster"
+		],
+		u: "1f9aa",
+		a: "12.0"
+	},
+	{
+		n: [
+			"icecream",
+			"soft ice cream"
+		],
+		u: "1f366",
+		a: "0.6"
+	},
+	{
+		n: [
+			"shaved ice"
+		],
+		u: "1f367",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ice cream"
+		],
+		u: "1f368",
+		a: "0.6"
+	},
+	{
+		n: [
+			"doughnut"
+		],
+		u: "1f369",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cookie"
+		],
+		u: "1f36a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"birthday",
+			"birthday cake"
+		],
+		u: "1f382",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cake",
+			"shortcake"
+		],
+		u: "1f370",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cupcake"
+		],
+		u: "1f9c1",
+		a: "11.0"
+	},
+	{
+		n: [
+			"pie"
+		],
+		u: "1f967",
+		a: "5.0"
+	},
+	{
+		n: [
+			"chocolate bar"
+		],
+		u: "1f36b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"candy"
+		],
+		u: "1f36c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"lollipop"
+		],
+		u: "1f36d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"custard"
+		],
+		u: "1f36e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"honey pot"
+		],
+		u: "1f36f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"baby bottle"
+		],
+		u: "1f37c",
+		a: "1.0"
+	},
+	{
+		n: [
+			"glass of milk"
+		],
+		u: "1f95b",
+		a: "3.0"
+	},
+	{
+		n: [
+			"coffee",
+			"hot beverage"
+		],
+		u: "2615",
+		a: "0.6"
+	},
+	{
+		n: [
+			"teapot"
+		],
+		u: "1fad6",
+		a: "13.0"
+	},
+	{
+		n: [
+			"tea",
+			"teacup without handle"
+		],
+		u: "1f375",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sake",
+			"sake bottle and cup"
+		],
+		u: "1f376",
+		a: "0.6"
+	},
+	{
+		n: [
+			"champagne",
+			"bottle with popping cork"
+		],
+		u: "1f37e",
+		a: "1.0"
+	},
+	{
+		n: [
+			"wine glass"
+		],
+		u: "1f377",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cocktail",
+			"cocktail glass"
+		],
+		u: "1f378",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tropical drink"
+		],
+		u: "1f379",
+		a: "0.6"
+	},
+	{
+		n: [
+			"beer",
+			"beer mug"
+		],
+		u: "1f37a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"beers",
+			"clinking beer mugs"
+		],
+		u: "1f37b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clinking glasses"
+		],
+		u: "1f942",
+		a: "3.0"
+	},
+	{
+		n: [
+			"tumbler glass"
+		],
+		u: "1f943",
+		a: "3.0"
+	},
+	{
+		n: [
+			"pouring liquid"
+		],
+		u: "1fad7",
+		a: "14.0"
+	},
+	{
+		n: [
+			"cup with straw"
+		],
+		u: "1f964",
+		a: "5.0"
+	},
+	{
+		n: [
+			"bubble tea"
+		],
+		u: "1f9cb",
+		a: "13.0"
+	},
+	{
+		n: [
+			"beverage box"
+		],
+		u: "1f9c3",
+		a: "12.0"
+	},
+	{
+		n: [
+			"mate drink"
+		],
+		u: "1f9c9",
+		a: "12.0"
+	},
+	{
+		n: [
+			"ice cube"
+		],
+		u: "1f9ca",
+		a: "12.0"
+	},
+	{
+		n: [
+			"chopsticks"
+		],
+		u: "1f962",
+		a: "5.0"
+	},
+	{
+		n: [
+			"knife fork plate",
+			"fork and knife with plate"
+		],
+		u: "1f37d-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"fork and knife"
+		],
+		u: "1f374",
+		a: "0.6"
+	},
+	{
+		n: [
+			"spoon"
+		],
+		u: "1f944",
+		a: "3.0"
+	},
+	{
+		n: [
+			"hocho",
+			"knife"
+		],
+		u: "1f52a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"jar"
+		],
+		u: "1fad9",
+		a: "14.0"
+	},
+	{
+		n: [
+			"amphora"
+		],
+		u: "1f3fa",
+		a: "1.0"
+	}
+];
+var travel_places = [
+	{
+		n: [
+			"earth africa",
+			"earth globe europe-africa"
+		],
+		u: "1f30d",
+		a: "0.7"
+	},
+	{
+		n: [
+			"earth americas",
+			"earth globe americas"
+		],
+		u: "1f30e",
+		a: "0.7"
+	},
+	{
+		n: [
+			"earth asia",
+			"earth globe asia-australia"
+		],
+		u: "1f30f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"globe with meridians"
+		],
+		u: "1f310",
+		a: "1.0"
+	},
+	{
+		n: [
+			"world map"
+		],
+		u: "1f5fa-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"japan",
+			"silhouette of japan"
+		],
+		u: "1f5fe",
+		a: "0.6"
+	},
+	{
+		n: [
+			"compass"
+		],
+		u: "1f9ed",
+		a: "11.0"
+	},
+	{
+		n: [
+			"snow-capped mountain",
+			"snow capped mountain"
+		],
+		u: "1f3d4-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"mountain"
+		],
+		u: "26f0-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"volcano"
+		],
+		u: "1f30b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mount fuji"
+		],
+		u: "1f5fb",
+		a: "0.6"
+	},
+	{
+		n: [
+			"camping"
+		],
+		u: "1f3d5-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"beach with umbrella"
+		],
+		u: "1f3d6-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"desert"
+		],
+		u: "1f3dc-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"desert island"
+		],
+		u: "1f3dd-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"national park"
+		],
+		u: "1f3de-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"stadium"
+		],
+		u: "1f3df-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"classical building"
+		],
+		u: "1f3db-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"building construction"
+		],
+		u: "1f3d7-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"brick",
+			"bricks"
+		],
+		u: "1f9f1",
+		a: "11.0"
+	},
+	{
+		n: [
+			"rock"
+		],
+		u: "1faa8",
+		a: "13.0"
+	},
+	{
+		n: [
+			"wood"
+		],
+		u: "1fab5",
+		a: "13.0"
+	},
+	{
+		n: [
+			"hut"
+		],
+		u: "1f6d6",
+		a: "13.0"
+	},
+	{
+		n: [
+			"houses",
+			"house buildings"
+		],
+		u: "1f3d8-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"derelict house",
+			"derelict house building"
+		],
+		u: "1f3da-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"house",
+			"house building"
+		],
+		u: "1f3e0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"house with garden"
+		],
+		u: "1f3e1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"office",
+			"office building"
+		],
+		u: "1f3e2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"post office",
+			"japanese post office"
+		],
+		u: "1f3e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"european post office"
+		],
+		u: "1f3e4",
+		a: "1.0"
+	},
+	{
+		n: [
+			"hospital"
+		],
+		u: "1f3e5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"bank"
+		],
+		u: "1f3e6",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hotel"
+		],
+		u: "1f3e8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"love hotel"
+		],
+		u: "1f3e9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"convenience store"
+		],
+		u: "1f3ea",
+		a: "0.6"
+	},
+	{
+		n: [
+			"school"
+		],
+		u: "1f3eb",
+		a: "0.6"
+	},
+	{
+		n: [
+			"department store"
+		],
+		u: "1f3ec",
+		a: "0.6"
+	},
+	{
+		n: [
+			"factory"
+		],
+		u: "1f3ed",
+		a: "0.6"
+	},
+	{
+		n: [
+			"japanese castle"
+		],
+		u: "1f3ef",
+		a: "0.6"
+	},
+	{
+		n: [
+			"european castle"
+		],
+		u: "1f3f0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"wedding"
+		],
+		u: "1f492",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tokyo tower"
+		],
+		u: "1f5fc",
+		a: "0.6"
+	},
+	{
+		n: [
+			"statue of liberty"
+		],
+		u: "1f5fd",
+		a: "0.6"
+	},
+	{
+		n: [
+			"church"
+		],
+		u: "26ea",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mosque"
+		],
+		u: "1f54c",
+		a: "1.0"
+	},
+	{
+		n: [
+			"hindu temple"
+		],
+		u: "1f6d5",
+		a: "12.0"
+	},
+	{
+		n: [
+			"synagogue"
+		],
+		u: "1f54d",
+		a: "1.0"
+	},
+	{
+		n: [
+			"shinto shrine"
+		],
+		u: "26e9-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"kaaba"
+		],
+		u: "1f54b",
+		a: "1.0"
+	},
+	{
+		n: [
+			"fountain"
+		],
+		u: "26f2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tent"
+		],
+		u: "26fa",
+		a: "0.6"
+	},
+	{
+		n: [
+			"foggy"
+		],
+		u: "1f301",
+		a: "0.6"
+	},
+	{
+		n: [
+			"night with stars"
+		],
+		u: "1f303",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cityscape"
+		],
+		u: "1f3d9-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"sunrise over mountains"
+		],
+		u: "1f304",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sunrise"
+		],
+		u: "1f305",
+		a: "0.6"
+	},
+	{
+		n: [
+			"city sunset",
+			"cityscape at dusk"
+		],
+		u: "1f306",
+		a: "0.6"
+	},
+	{
+		n: [
+			"city sunrise",
+			"sunset over buildings"
+		],
+		u: "1f307",
+		a: "0.6"
+	},
+	{
+		n: [
+			"bridge at night"
+		],
+		u: "1f309",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hotsprings",
+			"hot springs"
+		],
+		u: "2668-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"carousel horse"
+		],
+		u: "1f3a0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"playground slide"
+		],
+		u: "1f6dd",
+		a: "14.0"
+	},
+	{
+		n: [
+			"ferris wheel"
+		],
+		u: "1f3a1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"roller coaster"
+		],
+		u: "1f3a2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"barber",
+			"barber pole"
+		],
+		u: "1f488",
+		a: "0.6"
+	},
+	{
+		n: [
+			"circus tent"
+		],
+		u: "1f3aa",
+		a: "0.6"
+	},
+	{
+		n: [
+			"steam locomotive"
+		],
+		u: "1f682",
+		a: "1.0"
+	},
+	{
+		n: [
+			"railway car"
+		],
+		u: "1f683",
+		a: "0.6"
+	},
+	{
+		n: [
+			"high-speed train",
+			"bullettrain side"
+		],
+		u: "1f684",
+		a: "0.6"
+	},
+	{
+		n: [
+			"bullettrain front",
+			"high-speed train with bullet nose"
+		],
+		u: "1f685",
+		a: "0.6"
+	},
+	{
+		n: [
+			"train",
+			"train2"
+		],
+		u: "1f686",
+		a: "1.0"
+	},
+	{
+		n: [
+			"metro"
+		],
+		u: "1f687",
+		a: "0.6"
+	},
+	{
+		n: [
+			"light rail"
+		],
+		u: "1f688",
+		a: "1.0"
+	},
+	{
+		n: [
+			"station"
+		],
+		u: "1f689",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tram"
+		],
+		u: "1f68a",
+		a: "1.0"
+	},
+	{
+		n: [
+			"monorail"
+		],
+		u: "1f69d",
+		a: "1.0"
+	},
+	{
+		n: [
+			"mountain railway"
+		],
+		u: "1f69e",
+		a: "1.0"
+	},
+	{
+		n: [
+			"train",
+			"tram car"
+		],
+		u: "1f68b",
+		a: "1.0"
+	},
+	{
+		n: [
+			"bus"
+		],
+		u: "1f68c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"oncoming bus"
+		],
+		u: "1f68d",
+		a: "0.7"
+	},
+	{
+		n: [
+			"trolleybus"
+		],
+		u: "1f68e",
+		a: "1.0"
+	},
+	{
+		n: [
+			"minibus"
+		],
+		u: "1f690",
+		a: "1.0"
+	},
+	{
+		n: [
+			"ambulance"
+		],
+		u: "1f691",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fire engine"
+		],
+		u: "1f692",
+		a: "0.6"
+	},
+	{
+		n: [
+			"police car"
+		],
+		u: "1f693",
+		a: "0.6"
+	},
+	{
+		n: [
+			"oncoming police car"
+		],
+		u: "1f694",
+		a: "0.7"
+	},
+	{
+		n: [
+			"taxi"
+		],
+		u: "1f695",
+		a: "0.6"
+	},
+	{
+		n: [
+			"oncoming taxi"
+		],
+		u: "1f696",
+		a: "1.0"
+	},
+	{
+		n: [
+			"car",
+			"red car",
+			"automobile"
+		],
+		u: "1f697",
+		a: "0.6"
+	},
+	{
+		n: [
+			"oncoming automobile"
+		],
+		u: "1f698",
+		a: "0.7"
+	},
+	{
+		n: [
+			"blue car",
+			"recreational vehicle"
+		],
+		u: "1f699",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pickup truck"
+		],
+		u: "1f6fb",
+		a: "13.0"
+	},
+	{
+		n: [
+			"truck",
+			"delivery truck"
+		],
+		u: "1f69a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"articulated lorry"
+		],
+		u: "1f69b",
+		a: "1.0"
+	},
+	{
+		n: [
+			"tractor"
+		],
+		u: "1f69c",
+		a: "1.0"
+	},
+	{
+		n: [
+			"racing car"
+		],
+		u: "1f3ce-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"motorcycle",
+			"racing motorcycle"
+		],
+		u: "1f3cd-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"motor scooter"
+		],
+		u: "1f6f5",
+		a: "3.0"
+	},
+	{
+		n: [
+			"manual wheelchair"
+		],
+		u: "1f9bd",
+		a: "12.0"
+	},
+	{
+		n: [
+			"motorized wheelchair"
+		],
+		u: "1f9bc",
+		a: "12.0"
+	},
+	{
+		n: [
+			"auto rickshaw"
+		],
+		u: "1f6fa",
+		a: "12.0"
+	},
+	{
+		n: [
+			"bike",
+			"bicycle"
+		],
+		u: "1f6b2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"scooter"
+		],
+		u: "1f6f4",
+		a: "3.0"
+	},
+	{
+		n: [
+			"skateboard"
+		],
+		u: "1f6f9",
+		a: "11.0"
+	},
+	{
+		n: [
+			"roller skate"
+		],
+		u: "1f6fc",
+		a: "13.0"
+	},
+	{
+		n: [
+			"busstop",
+			"bus stop"
+		],
+		u: "1f68f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"motorway"
+		],
+		u: "1f6e3-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"railway track"
+		],
+		u: "1f6e4-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"oil drum"
+		],
+		u: "1f6e2-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"fuelpump",
+			"fuel pump"
+		],
+		u: "26fd",
+		a: "0.6"
+	},
+	{
+		n: [
+			"wheel"
+		],
+		u: "1f6de",
+		a: "14.0"
+	},
+	{
+		n: [
+			"rotating light",
+			"police cars revolving light"
+		],
+		u: "1f6a8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"traffic light",
+			"horizontal traffic light"
+		],
+		u: "1f6a5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"vertical traffic light"
+		],
+		u: "1f6a6",
+		a: "1.0"
+	},
+	{
+		n: [
+			"octagonal sign"
+		],
+		u: "1f6d1",
+		a: "3.0"
+	},
+	{
+		n: [
+			"construction",
+			"construction sign"
+		],
+		u: "1f6a7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"anchor"
+		],
+		u: "2693",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ring buoy"
+		],
+		u: "1f6df",
+		a: "14.0"
+	},
+	{
+		n: [
+			"boat",
+			"sailboat"
+		],
+		u: "26f5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"canoe"
+		],
+		u: "1f6f6",
+		a: "3.0"
+	},
+	{
+		n: [
+			"speedboat"
+		],
+		u: "1f6a4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"passenger ship"
+		],
+		u: "1f6f3-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"ferry"
+		],
+		u: "26f4-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"motor boat"
+		],
+		u: "1f6e5-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"ship"
+		],
+		u: "1f6a2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"airplane"
+		],
+		u: "2708-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"small airplane"
+		],
+		u: "1f6e9-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"airplane departure"
+		],
+		u: "1f6eb",
+		a: "1.0"
+	},
+	{
+		n: [
+			"airplane arriving"
+		],
+		u: "1f6ec",
+		a: "1.0"
+	},
+	{
+		n: [
+			"parachute"
+		],
+		u: "1fa82",
+		a: "12.0"
+	},
+	{
+		n: [
+			"seat"
+		],
+		u: "1f4ba",
+		a: "0.6"
+	},
+	{
+		n: [
+			"helicopter"
+		],
+		u: "1f681",
+		a: "1.0"
+	},
+	{
+		n: [
+			"suspension railway"
+		],
+		u: "1f69f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"mountain cableway"
+		],
+		u: "1f6a0",
+		a: "1.0"
+	},
+	{
+		n: [
+			"aerial tramway"
+		],
+		u: "1f6a1",
+		a: "1.0"
+	},
+	{
+		n: [
+			"satellite"
+		],
+		u: "1f6f0-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"rocket"
+		],
+		u: "1f680",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flying saucer"
+		],
+		u: "1f6f8",
+		a: "5.0"
+	},
+	{
+		n: [
+			"bellhop bell"
+		],
+		u: "1f6ce-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"luggage"
+		],
+		u: "1f9f3",
+		a: "11.0"
+	},
+	{
+		n: [
+			"hourglass"
+		],
+		u: "231b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hourglass flowing sand",
+			"hourglass with flowing sand"
+		],
+		u: "23f3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"watch"
+		],
+		u: "231a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"alarm clock"
+		],
+		u: "23f0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"stopwatch"
+		],
+		u: "23f1-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"timer clock"
+		],
+		u: "23f2-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"mantelpiece clock"
+		],
+		u: "1f570-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock12",
+			"clock face twelve oclock"
+		],
+		u: "1f55b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock1230",
+			"clock face twelve-thirty"
+		],
+		u: "1f567",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock1",
+			"clock face one oclock"
+		],
+		u: "1f550",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock130",
+			"clock face one-thirty"
+		],
+		u: "1f55c",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock2",
+			"clock face two oclock"
+		],
+		u: "1f551",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock230",
+			"clock face two-thirty"
+		],
+		u: "1f55d",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock3",
+			"clock face three oclock"
+		],
+		u: "1f552",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock330",
+			"clock face three-thirty"
+		],
+		u: "1f55e",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock4",
+			"clock face four oclock"
+		],
+		u: "1f553",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock430",
+			"clock face four-thirty"
+		],
+		u: "1f55f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock5",
+			"clock face five oclock"
+		],
+		u: "1f554",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock530",
+			"clock face five-thirty"
+		],
+		u: "1f560",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock6",
+			"clock face six oclock"
+		],
+		u: "1f555",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock630",
+			"clock face six-thirty"
+		],
+		u: "1f561",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock7",
+			"clock face seven oclock"
+		],
+		u: "1f556",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock730",
+			"clock face seven-thirty"
+		],
+		u: "1f562",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock8",
+			"clock face eight oclock"
+		],
+		u: "1f557",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock830",
+			"clock face eight-thirty"
+		],
+		u: "1f563",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock9",
+			"clock face nine oclock"
+		],
+		u: "1f558",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock930",
+			"clock face nine-thirty"
+		],
+		u: "1f564",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock10",
+			"clock face ten oclock"
+		],
+		u: "1f559",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock1030",
+			"clock face ten-thirty"
+		],
+		u: "1f565",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clock11",
+			"clock face eleven oclock"
+		],
+		u: "1f55a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clock1130",
+			"clock face eleven-thirty"
+		],
+		u: "1f566",
+		a: "0.7"
+	},
+	{
+		n: [
+			"new moon",
+			"new moon symbol"
+		],
+		u: "1f311",
+		a: "0.6"
+	},
+	{
+		n: [
+			"waxing crescent moon",
+			"waxing crescent moon symbol"
+		],
+		u: "1f312",
+		a: "1.0"
+	},
+	{
+		n: [
+			"first quarter moon",
+			"first quarter moon symbol"
+		],
+		u: "1f313",
+		a: "0.6"
+	},
+	{
+		n: [
+			"moon",
+			"waxing gibbous moon",
+			"waxing gibbous moon symbol"
+		],
+		u: "1f314",
+		a: "0.6"
+	},
+	{
+		n: [
+			"full moon",
+			"full moon symbol"
+		],
+		u: "1f315",
+		a: "0.6"
+	},
+	{
+		n: [
+			"waning gibbous moon",
+			"waning gibbous moon symbol"
+		],
+		u: "1f316",
+		a: "1.0"
+	},
+	{
+		n: [
+			"last quarter moon",
+			"last quarter moon symbol"
+		],
+		u: "1f317",
+		a: "1.0"
+	},
+	{
+		n: [
+			"waning crescent moon",
+			"waning crescent moon symbol"
+		],
+		u: "1f318",
+		a: "1.0"
+	},
+	{
+		n: [
+			"crescent moon"
+		],
+		u: "1f319",
+		a: "0.6"
+	},
+	{
+		n: [
+			"new moon with face"
+		],
+		u: "1f31a",
+		a: "1.0"
+	},
+	{
+		n: [
+			"first quarter moon with face"
+		],
+		u: "1f31b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"last quarter moon with face"
+		],
+		u: "1f31c",
+		a: "0.7"
+	},
+	{
+		n: [
+			"thermometer"
+		],
+		u: "1f321-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"sunny",
+			"black sun with rays"
+		],
+		u: "2600-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"full moon with face"
+		],
+		u: "1f31d",
+		a: "1.0"
+	},
+	{
+		n: [
+			"sun with face"
+		],
+		u: "1f31e",
+		a: "1.0"
+	},
+	{
+		n: [
+			"ringed planet"
+		],
+		u: "1fa90",
+		a: "12.0"
+	},
+	{
+		n: [
+			"star",
+			"white medium star"
+		],
+		u: "2b50",
+		a: "0.6"
+	},
+	{
+		n: [
+			"star2",
+			"glowing star"
+		],
+		u: "1f31f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"stars",
+			"shooting star"
+		],
+		u: "1f320",
+		a: "0.6"
+	},
+	{
+		n: [
+			"milky way"
+		],
+		u: "1f30c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cloud"
+		],
+		u: "2601-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"partly sunny",
+			"sun behind cloud"
+		],
+		u: "26c5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"thunder cloud and rain",
+			"cloud with lightning and rain"
+		],
+		u: "26c8-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"mostly sunny",
+			"sun small cloud",
+			"sun behind small cloud"
+		],
+		u: "1f324-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"barely sunny",
+			"sun behind cloud",
+			"sun behind large cloud"
+		],
+		u: "1f325-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"partly sunny rain",
+			"sun behind rain cloud"
+		],
+		u: "1f326-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"rain cloud",
+			"cloud with rain"
+		],
+		u: "1f327-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"snow cloud",
+			"cloud with snow"
+		],
+		u: "1f328-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"lightning",
+			"lightning cloud",
+			"cloud with lightning"
+		],
+		u: "1f329-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"tornado",
+			"tornado cloud"
+		],
+		u: "1f32a-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"fog"
+		],
+		u: "1f32b-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"wind face",
+			"wind blowing face"
+		],
+		u: "1f32c-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"cyclone"
+		],
+		u: "1f300",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rainbow"
+		],
+		u: "1f308",
+		a: "0.6"
+	},
+	{
+		n: [
+			"closed umbrella"
+		],
+		u: "1f302",
+		a: "0.6"
+	},
+	{
+		n: [
+			"umbrella"
+		],
+		u: "2602-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"umbrella with rain drops"
+		],
+		u: "2614",
+		a: "0.6"
+	},
+	{
+		n: [
+			"umbrella on ground"
+		],
+		u: "26f1-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"zap",
+			"high voltage sign"
+		],
+		u: "26a1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"snowflake"
+		],
+		u: "2744-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"snowman"
+		],
+		u: "2603-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"snowman without snow"
+		],
+		u: "26c4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"comet"
+		],
+		u: "2604-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"fire"
+		],
+		u: "1f525",
+		a: "0.6"
+	},
+	{
+		n: [
+			"droplet"
+		],
+		u: "1f4a7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ocean",
+			"water wave"
+		],
+		u: "1f30a",
+		a: "0.6"
+	}
+];
+var activities = [
+	{
+		n: [
+			"jack-o-lantern",
+			"jack o lantern"
+		],
+		u: "1f383",
+		a: "0.6"
+	},
+	{
+		n: [
+			"christmas tree"
+		],
+		u: "1f384",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fireworks"
+		],
+		u: "1f386",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sparkler",
+			"firework sparkler"
+		],
+		u: "1f387",
+		a: "0.6"
+	},
+	{
+		n: [
+			"firecracker"
+		],
+		u: "1f9e8",
+		a: "11.0"
+	},
+	{
+		n: [
+			"sparkles"
+		],
+		u: "2728",
+		a: "0.6"
+	},
+	{
+		n: [
+			"balloon"
+		],
+		u: "1f388",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tada",
+			"party popper"
+		],
+		u: "1f389",
+		a: "0.6"
+	},
+	{
+		n: [
+			"confetti ball"
+		],
+		u: "1f38a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tanabata tree"
+		],
+		u: "1f38b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"bamboo",
+			"pine decoration"
+		],
+		u: "1f38d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dolls",
+			"japanese dolls"
+		],
+		u: "1f38e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flags",
+			"carp streamer"
+		],
+		u: "1f38f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"wind chime"
+		],
+		u: "1f390",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rice scene",
+			"moon viewing ceremony"
+		],
+		u: "1f391",
+		a: "0.6"
+	},
+	{
+		n: [
+			"red envelope",
+			"red gift envelope"
+		],
+		u: "1f9e7",
+		a: "11.0"
+	},
+	{
+		n: [
+			"ribbon"
+		],
+		u: "1f380",
+		a: "0.6"
+	},
+	{
+		n: [
+			"gift",
+			"wrapped present"
+		],
+		u: "1f381",
+		a: "0.6"
+	},
+	{
+		n: [
+			"reminder ribbon"
+		],
+		u: "1f397-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"admission tickets"
+		],
+		u: "1f39f-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"ticket"
+		],
+		u: "1f3ab",
+		a: "0.6"
+	},
+	{
+		n: [
+			"medal",
+			"military medal"
+		],
+		u: "1f396-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"trophy"
+		],
+		u: "1f3c6",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sports medal"
+		],
+		u: "1f3c5",
+		a: "1.0"
+	},
+	{
+		n: [
+			"first place medal"
+		],
+		u: "1f947",
+		a: "3.0"
+	},
+	{
+		n: [
+			"second place medal"
+		],
+		u: "1f948",
+		a: "3.0"
+	},
+	{
+		n: [
+			"third place medal"
+		],
+		u: "1f949",
+		a: "3.0"
+	},
+	{
+		n: [
+			"soccer",
+			"soccer ball"
+		],
+		u: "26bd",
+		a: "0.6"
+	},
+	{
+		n: [
+			"baseball"
+		],
+		u: "26be",
+		a: "0.6"
+	},
+	{
+		n: [
+			"softball"
+		],
+		u: "1f94e",
+		a: "11.0"
+	},
+	{
+		n: [
+			"basketball",
+			"basketball and hoop"
+		],
+		u: "1f3c0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"volleyball"
+		],
+		u: "1f3d0",
+		a: "1.0"
+	},
+	{
+		n: [
+			"football",
+			"american football"
+		],
+		u: "1f3c8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rugby football"
+		],
+		u: "1f3c9",
+		a: "1.0"
+	},
+	{
+		n: [
+			"tennis",
+			"tennis racquet and ball"
+		],
+		u: "1f3be",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flying disc"
+		],
+		u: "1f94f",
+		a: "11.0"
+	},
+	{
+		n: [
+			"bowling"
+		],
+		u: "1f3b3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cricket bat and ball"
+		],
+		u: "1f3cf",
+		a: "1.0"
+	},
+	{
+		n: [
+			"field hockey stick and ball"
+		],
+		u: "1f3d1",
+		a: "1.0"
+	},
+	{
+		n: [
+			"ice hockey stick and puck"
+		],
+		u: "1f3d2",
+		a: "1.0"
+	},
+	{
+		n: [
+			"lacrosse",
+			"lacrosse stick and ball"
+		],
+		u: "1f94d",
+		a: "11.0"
+	},
+	{
+		n: [
+			"table tennis paddle and ball"
+		],
+		u: "1f3d3",
+		a: "1.0"
+	},
+	{
+		n: [
+			"badminton racquet and shuttlecock"
+		],
+		u: "1f3f8",
+		a: "1.0"
+	},
+	{
+		n: [
+			"boxing glove"
+		],
+		u: "1f94a",
+		a: "3.0"
+	},
+	{
+		n: [
+			"martial arts uniform"
+		],
+		u: "1f94b",
+		a: "3.0"
+	},
+	{
+		n: [
+			"goal net"
+		],
+		u: "1f945",
+		a: "3.0"
+	},
+	{
+		n: [
+			"golf",
+			"flag in hole"
+		],
+		u: "26f3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ice skate"
+		],
+		u: "26f8-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"fishing pole and fish"
+		],
+		u: "1f3a3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"diving mask"
+		],
+		u: "1f93f",
+		a: "12.0"
+	},
+	{
+		n: [
+			"running shirt with sash"
+		],
+		u: "1f3bd",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ski",
+			"ski and ski boot"
+		],
+		u: "1f3bf",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sled"
+		],
+		u: "1f6f7",
+		a: "5.0"
+	},
+	{
+		n: [
+			"curling stone"
+		],
+		u: "1f94c",
+		a: "5.0"
+	},
+	{
+		n: [
+			"dart",
+			"direct hit"
+		],
+		u: "1f3af",
+		a: "0.6"
+	},
+	{
+		n: [
+			"yo-yo"
+		],
+		u: "1fa80",
+		a: "12.0"
+	},
+	{
+		n: [
+			"kite"
+		],
+		u: "1fa81",
+		a: "12.0"
+	},
+	{
+		n: [
+			"gun",
+			"pistol"
+		],
+		u: "1f52b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"8ball",
+			"billiards"
+		],
+		u: "1f3b1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"crystal ball"
+		],
+		u: "1f52e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"magic wand"
+		],
+		u: "1fa84",
+		a: "13.0"
+	},
+	{
+		n: [
+			"video game"
+		],
+		u: "1f3ae",
+		a: "0.6"
+	},
+	{
+		n: [
+			"joystick"
+		],
+		u: "1f579-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"slot machine"
+		],
+		u: "1f3b0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"game die"
+		],
+		u: "1f3b2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"jigsaw",
+			"jigsaw puzzle piece"
+		],
+		u: "1f9e9",
+		a: "11.0"
+	},
+	{
+		n: [
+			"teddy bear"
+		],
+		u: "1f9f8",
+		a: "11.0"
+	},
+	{
+		n: [
+			"pinata"
+		],
+		u: "1fa85",
+		a: "13.0"
+	},
+	{
+		n: [
+			"mirror ball"
+		],
+		u: "1faa9",
+		a: "14.0"
+	},
+	{
+		n: [
+			"nesting dolls"
+		],
+		u: "1fa86",
+		a: "13.0"
+	},
+	{
+		n: [
+			"spades",
+			"black spade suit"
+		],
+		u: "2660-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hearts",
+			"black heart suit"
+		],
+		u: "2665-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"diamonds",
+			"black diamond suit"
+		],
+		u: "2666-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clubs",
+			"black club suit"
+		],
+		u: "2663-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"chess pawn"
+		],
+		u: "265f-fe0f",
+		a: "11.0"
+	},
+	{
+		n: [
+			"black joker",
+			"playing card black joker"
+		],
+		u: "1f0cf",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mahjong",
+			"mahjong tile red dragon"
+		],
+		u: "1f004",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flower playing cards"
+		],
+		u: "1f3b4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"performing arts"
+		],
+		u: "1f3ad",
+		a: "0.6"
+	},
+	{
+		n: [
+			"framed picture",
+			"frame with picture"
+		],
+		u: "1f5bc-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"art",
+			"artist palette"
+		],
+		u: "1f3a8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"thread",
+			"spool of thread"
+		],
+		u: "1f9f5",
+		a: "11.0"
+	},
+	{
+		n: [
+			"sewing needle"
+		],
+		u: "1faa1",
+		a: "13.0"
+	},
+	{
+		n: [
+			"yarn",
+			"ball of yarn"
+		],
+		u: "1f9f6",
+		a: "11.0"
+	},
+	{
+		n: [
+			"knot"
+		],
+		u: "1faa2",
+		a: "13.0"
+	}
+];
+var objects = [
+	{
+		n: [
+			"eyeglasses"
+		],
+		u: "1f453",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sunglasses",
+			"dark sunglasses"
+		],
+		u: "1f576-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"goggles"
+		],
+		u: "1f97d",
+		a: "11.0"
+	},
+	{
+		n: [
+			"lab coat"
+		],
+		u: "1f97c",
+		a: "11.0"
+	},
+	{
+		n: [
+			"safety vest"
+		],
+		u: "1f9ba",
+		a: "12.0"
+	},
+	{
+		n: [
+			"necktie"
+		],
+		u: "1f454",
+		a: "0.6"
+	},
+	{
+		n: [
+			"shirt",
+			"tshirt",
+			"t-shirt"
+		],
+		u: "1f455",
+		a: "0.6"
+	},
+	{
+		n: [
+			"jeans"
+		],
+		u: "1f456",
+		a: "0.6"
+	},
+	{
+		n: [
+			"scarf"
+		],
+		u: "1f9e3",
+		a: "5.0"
+	},
+	{
+		n: [
+			"gloves"
+		],
+		u: "1f9e4",
+		a: "5.0"
+	},
+	{
+		n: [
+			"coat"
+		],
+		u: "1f9e5",
+		a: "5.0"
+	},
+	{
+		n: [
+			"socks"
+		],
+		u: "1f9e6",
+		a: "5.0"
+	},
+	{
+		n: [
+			"dress"
+		],
+		u: "1f457",
+		a: "0.6"
+	},
+	{
+		n: [
+			"kimono"
+		],
+		u: "1f458",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sari"
+		],
+		u: "1f97b",
+		a: "12.0"
+	},
+	{
+		n: [
+			"one-piece swimsuit"
+		],
+		u: "1fa71",
+		a: "12.0"
+	},
+	{
+		n: [
+			"briefs"
+		],
+		u: "1fa72",
+		a: "12.0"
+	},
+	{
+		n: [
+			"shorts"
+		],
+		u: "1fa73",
+		a: "12.0"
+	},
+	{
+		n: [
+			"bikini"
+		],
+		u: "1f459",
+		a: "0.6"
+	},
+	{
+		n: [
+			"womans clothes"
+		],
+		u: "1f45a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"folding hand fan"
+		],
+		u: "1faad",
+		a: "15.0"
+	},
+	{
+		n: [
+			"purse"
+		],
+		u: "1f45b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"handbag"
+		],
+		u: "1f45c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pouch"
+		],
+		u: "1f45d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"shopping bags"
+		],
+		u: "1f6cd-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"school satchel"
+		],
+		u: "1f392",
+		a: "0.6"
+	},
+	{
+		n: [
+			"thong sandal"
+		],
+		u: "1fa74",
+		a: "13.0"
+	},
+	{
+		n: [
+			"shoe",
+			"mans shoe"
+		],
+		u: "1f45e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"athletic shoe"
+		],
+		u: "1f45f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hiking boot"
+		],
+		u: "1f97e",
+		a: "11.0"
+	},
+	{
+		n: [
+			"flat shoe",
+			"womans flat shoe"
+		],
+		u: "1f97f",
+		a: "11.0"
+	},
+	{
+		n: [
+			"high heel",
+			"high-heeled shoe"
+		],
+		u: "1f460",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sandal",
+			"womans sandal"
+		],
+		u: "1f461",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ballet shoes"
+		],
+		u: "1fa70",
+		a: "12.0"
+	},
+	{
+		n: [
+			"boot",
+			"womans boots"
+		],
+		u: "1f462",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hair pick"
+		],
+		u: "1faae",
+		a: "15.0"
+	},
+	{
+		n: [
+			"crown"
+		],
+		u: "1f451",
+		a: "0.6"
+	},
+	{
+		n: [
+			"womans hat"
+		],
+		u: "1f452",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tophat",
+			"top hat"
+		],
+		u: "1f3a9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mortar board",
+			"graduation cap"
+		],
+		u: "1f393",
+		a: "0.6"
+	},
+	{
+		n: [
+			"billed cap"
+		],
+		u: "1f9e2",
+		a: "5.0"
+	},
+	{
+		n: [
+			"military helmet"
+		],
+		u: "1fa96",
+		a: "13.0"
+	},
+	{
+		n: [
+			"rescue worker’s helmet",
+			"helmet with white cross"
+		],
+		u: "26d1-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"prayer beads"
+		],
+		u: "1f4ff",
+		a: "1.0"
+	},
+	{
+		n: [
+			"lipstick"
+		],
+		u: "1f484",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ring"
+		],
+		u: "1f48d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"gem",
+			"gem stone"
+		],
+		u: "1f48e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mute",
+			"speaker with cancellation stroke"
+		],
+		u: "1f507",
+		a: "1.0"
+	},
+	{
+		n: [
+			"speaker"
+		],
+		u: "1f508",
+		a: "0.7"
+	},
+	{
+		n: [
+			"sound",
+			"speaker with one sound wave"
+		],
+		u: "1f509",
+		a: "1.0"
+	},
+	{
+		n: [
+			"loud sound",
+			"speaker with three sound waves"
+		],
+		u: "1f50a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"loudspeaker",
+			"public address loudspeaker"
+		],
+		u: "1f4e2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mega",
+			"cheering megaphone"
+		],
+		u: "1f4e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"postal horn"
+		],
+		u: "1f4ef",
+		a: "1.0"
+	},
+	{
+		n: [
+			"bell"
+		],
+		u: "1f514",
+		a: "0.6"
+	},
+	{
+		n: [
+			"no bell",
+			"bell with cancellation stroke"
+		],
+		u: "1f515",
+		a: "1.0"
+	},
+	{
+		n: [
+			"musical score"
+		],
+		u: "1f3bc",
+		a: "0.6"
+	},
+	{
+		n: [
+			"musical note"
+		],
+		u: "1f3b5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"notes",
+			"multiple musical notes"
+		],
+		u: "1f3b6",
+		a: "0.6"
+	},
+	{
+		n: [
+			"studio microphone"
+		],
+		u: "1f399-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"level slider"
+		],
+		u: "1f39a-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"control knobs"
+		],
+		u: "1f39b-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"microphone"
+		],
+		u: "1f3a4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"headphone",
+			"headphones"
+		],
+		u: "1f3a7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"radio"
+		],
+		u: "1f4fb",
+		a: "0.6"
+	},
+	{
+		n: [
+			"saxophone"
+		],
+		u: "1f3b7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"accordion"
+		],
+		u: "1fa97",
+		a: "13.0"
+	},
+	{
+		n: [
+			"guitar"
+		],
+		u: "1f3b8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"musical keyboard"
+		],
+		u: "1f3b9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"trumpet"
+		],
+		u: "1f3ba",
+		a: "0.6"
+	},
+	{
+		n: [
+			"violin"
+		],
+		u: "1f3bb",
+		a: "0.6"
+	},
+	{
+		n: [
+			"banjo"
+		],
+		u: "1fa95",
+		a: "12.0"
+	},
+	{
+		n: [
+			"drum with drumsticks"
+		],
+		u: "1f941",
+		a: "3.0"
+	},
+	{
+		n: [
+			"long drum"
+		],
+		u: "1fa98",
+		a: "13.0"
+	},
+	{
+		n: [
+			"maracas"
+		],
+		u: "1fa87",
+		a: "15.0"
+	},
+	{
+		n: [
+			"flute"
+		],
+		u: "1fa88",
+		a: "15.0"
+	},
+	{
+		n: [
+			"iphone",
+			"mobile phone"
+		],
+		u: "1f4f1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"calling",
+			"mobile phone with rightwards arrow at left"
+		],
+		u: "1f4f2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"phone",
+			"telephone",
+			"black telephone"
+		],
+		u: "260e-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"telephone receiver"
+		],
+		u: "1f4de",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pager"
+		],
+		u: "1f4df",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fax",
+			"fax machine"
+		],
+		u: "1f4e0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"battery"
+		],
+		u: "1f50b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"low battery"
+		],
+		u: "1faab",
+		a: "14.0"
+	},
+	{
+		n: [
+			"electric plug"
+		],
+		u: "1f50c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"computer",
+			"personal computer"
+		],
+		u: "1f4bb",
+		a: "0.6"
+	},
+	{
+		n: [
+			"desktop computer"
+		],
+		u: "1f5a5-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"printer"
+		],
+		u: "1f5a8-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"keyboard"
+		],
+		u: "2328-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"computer mouse",
+			"three button mouse"
+		],
+		u: "1f5b1-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"trackball"
+		],
+		u: "1f5b2-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"minidisc"
+		],
+		u: "1f4bd",
+		a: "0.6"
+	},
+	{
+		n: [
+			"floppy disk"
+		],
+		u: "1f4be",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cd",
+			"optical disc"
+		],
+		u: "1f4bf",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dvd"
+		],
+		u: "1f4c0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"abacus"
+		],
+		u: "1f9ee",
+		a: "11.0"
+	},
+	{
+		n: [
+			"movie camera"
+		],
+		u: "1f3a5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"film frames"
+		],
+		u: "1f39e-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"film projector"
+		],
+		u: "1f4fd-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"clapper",
+			"clapper board"
+		],
+		u: "1f3ac",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tv",
+			"television"
+		],
+		u: "1f4fa",
+		a: "0.6"
+	},
+	{
+		n: [
+			"camera"
+		],
+		u: "1f4f7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"camera with flash"
+		],
+		u: "1f4f8",
+		a: "1.0"
+	},
+	{
+		n: [
+			"video camera"
+		],
+		u: "1f4f9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"vhs",
+			"videocassette"
+		],
+		u: "1f4fc",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mag",
+			"left-pointing magnifying glass"
+		],
+		u: "1f50d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mag right",
+			"right-pointing magnifying glass"
+		],
+		u: "1f50e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"candle"
+		],
+		u: "1f56f-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"bulb",
+			"electric light bulb"
+		],
+		u: "1f4a1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flashlight",
+			"electric torch"
+		],
+		u: "1f526",
+		a: "0.6"
+	},
+	{
+		n: [
+			"lantern",
+			"izakaya lantern"
+		],
+		u: "1f3ee",
+		a: "0.6"
+	},
+	{
+		n: [
+			"diya lamp"
+		],
+		u: "1fa94",
+		a: "12.0"
+	},
+	{
+		n: [
+			"notebook with decorative cover"
+		],
+		u: "1f4d4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"closed book"
+		],
+		u: "1f4d5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"book",
+			"open book"
+		],
+		u: "1f4d6",
+		a: "0.6"
+	},
+	{
+		n: [
+			"green book"
+		],
+		u: "1f4d7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"blue book"
+		],
+		u: "1f4d8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"orange book"
+		],
+		u: "1f4d9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"books"
+		],
+		u: "1f4da",
+		a: "0.6"
+	},
+	{
+		n: [
+			"notebook"
+		],
+		u: "1f4d3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ledger"
+		],
+		u: "1f4d2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"page with curl"
+		],
+		u: "1f4c3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"scroll"
+		],
+		u: "1f4dc",
+		a: "0.6"
+	},
+	{
+		n: [
+			"page facing up"
+		],
+		u: "1f4c4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"newspaper"
+		],
+		u: "1f4f0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rolled-up newspaper",
+			"rolled up newspaper"
+		],
+		u: "1f5de-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"bookmark tabs"
+		],
+		u: "1f4d1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"bookmark"
+		],
+		u: "1f516",
+		a: "0.6"
+	},
+	{
+		n: [
+			"label"
+		],
+		u: "1f3f7-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"moneybag",
+			"money bag"
+		],
+		u: "1f4b0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"coin"
+		],
+		u: "1fa99",
+		a: "13.0"
+	},
+	{
+		n: [
+			"yen",
+			"banknote with yen sign"
+		],
+		u: "1f4b4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"dollar",
+			"banknote with dollar sign"
+		],
+		u: "1f4b5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"euro",
+			"banknote with euro sign"
+		],
+		u: "1f4b6",
+		a: "1.0"
+	},
+	{
+		n: [
+			"pound",
+			"banknote with pound sign"
+		],
+		u: "1f4b7",
+		a: "1.0"
+	},
+	{
+		n: [
+			"money with wings"
+		],
+		u: "1f4b8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"credit card"
+		],
+		u: "1f4b3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"receipt"
+		],
+		u: "1f9fe",
+		a: "11.0"
+	},
+	{
+		n: [
+			"chart",
+			"chart with upwards trend and yen sign"
+		],
+		u: "1f4b9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"email",
+			"envelope"
+		],
+		u: "2709-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"e-mail",
+			"e-mail symbol"
+		],
+		u: "1f4e7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"incoming envelope"
+		],
+		u: "1f4e8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"envelope with arrow",
+			"envelope with downwards arrow above"
+		],
+		u: "1f4e9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"outbox tray"
+		],
+		u: "1f4e4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"inbox tray"
+		],
+		u: "1f4e5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"package"
+		],
+		u: "1f4e6",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mailbox",
+			"closed mailbox with raised flag"
+		],
+		u: "1f4eb",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mailbox closed",
+			"closed mailbox with lowered flag"
+		],
+		u: "1f4ea",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mailbox with mail",
+			"open mailbox with raised flag"
+		],
+		u: "1f4ec",
+		a: "0.7"
+	},
+	{
+		n: [
+			"mailbox with no mail",
+			"open mailbox with lowered flag"
+		],
+		u: "1f4ed",
+		a: "0.7"
+	},
+	{
+		n: [
+			"postbox"
+		],
+		u: "1f4ee",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ballot box with ballot"
+		],
+		u: "1f5f3-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"pencil",
+			"pencil2"
+		],
+		u: "270f-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"black nib"
+		],
+		u: "2712-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fountain pen",
+			"lower left fountain pen"
+		],
+		u: "1f58b-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"pen",
+			"lower left ballpoint pen"
+		],
+		u: "1f58a-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"paintbrush",
+			"lower left paintbrush"
+		],
+		u: "1f58c-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"crayon",
+			"lower left crayon"
+		],
+		u: "1f58d-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"memo",
+			"pencil"
+		],
+		u: "1f4dd",
+		a: "0.6"
+	},
+	{
+		n: [
+			"briefcase"
+		],
+		u: "1f4bc",
+		a: "0.6"
+	},
+	{
+		n: [
+			"file folder"
+		],
+		u: "1f4c1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"open file folder"
+		],
+		u: "1f4c2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"card index dividers"
+		],
+		u: "1f5c2-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"date",
+			"calendar"
+		],
+		u: "1f4c5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"calendar",
+			"tear-off calendar"
+		],
+		u: "1f4c6",
+		a: "0.6"
+	},
+	{
+		n: [
+			"spiral notepad",
+			"spiral note pad"
+		],
+		u: "1f5d2-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"spiral calendar",
+			"spiral calendar pad"
+		],
+		u: "1f5d3-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"card index"
+		],
+		u: "1f4c7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"chart with upwards trend"
+		],
+		u: "1f4c8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"chart with downwards trend"
+		],
+		u: "1f4c9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"bar chart"
+		],
+		u: "1f4ca",
+		a: "0.6"
+	},
+	{
+		n: [
+			"clipboard"
+		],
+		u: "1f4cb",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pushpin"
+		],
+		u: "1f4cc",
+		a: "0.6"
+	},
+	{
+		n: [
+			"round pushpin"
+		],
+		u: "1f4cd",
+		a: "0.6"
+	},
+	{
+		n: [
+			"paperclip"
+		],
+		u: "1f4ce",
+		a: "0.6"
+	},
+	{
+		n: [
+			"linked paperclips"
+		],
+		u: "1f587-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"straight ruler"
+		],
+		u: "1f4cf",
+		a: "0.6"
+	},
+	{
+		n: [
+			"triangular ruler"
+		],
+		u: "1f4d0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"scissors",
+			"black scissors"
+		],
+		u: "2702-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"card file box"
+		],
+		u: "1f5c3-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"file cabinet"
+		],
+		u: "1f5c4-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"wastebasket"
+		],
+		u: "1f5d1-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"lock"
+		],
+		u: "1f512",
+		a: "0.6"
+	},
+	{
+		n: [
+			"unlock",
+			"open lock"
+		],
+		u: "1f513",
+		a: "0.6"
+	},
+	{
+		n: [
+			"lock with ink pen"
+		],
+		u: "1f50f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"closed lock with key"
+		],
+		u: "1f510",
+		a: "0.6"
+	},
+	{
+		n: [
+			"key"
+		],
+		u: "1f511",
+		a: "0.6"
+	},
+	{
+		n: [
+			"old key"
+		],
+		u: "1f5dd-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"hammer"
+		],
+		u: "1f528",
+		a: "0.6"
+	},
+	{
+		n: [
+			"axe"
+		],
+		u: "1fa93",
+		a: "12.0"
+	},
+	{
+		n: [
+			"pick"
+		],
+		u: "26cf-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"hammer and pick"
+		],
+		u: "2692-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"hammer and wrench"
+		],
+		u: "1f6e0-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"dagger",
+			"dagger knife"
+		],
+		u: "1f5e1-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"crossed swords"
+		],
+		u: "2694-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"bomb"
+		],
+		u: "1f4a3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"boomerang"
+		],
+		u: "1fa83",
+		a: "13.0"
+	},
+	{
+		n: [
+			"bow and arrow"
+		],
+		u: "1f3f9",
+		a: "1.0"
+	},
+	{
+		n: [
+			"shield"
+		],
+		u: "1f6e1-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"carpentry saw"
+		],
+		u: "1fa9a",
+		a: "13.0"
+	},
+	{
+		n: [
+			"wrench"
+		],
+		u: "1f527",
+		a: "0.6"
+	},
+	{
+		n: [
+			"screwdriver"
+		],
+		u: "1fa9b",
+		a: "13.0"
+	},
+	{
+		n: [
+			"nut and bolt"
+		],
+		u: "1f529",
+		a: "0.6"
+	},
+	{
+		n: [
+			"gear"
+		],
+		u: "2699-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"clamp",
+			"compression"
+		],
+		u: "1f5dc-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"scales",
+			"balance scale"
+		],
+		u: "2696-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"probing cane"
+		],
+		u: "1f9af",
+		a: "12.0"
+	},
+	{
+		n: [
+			"link",
+			"link symbol"
+		],
+		u: "1f517",
+		a: "0.6"
+	},
+	{
+		n: [
+			"broken chain"
+		],
+		u: "26d3-fe0f-200d-1f4a5",
+		a: "15.1"
+	},
+	{
+		n: [
+			"chains"
+		],
+		u: "26d3-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"hook"
+		],
+		u: "1fa9d",
+		a: "13.0"
+	},
+	{
+		n: [
+			"toolbox"
+		],
+		u: "1f9f0",
+		a: "11.0"
+	},
+	{
+		n: [
+			"magnet"
+		],
+		u: "1f9f2",
+		a: "11.0"
+	},
+	{
+		n: [
+			"ladder"
+		],
+		u: "1fa9c",
+		a: "13.0"
+	},
+	{
+		n: [
+			"alembic"
+		],
+		u: "2697-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"test tube"
+		],
+		u: "1f9ea",
+		a: "11.0"
+	},
+	{
+		n: [
+			"petri dish"
+		],
+		u: "1f9eb",
+		a: "11.0"
+	},
+	{
+		n: [
+			"dna",
+			"dna double helix"
+		],
+		u: "1f9ec",
+		a: "11.0"
+	},
+	{
+		n: [
+			"microscope"
+		],
+		u: "1f52c",
+		a: "1.0"
+	},
+	{
+		n: [
+			"telescope"
+		],
+		u: "1f52d",
+		a: "1.0"
+	},
+	{
+		n: [
+			"satellite antenna"
+		],
+		u: "1f4e1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"syringe"
+		],
+		u: "1f489",
+		a: "0.6"
+	},
+	{
+		n: [
+			"drop of blood"
+		],
+		u: "1fa78",
+		a: "12.0"
+	},
+	{
+		n: [
+			"pill"
+		],
+		u: "1f48a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"adhesive bandage"
+		],
+		u: "1fa79",
+		a: "12.0"
+	},
+	{
+		n: [
+			"crutch"
+		],
+		u: "1fa7c",
+		a: "14.0"
+	},
+	{
+		n: [
+			"stethoscope"
+		],
+		u: "1fa7a",
+		a: "12.0"
+	},
+	{
+		n: [
+			"x-ray"
+		],
+		u: "1fa7b",
+		a: "14.0"
+	},
+	{
+		n: [
+			"door"
+		],
+		u: "1f6aa",
+		a: "0.6"
+	},
+	{
+		n: [
+			"elevator"
+		],
+		u: "1f6d7",
+		a: "13.0"
+	},
+	{
+		n: [
+			"mirror"
+		],
+		u: "1fa9e",
+		a: "13.0"
+	},
+	{
+		n: [
+			"window"
+		],
+		u: "1fa9f",
+		a: "13.0"
+	},
+	{
+		n: [
+			"bed"
+		],
+		u: "1f6cf-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"couch and lamp"
+		],
+		u: "1f6cb-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"chair"
+		],
+		u: "1fa91",
+		a: "12.0"
+	},
+	{
+		n: [
+			"toilet"
+		],
+		u: "1f6bd",
+		a: "0.6"
+	},
+	{
+		n: [
+			"plunger"
+		],
+		u: "1faa0",
+		a: "13.0"
+	},
+	{
+		n: [
+			"shower"
+		],
+		u: "1f6bf",
+		a: "1.0"
+	},
+	{
+		n: [
+			"bathtub"
+		],
+		u: "1f6c1",
+		a: "1.0"
+	},
+	{
+		n: [
+			"mouse trap"
+		],
+		u: "1faa4",
+		a: "13.0"
+	},
+	{
+		n: [
+			"razor"
+		],
+		u: "1fa92",
+		a: "12.0"
+	},
+	{
+		n: [
+			"lotion bottle"
+		],
+		u: "1f9f4",
+		a: "11.0"
+	},
+	{
+		n: [
+			"safety pin"
+		],
+		u: "1f9f7",
+		a: "11.0"
+	},
+	{
+		n: [
+			"broom"
+		],
+		u: "1f9f9",
+		a: "11.0"
+	},
+	{
+		n: [
+			"basket"
+		],
+		u: "1f9fa",
+		a: "11.0"
+	},
+	{
+		n: [
+			"roll of paper"
+		],
+		u: "1f9fb",
+		a: "11.0"
+	},
+	{
+		n: [
+			"bucket"
+		],
+		u: "1faa3",
+		a: "13.0"
+	},
+	{
+		n: [
+			"soap",
+			"bar of soap"
+		],
+		u: "1f9fc",
+		a: "11.0"
+	},
+	{
+		n: [
+			"bubbles"
+		],
+		u: "1fae7",
+		a: "14.0"
+	},
+	{
+		n: [
+			"toothbrush"
+		],
+		u: "1faa5",
+		a: "13.0"
+	},
+	{
+		n: [
+			"sponge"
+		],
+		u: "1f9fd",
+		a: "11.0"
+	},
+	{
+		n: [
+			"fire extinguisher"
+		],
+		u: "1f9ef",
+		a: "11.0"
+	},
+	{
+		n: [
+			"shopping trolley"
+		],
+		u: "1f6d2",
+		a: "3.0"
+	},
+	{
+		n: [
+			"smoking",
+			"smoking symbol"
+		],
+		u: "1f6ac",
+		a: "0.6"
+	},
+	{
+		n: [
+			"coffin"
+		],
+		u: "26b0-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"headstone"
+		],
+		u: "1faa6",
+		a: "13.0"
+	},
+	{
+		n: [
+			"funeral urn"
+		],
+		u: "26b1-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"nazar amulet"
+		],
+		u: "1f9ff",
+		a: "11.0"
+	},
+	{
+		n: [
+			"hamsa"
+		],
+		u: "1faac",
+		a: "14.0"
+	},
+	{
+		n: [
+			"moyai"
+		],
+		u: "1f5ff",
+		a: "0.6"
+	},
+	{
+		n: [
+			"placard"
+		],
+		u: "1faa7",
+		a: "13.0"
+	},
+	{
+		n: [
+			"identification card"
+		],
+		u: "1faaa",
+		a: "14.0"
+	}
+];
+var symbols = [
+	{
+		n: [
+			"atm",
+			"automated teller machine"
+		],
+		u: "1f3e7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"put litter in its place",
+			"put litter in its place symbol"
+		],
+		u: "1f6ae",
+		a: "1.0"
+	},
+	{
+		n: [
+			"potable water",
+			"potable water symbol"
+		],
+		u: "1f6b0",
+		a: "1.0"
+	},
+	{
+		n: [
+			"wheelchair",
+			"wheelchair symbol"
+		],
+		u: "267f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mens",
+			"mens symbol"
+		],
+		u: "1f6b9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"womens",
+			"womens symbol"
+		],
+		u: "1f6ba",
+		a: "0.6"
+	},
+	{
+		n: [
+			"restroom"
+		],
+		u: "1f6bb",
+		a: "0.6"
+	},
+	{
+		n: [
+			"baby symbol"
+		],
+		u: "1f6bc",
+		a: "0.6"
+	},
+	{
+		n: [
+			"wc",
+			"water closet"
+		],
+		u: "1f6be",
+		a: "0.6"
+	},
+	{
+		n: [
+			"passport control"
+		],
+		u: "1f6c2",
+		a: "1.0"
+	},
+	{
+		n: [
+			"customs"
+		],
+		u: "1f6c3",
+		a: "1.0"
+	},
+	{
+		n: [
+			"baggage claim"
+		],
+		u: "1f6c4",
+		a: "1.0"
+	},
+	{
+		n: [
+			"left luggage"
+		],
+		u: "1f6c5",
+		a: "1.0"
+	},
+	{
+		n: [
+			"warning",
+			"warning sign"
+		],
+		u: "26a0-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"children crossing"
+		],
+		u: "1f6b8",
+		a: "1.0"
+	},
+	{
+		n: [
+			"no entry"
+		],
+		u: "26d4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"no entry sign"
+		],
+		u: "1f6ab",
+		a: "0.6"
+	},
+	{
+		n: [
+			"no bicycles"
+		],
+		u: "1f6b3",
+		a: "1.0"
+	},
+	{
+		n: [
+			"no smoking",
+			"no smoking symbol"
+		],
+		u: "1f6ad",
+		a: "0.6"
+	},
+	{
+		n: [
+			"do not litter",
+			"do not litter symbol"
+		],
+		u: "1f6af",
+		a: "1.0"
+	},
+	{
+		n: [
+			"non-potable water",
+			"non-potable water symbol"
+		],
+		u: "1f6b1",
+		a: "1.0"
+	},
+	{
+		n: [
+			"no pedestrians"
+		],
+		u: "1f6b7",
+		a: "1.0"
+	},
+	{
+		n: [
+			"no mobile phones"
+		],
+		u: "1f4f5",
+		a: "1.0"
+	},
+	{
+		n: [
+			"underage",
+			"no one under eighteen symbol"
+		],
+		u: "1f51e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"radioactive",
+			"radioactive sign"
+		],
+		u: "2622-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"biohazard",
+			"biohazard sign"
+		],
+		u: "2623-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"arrow up",
+			"upwards black arrow"
+		],
+		u: "2b06-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"north east arrow",
+			"arrow upper right"
+		],
+		u: "2197-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrow right",
+			"black rightwards arrow"
+		],
+		u: "27a1-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"south east arrow",
+			"arrow lower right"
+		],
+		u: "2198-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrow down",
+			"downwards black arrow"
+		],
+		u: "2b07-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"south west arrow",
+			"arrow lower left"
+		],
+		u: "2199-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrow left",
+			"leftwards black arrow"
+		],
+		u: "2b05-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"north west arrow",
+			"arrow upper left"
+		],
+		u: "2196-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"up down arrow",
+			"arrow up down"
+		],
+		u: "2195-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"left right arrow"
+		],
+		u: "2194-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"leftwards arrow with hook"
+		],
+		u: "21a9-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrow right hook",
+			"rightwards arrow with hook"
+		],
+		u: "21aa-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrow heading up",
+			"arrow pointing rightwards then curving upwards"
+		],
+		u: "2934-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrow heading down",
+			"arrow pointing rightwards then curving downwards"
+		],
+		u: "2935-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrows clockwise",
+			"clockwise downwards and upwards open circle arrows"
+		],
+		u: "1f503",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrows counterclockwise",
+			"anticlockwise downwards and upwards open circle arrows"
+		],
+		u: "1f504",
+		a: "1.0"
+	},
+	{
+		n: [
+			"back",
+			"back with leftwards arrow above"
+		],
+		u: "1f519",
+		a: "0.6"
+	},
+	{
+		n: [
+			"end",
+			"end with leftwards arrow above"
+		],
+		u: "1f51a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"on",
+			"on with exclamation mark with left right arrow above"
+		],
+		u: "1f51b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"soon",
+			"soon with rightwards arrow above"
+		],
+		u: "1f51c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"top",
+			"top with upwards arrow above"
+		],
+		u: "1f51d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"place of worship"
+		],
+		u: "1f6d0",
+		a: "1.0"
+	},
+	{
+		n: [
+			"atom symbol"
+		],
+		u: "269b-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"om",
+			"om symbol"
+		],
+		u: "1f549-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"star of david"
+		],
+		u: "2721-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"wheel of dharma"
+		],
+		u: "2638-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"yin yang"
+		],
+		u: "262f-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"latin cross"
+		],
+		u: "271d-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"orthodox cross"
+		],
+		u: "2626-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"star and crescent"
+		],
+		u: "262a-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"peace symbol"
+		],
+		u: "262e-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"menorah with nine branches"
+		],
+		u: "1f54e",
+		a: "1.0"
+	},
+	{
+		n: [
+			"six pointed star",
+			"six pointed star with middle dot"
+		],
+		u: "1f52f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"khanda"
+		],
+		u: "1faaf",
+		a: "15.0"
+	},
+	{
+		n: [
+			"aries"
+		],
+		u: "2648",
+		a: "0.6"
+	},
+	{
+		n: [
+			"taurus"
+		],
+		u: "2649",
+		a: "0.6"
+	},
+	{
+		n: [
+			"gemini"
+		],
+		u: "264a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cancer"
+		],
+		u: "264b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"leo"
+		],
+		u: "264c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"virgo"
+		],
+		u: "264d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"libra"
+		],
+		u: "264e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"scorpius"
+		],
+		u: "264f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sagittarius"
+		],
+		u: "2650",
+		a: "0.6"
+	},
+	{
+		n: [
+			"capricorn"
+		],
+		u: "2651",
+		a: "0.6"
+	},
+	{
+		n: [
+			"aquarius"
+		],
+		u: "2652",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pisces"
+		],
+		u: "2653",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ophiuchus"
+		],
+		u: "26ce",
+		a: "0.6"
+	},
+	{
+		n: [
+			"twisted rightwards arrows"
+		],
+		u: "1f500",
+		a: "1.0"
+	},
+	{
+		n: [
+			"repeat",
+			"clockwise rightwards and leftwards open circle arrows"
+		],
+		u: "1f501",
+		a: "1.0"
+	},
+	{
+		n: [
+			"repeat one",
+			"clockwise rightwards and leftwards open circle arrows with circled one overlay"
+		],
+		u: "1f502",
+		a: "1.0"
+	},
+	{
+		n: [
+			"arrow forward",
+			"black right-pointing triangle"
+		],
+		u: "25b6-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fast forward",
+			"black right-pointing double triangle"
+		],
+		u: "23e9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"next track button",
+			"black right pointing double triangle with vertical bar"
+		],
+		u: "23ed-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"play or pause button",
+			"black right pointing triangle with double vertical bar"
+		],
+		u: "23ef-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"arrow backward",
+			"black left-pointing triangle"
+		],
+		u: "25c0-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"rewind",
+			"black left-pointing double triangle"
+		],
+		u: "23ea",
+		a: "0.6"
+	},
+	{
+		n: [
+			"last track button",
+			"black left pointing double triangle with vertical bar"
+		],
+		u: "23ee-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"arrow up small",
+			"up-pointing small red triangle"
+		],
+		u: "1f53c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrow double up",
+			"black up-pointing double triangle"
+		],
+		u: "23eb",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrow down small",
+			"down-pointing small red triangle"
+		],
+		u: "1f53d",
+		a: "0.6"
+	},
+	{
+		n: [
+			"arrow double down",
+			"black down-pointing double triangle"
+		],
+		u: "23ec",
+		a: "0.6"
+	},
+	{
+		n: [
+			"pause button",
+			"double vertical bar"
+		],
+		u: "23f8-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"stop button",
+			"black square for stop"
+		],
+		u: "23f9-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"record button",
+			"black circle for record"
+		],
+		u: "23fa-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"eject",
+			"eject button"
+		],
+		u: "23cf-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"cinema"
+		],
+		u: "1f3a6",
+		a: "0.6"
+	},
+	{
+		n: [
+			"low brightness",
+			"low brightness symbol"
+		],
+		u: "1f505",
+		a: "1.0"
+	},
+	{
+		n: [
+			"high brightness",
+			"high brightness symbol"
+		],
+		u: "1f506",
+		a: "1.0"
+	},
+	{
+		n: [
+			"signal strength",
+			"antenna with bars"
+		],
+		u: "1f4f6",
+		a: "0.6"
+	},
+	{
+		n: [
+			"wireless"
+		],
+		u: "1f6dc",
+		a: "15.0"
+	},
+	{
+		n: [
+			"vibration mode"
+		],
+		u: "1f4f3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"mobile phone off"
+		],
+		u: "1f4f4",
+		a: "0.6"
+	},
+	{
+		n: [
+			"female sign"
+		],
+		u: "2640-fe0f",
+		a: "4.0"
+	},
+	{
+		n: [
+			"male sign"
+		],
+		u: "2642-fe0f",
+		a: "4.0"
+	},
+	{
+		n: [
+			"transgender symbol"
+		],
+		u: "26a7-fe0f",
+		a: "13.0"
+	},
+	{
+		n: [
+			"heavy multiplication x"
+		],
+		u: "2716-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heavy plus sign"
+		],
+		u: "2795",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heavy minus sign"
+		],
+		u: "2796",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heavy division sign"
+		],
+		u: "2797",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heavy equals sign"
+		],
+		u: "1f7f0",
+		a: "14.0"
+	},
+	{
+		n: [
+			"infinity"
+		],
+		u: "267e-fe0f",
+		a: "11.0"
+	},
+	{
+		n: [
+			"bangbang",
+			"double exclamation mark"
+		],
+		u: "203c-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"interrobang",
+			"exclamation question mark"
+		],
+		u: "2049-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"question",
+			"black question mark ornament"
+		],
+		u: "2753",
+		a: "0.6"
+	},
+	{
+		n: [
+			"grey question",
+			"white question mark ornament"
+		],
+		u: "2754",
+		a: "0.6"
+	},
+	{
+		n: [
+			"grey exclamation",
+			"white exclamation mark ornament"
+		],
+		u: "2755",
+		a: "0.6"
+	},
+	{
+		n: [
+			"exclamation",
+			"heavy exclamation mark",
+			"heavy exclamation mark symbol"
+		],
+		u: "2757",
+		a: "0.6"
+	},
+	{
+		n: [
+			"wavy dash"
+		],
+		u: "3030-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"currency exchange"
+		],
+		u: "1f4b1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heavy dollar sign"
+		],
+		u: "1f4b2",
+		a: "0.6"
+	},
+	{
+		n: [
+			"medical symbol",
+			"staff of aesculapius"
+		],
+		u: "2695-fe0f",
+		a: "4.0"
+	},
+	{
+		n: [
+			"recycle",
+			"black universal recycling symbol"
+		],
+		u: "267b-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"fleur-de-lis",
+			"fleur de lis"
+		],
+		u: "269c-fe0f",
+		a: "1.0"
+	},
+	{
+		n: [
+			"trident",
+			"trident emblem"
+		],
+		u: "1f531",
+		a: "0.6"
+	},
+	{
+		n: [
+			"name badge"
+		],
+		u: "1f4db",
+		a: "0.6"
+	},
+	{
+		n: [
+			"beginner",
+			"japanese symbol for beginner"
+		],
+		u: "1f530",
+		a: "0.6"
+	},
+	{
+		n: [
+			"o",
+			"heavy large circle"
+		],
+		u: "2b55",
+		a: "0.6"
+	},
+	{
+		n: [
+			"white check mark",
+			"white heavy check mark"
+		],
+		u: "2705",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ballot box with check"
+		],
+		u: "2611-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"heavy check mark"
+		],
+		u: "2714-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"x",
+			"cross mark"
+		],
+		u: "274c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"negative squared cross mark"
+		],
+		u: "274e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"curly loop"
+		],
+		u: "27b0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"loop",
+			"double curly loop"
+		],
+		u: "27bf",
+		a: "1.0"
+	},
+	{
+		n: [
+			"part alternation mark"
+		],
+		u: "303d-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"eight spoked asterisk"
+		],
+		u: "2733-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"eight pointed black star"
+		],
+		u: "2734-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sparkle"
+		],
+		u: "2747-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"copyright",
+			"copyright sign"
+		],
+		u: "00a9-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"registered",
+			"registered sign"
+		],
+		u: "00ae-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"tm",
+			"trade mark sign"
+		],
+		u: "2122-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"hash",
+			"hash key"
+		],
+		u: "0023-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"keycap: *",
+			"keycap star"
+		],
+		u: "002a-fe0f-20e3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"zero",
+			"keycap 0"
+		],
+		u: "0030-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"one",
+			"keycap 1"
+		],
+		u: "0031-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"two",
+			"keycap 2"
+		],
+		u: "0032-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"three",
+			"keycap 3"
+		],
+		u: "0033-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"four",
+			"keycap 4"
+		],
+		u: "0034-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"five",
+			"keycap 5"
+		],
+		u: "0035-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"six",
+			"keycap 6"
+		],
+		u: "0036-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"seven",
+			"keycap 7"
+		],
+		u: "0037-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"eight",
+			"keycap 8"
+		],
+		u: "0038-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"nine",
+			"keycap 9"
+		],
+		u: "0039-fe0f-20e3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"keycap ten"
+		],
+		u: "1f51f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"capital abcd",
+			"input symbol for latin capital letters"
+		],
+		u: "1f520",
+		a: "0.6"
+	},
+	{
+		n: [
+			"abcd",
+			"input symbol for latin small letters"
+		],
+		u: "1f521",
+		a: "0.6"
+	},
+	{
+		n: [
+			"1234",
+			"input symbol for numbers"
+		],
+		u: "1f522",
+		a: "0.6"
+	},
+	{
+		n: [
+			"symbols",
+			"input symbol for symbols"
+		],
+		u: "1f523",
+		a: "0.6"
+	},
+	{
+		n: [
+			"abc",
+			"input symbol for latin letters"
+		],
+		u: "1f524",
+		a: "0.6"
+	},
+	{
+		n: [
+			"a",
+			"negative squared latin capital letter a"
+		],
+		u: "1f170-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ab",
+			"negative squared ab"
+		],
+		u: "1f18e",
+		a: "0.6"
+	},
+	{
+		n: [
+			"b",
+			"negative squared latin capital letter b"
+		],
+		u: "1f171-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cl",
+			"squared cl"
+		],
+		u: "1f191",
+		a: "0.6"
+	},
+	{
+		n: [
+			"cool",
+			"squared cool"
+		],
+		u: "1f192",
+		a: "0.6"
+	},
+	{
+		n: [
+			"free",
+			"squared free"
+		],
+		u: "1f193",
+		a: "0.6"
+	},
+	{
+		n: [
+			"information source"
+		],
+		u: "2139-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"id",
+			"squared id"
+		],
+		u: "1f194",
+		a: "0.6"
+	},
+	{
+		n: [
+			"m",
+			"circled latin capital letter m"
+		],
+		u: "24c2-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"new",
+			"squared new"
+		],
+		u: "1f195",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ng",
+			"squared ng"
+		],
+		u: "1f196",
+		a: "0.6"
+	},
+	{
+		n: [
+			"o2",
+			"negative squared latin capital letter o"
+		],
+		u: "1f17e-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ok",
+			"squared ok"
+		],
+		u: "1f197",
+		a: "0.6"
+	},
+	{
+		n: [
+			"parking",
+			"negative squared latin capital letter p"
+		],
+		u: "1f17f-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sos",
+			"squared sos"
+		],
+		u: "1f198",
+		a: "0.6"
+	},
+	{
+		n: [
+			"up",
+			"squared up with exclamation mark"
+		],
+		u: "1f199",
+		a: "0.6"
+	},
+	{
+		n: [
+			"vs",
+			"squared vs"
+		],
+		u: "1f19a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"koko",
+			"squared katakana koko"
+		],
+		u: "1f201",
+		a: "0.6"
+	},
+	{
+		n: [
+			"sa",
+			"squared katakana sa"
+		],
+		u: "1f202-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u6708",
+			"squared cjk unified ideograph-6708"
+		],
+		u: "1f237-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u6709",
+			"squared cjk unified ideograph-6709"
+		],
+		u: "1f236",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u6307",
+			"squared cjk unified ideograph-6307"
+		],
+		u: "1f22f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"ideograph advantage",
+			"circled ideograph advantage"
+		],
+		u: "1f250",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u5272",
+			"squared cjk unified ideograph-5272"
+		],
+		u: "1f239",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u7121",
+			"squared cjk unified ideograph-7121"
+		],
+		u: "1f21a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u7981",
+			"squared cjk unified ideograph-7981"
+		],
+		u: "1f232",
+		a: "0.6"
+	},
+	{
+		n: [
+			"accept",
+			"circled ideograph accept"
+		],
+		u: "1f251",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u7533",
+			"squared cjk unified ideograph-7533"
+		],
+		u: "1f238",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u5408",
+			"squared cjk unified ideograph-5408"
+		],
+		u: "1f234",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u7a7a",
+			"squared cjk unified ideograph-7a7a"
+		],
+		u: "1f233",
+		a: "0.6"
+	},
+	{
+		n: [
+			"congratulations",
+			"circled ideograph congratulation"
+		],
+		u: "3297-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"secret",
+			"circled ideograph secret"
+		],
+		u: "3299-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u55b6",
+			"squared cjk unified ideograph-55b6"
+		],
+		u: "1f23a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"u6e80",
+			"squared cjk unified ideograph-6e80"
+		],
+		u: "1f235",
+		a: "0.6"
+	},
+	{
+		n: [
+			"red circle",
+			"large red circle"
+		],
+		u: "1f534",
+		a: "0.6"
+	},
+	{
+		n: [
+			"large orange circle"
+		],
+		u: "1f7e0",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large yellow circle"
+		],
+		u: "1f7e1",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large green circle"
+		],
+		u: "1f7e2",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large blue circle"
+		],
+		u: "1f535",
+		a: "0.6"
+	},
+	{
+		n: [
+			"large purple circle"
+		],
+		u: "1f7e3",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large brown circle"
+		],
+		u: "1f7e4",
+		a: "12.0"
+	},
+	{
+		n: [
+			"black circle",
+			"medium black circle"
+		],
+		u: "26ab",
+		a: "0.6"
+	},
+	{
+		n: [
+			"white circle",
+			"medium white circle"
+		],
+		u: "26aa",
+		a: "0.6"
+	},
+	{
+		n: [
+			"large red square"
+		],
+		u: "1f7e5",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large orange square"
+		],
+		u: "1f7e7",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large yellow square"
+		],
+		u: "1f7e8",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large green square"
+		],
+		u: "1f7e9",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large blue square"
+		],
+		u: "1f7e6",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large purple square"
+		],
+		u: "1f7ea",
+		a: "12.0"
+	},
+	{
+		n: [
+			"large brown square"
+		],
+		u: "1f7eb",
+		a: "12.0"
+	},
+	{
+		n: [
+			"black large square"
+		],
+		u: "2b1b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"white large square"
+		],
+		u: "2b1c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"black medium square"
+		],
+		u: "25fc-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"white medium square"
+		],
+		u: "25fb-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"black medium small square"
+		],
+		u: "25fe",
+		a: "0.6"
+	},
+	{
+		n: [
+			"white medium small square"
+		],
+		u: "25fd",
+		a: "0.6"
+	},
+	{
+		n: [
+			"black small square"
+		],
+		u: "25aa-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"white small square"
+		],
+		u: "25ab-fe0f",
+		a: "0.6"
+	},
+	{
+		n: [
+			"large orange diamond"
+		],
+		u: "1f536",
+		a: "0.6"
+	},
+	{
+		n: [
+			"large blue diamond"
+		],
+		u: "1f537",
+		a: "0.6"
+	},
+	{
+		n: [
+			"small orange diamond"
+		],
+		u: "1f538",
+		a: "0.6"
+	},
+	{
+		n: [
+			"small blue diamond"
+		],
+		u: "1f539",
+		a: "0.6"
+	},
+	{
+		n: [
+			"small red triangle",
+			"up-pointing red triangle"
+		],
+		u: "1f53a",
+		a: "0.6"
+	},
+	{
+		n: [
+			"small red triangle down",
+			"down-pointing red triangle"
+		],
+		u: "1f53b",
+		a: "0.6"
+	},
+	{
+		n: [
+			"diamond shape with a dot inside"
+		],
+		u: "1f4a0",
+		a: "0.6"
+	},
+	{
+		n: [
+			"radio button"
+		],
+		u: "1f518",
+		a: "0.6"
+	},
+	{
+		n: [
+			"white square button"
+		],
+		u: "1f533",
+		a: "0.6"
+	},
+	{
+		n: [
+			"black square button"
+		],
+		u: "1f532",
+		a: "0.6"
+	}
+];
+var flags = [
+	{
+		n: [
+			"chequered flag",
+			"checkered flag"
+		],
+		u: "1f3c1",
+		a: "0.6"
+	},
+	{
+		n: [
+			"triangular flag on post"
+		],
+		u: "1f6a9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"crossed flags"
+		],
+		u: "1f38c",
+		a: "0.6"
+	},
+	{
+		n: [
+			"waving black flag"
+		],
+		u: "1f3f4",
+		a: "1.0"
+	},
+	{
+		n: [
+			"white flag",
+			"waving white flag"
+		],
+		u: "1f3f3-fe0f",
+		a: "0.7"
+	},
+	{
+		n: [
+			"rainbow flag",
+			"rainbow-flag"
+		],
+		u: "1f3f3-fe0f-200d-1f308",
+		a: "4.0"
+	},
+	{
+		n: [
+			"transgender flag"
+		],
+		u: "1f3f3-fe0f-200d-26a7-fe0f",
+		a: "13.0"
+	},
+	{
+		n: [
+			"pirate flag"
+		],
+		u: "1f3f4-200d-2620-fe0f",
+		a: "11.0"
+	},
+	{
+		n: [
+			"flag-ac",
+			"ascension island flag"
+		],
+		u: "1f1e6-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ad",
+			"andorra flag"
+		],
+		u: "1f1e6-1f1e9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ae",
+			"united arab emirates flag"
+		],
+		u: "1f1e6-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-af",
+			"afghanistan flag"
+		],
+		u: "1f1e6-1f1eb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ag",
+			"antigua & barbuda flag"
+		],
+		u: "1f1e6-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ai",
+			"anguilla flag"
+		],
+		u: "1f1e6-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-al",
+			"albania flag"
+		],
+		u: "1f1e6-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-am",
+			"armenia flag"
+		],
+		u: "1f1e6-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ao",
+			"angola flag"
+		],
+		u: "1f1e6-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-aq",
+			"antarctica flag"
+		],
+		u: "1f1e6-1f1f6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ar",
+			"argentina flag"
+		],
+		u: "1f1e6-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-as",
+			"american samoa flag"
+		],
+		u: "1f1e6-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-at",
+			"austria flag"
+		],
+		u: "1f1e6-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-au",
+			"australia flag"
+		],
+		u: "1f1e6-1f1fa",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-aw",
+			"aruba flag"
+		],
+		u: "1f1e6-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ax",
+			"åland islands flag"
+		],
+		u: "1f1e6-1f1fd",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-az",
+			"azerbaijan flag"
+		],
+		u: "1f1e6-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ba",
+			"bosnia & herzegovina flag"
+		],
+		u: "1f1e7-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bb",
+			"barbados flag"
+		],
+		u: "1f1e7-1f1e7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bd",
+			"bangladesh flag"
+		],
+		u: "1f1e7-1f1e9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-be",
+			"belgium flag"
+		],
+		u: "1f1e7-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bf",
+			"burkina faso flag"
+		],
+		u: "1f1e7-1f1eb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bg",
+			"bulgaria flag"
+		],
+		u: "1f1e7-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bh",
+			"bahrain flag"
+		],
+		u: "1f1e7-1f1ed",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bi",
+			"burundi flag"
+		],
+		u: "1f1e7-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bj",
+			"benin flag"
+		],
+		u: "1f1e7-1f1ef",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bl",
+			"st. barthélemy flag"
+		],
+		u: "1f1e7-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bm",
+			"bermuda flag"
+		],
+		u: "1f1e7-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bn",
+			"brunei flag"
+		],
+		u: "1f1e7-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bo",
+			"bolivia flag"
+		],
+		u: "1f1e7-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bq",
+			"caribbean netherlands flag"
+		],
+		u: "1f1e7-1f1f6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-br",
+			"brazil flag"
+		],
+		u: "1f1e7-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bs",
+			"bahamas flag"
+		],
+		u: "1f1e7-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bt",
+			"bhutan flag"
+		],
+		u: "1f1e7-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bv",
+			"bouvet island flag"
+		],
+		u: "1f1e7-1f1fb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bw",
+			"botswana flag"
+		],
+		u: "1f1e7-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-by",
+			"belarus flag"
+		],
+		u: "1f1e7-1f1fe",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-bz",
+			"belize flag"
+		],
+		u: "1f1e7-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ca",
+			"canada flag"
+		],
+		u: "1f1e8-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cc",
+			"cocos (keeling) islands flag"
+		],
+		u: "1f1e8-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cd",
+			"congo - kinshasa flag"
+		],
+		u: "1f1e8-1f1e9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cf",
+			"central african republic flag"
+		],
+		u: "1f1e8-1f1eb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cg",
+			"congo - brazzaville flag"
+		],
+		u: "1f1e8-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ch",
+			"switzerland flag"
+		],
+		u: "1f1e8-1f1ed",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ci",
+			"côte d’ivoire flag"
+		],
+		u: "1f1e8-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ck",
+			"cook islands flag"
+		],
+		u: "1f1e8-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cl",
+			"chile flag"
+		],
+		u: "1f1e8-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cm",
+			"cameroon flag"
+		],
+		u: "1f1e8-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"cn",
+			"flag-cn",
+			"china flag"
+		],
+		u: "1f1e8-1f1f3",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-co",
+			"colombia flag"
+		],
+		u: "1f1e8-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cp",
+			"clipperton island flag"
+		],
+		u: "1f1e8-1f1f5",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cr",
+			"costa rica flag"
+		],
+		u: "1f1e8-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cu",
+			"cuba flag"
+		],
+		u: "1f1e8-1f1fa",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cv",
+			"cape verde flag"
+		],
+		u: "1f1e8-1f1fb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cw",
+			"curaçao flag"
+		],
+		u: "1f1e8-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cx",
+			"christmas island flag"
+		],
+		u: "1f1e8-1f1fd",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cy",
+			"cyprus flag"
+		],
+		u: "1f1e8-1f1fe",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-cz",
+			"czechia flag"
+		],
+		u: "1f1e8-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"de",
+			"flag-de",
+			"germany flag"
+		],
+		u: "1f1e9-1f1ea",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-dg",
+			"diego garcia flag"
+		],
+		u: "1f1e9-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-dj",
+			"djibouti flag"
+		],
+		u: "1f1e9-1f1ef",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-dk",
+			"denmark flag"
+		],
+		u: "1f1e9-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-dm",
+			"dominica flag"
+		],
+		u: "1f1e9-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-do",
+			"dominican republic flag"
+		],
+		u: "1f1e9-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-dz",
+			"algeria flag"
+		],
+		u: "1f1e9-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ea",
+			"ceuta & melilla flag"
+		],
+		u: "1f1ea-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ec",
+			"ecuador flag"
+		],
+		u: "1f1ea-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ee",
+			"estonia flag"
+		],
+		u: "1f1ea-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-eg",
+			"egypt flag"
+		],
+		u: "1f1ea-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-eh",
+			"western sahara flag"
+		],
+		u: "1f1ea-1f1ed",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-er",
+			"eritrea flag"
+		],
+		u: "1f1ea-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"es",
+			"flag-es",
+			"spain flag"
+		],
+		u: "1f1ea-1f1f8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-et",
+			"ethiopia flag"
+		],
+		u: "1f1ea-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-eu",
+			"european union flag"
+		],
+		u: "1f1ea-1f1fa",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-fi",
+			"finland flag"
+		],
+		u: "1f1eb-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-fj",
+			"fiji flag"
+		],
+		u: "1f1eb-1f1ef",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-fk",
+			"falkland islands flag"
+		],
+		u: "1f1eb-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-fm",
+			"micronesia flag"
+		],
+		u: "1f1eb-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-fo",
+			"faroe islands flag"
+		],
+		u: "1f1eb-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"fr",
+			"flag-fr",
+			"france flag"
+		],
+		u: "1f1eb-1f1f7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-ga",
+			"gabon flag"
+		],
+		u: "1f1ec-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"gb",
+			"uk",
+			"flag-gb",
+			"united kingdom flag"
+		],
+		u: "1f1ec-1f1e7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-gd",
+			"grenada flag"
+		],
+		u: "1f1ec-1f1e9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ge",
+			"georgia flag"
+		],
+		u: "1f1ec-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gf",
+			"french guiana flag"
+		],
+		u: "1f1ec-1f1eb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gg",
+			"guernsey flag"
+		],
+		u: "1f1ec-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gh",
+			"ghana flag"
+		],
+		u: "1f1ec-1f1ed",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gi",
+			"gibraltar flag"
+		],
+		u: "1f1ec-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gl",
+			"greenland flag"
+		],
+		u: "1f1ec-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gm",
+			"gambia flag"
+		],
+		u: "1f1ec-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gn",
+			"guinea flag"
+		],
+		u: "1f1ec-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gp",
+			"guadeloupe flag"
+		],
+		u: "1f1ec-1f1f5",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gq",
+			"equatorial guinea flag"
+		],
+		u: "1f1ec-1f1f6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gr",
+			"greece flag"
+		],
+		u: "1f1ec-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gs",
+			"south georgia & south sandwich islands flag"
+		],
+		u: "1f1ec-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gt",
+			"guatemala flag"
+		],
+		u: "1f1ec-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gu",
+			"guam flag"
+		],
+		u: "1f1ec-1f1fa",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gw",
+			"guinea-bissau flag"
+		],
+		u: "1f1ec-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-gy",
+			"guyana flag"
+		],
+		u: "1f1ec-1f1fe",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-hk",
+			"hong kong sar china flag"
+		],
+		u: "1f1ed-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-hm",
+			"heard & mcdonald islands flag"
+		],
+		u: "1f1ed-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-hn",
+			"honduras flag"
+		],
+		u: "1f1ed-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-hr",
+			"croatia flag"
+		],
+		u: "1f1ed-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ht",
+			"haiti flag"
+		],
+		u: "1f1ed-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-hu",
+			"hungary flag"
+		],
+		u: "1f1ed-1f1fa",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ic",
+			"canary islands flag"
+		],
+		u: "1f1ee-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-id",
+			"indonesia flag"
+		],
+		u: "1f1ee-1f1e9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ie",
+			"ireland flag"
+		],
+		u: "1f1ee-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-il",
+			"israel flag"
+		],
+		u: "1f1ee-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-im",
+			"isle of man flag"
+		],
+		u: "1f1ee-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-in",
+			"india flag"
+		],
+		u: "1f1ee-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-io",
+			"british indian ocean territory flag"
+		],
+		u: "1f1ee-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-iq",
+			"iraq flag"
+		],
+		u: "1f1ee-1f1f6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ir",
+			"iran flag"
+		],
+		u: "1f1ee-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-is",
+			"iceland flag"
+		],
+		u: "1f1ee-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"it",
+			"flag-it",
+			"italy flag"
+		],
+		u: "1f1ee-1f1f9",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-je",
+			"jersey flag"
+		],
+		u: "1f1ef-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-jm",
+			"jamaica flag"
+		],
+		u: "1f1ef-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-jo",
+			"jordan flag"
+		],
+		u: "1f1ef-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"jp",
+			"flag-jp",
+			"japan flag"
+		],
+		u: "1f1ef-1f1f5",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-ke",
+			"kenya flag"
+		],
+		u: "1f1f0-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-kg",
+			"kyrgyzstan flag"
+		],
+		u: "1f1f0-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-kh",
+			"cambodia flag"
+		],
+		u: "1f1f0-1f1ed",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ki",
+			"kiribati flag"
+		],
+		u: "1f1f0-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-km",
+			"comoros flag"
+		],
+		u: "1f1f0-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-kn",
+			"st. kitts & nevis flag"
+		],
+		u: "1f1f0-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-kp",
+			"north korea flag"
+		],
+		u: "1f1f0-1f1f5",
+		a: "2.0"
+	},
+	{
+		n: [
+			"kr",
+			"flag-kr",
+			"south korea flag"
+		],
+		u: "1f1f0-1f1f7",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-kw",
+			"kuwait flag"
+		],
+		u: "1f1f0-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ky",
+			"cayman islands flag"
+		],
+		u: "1f1f0-1f1fe",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-kz",
+			"kazakhstan flag"
+		],
+		u: "1f1f0-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-la",
+			"laos flag"
+		],
+		u: "1f1f1-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-lb",
+			"lebanon flag"
+		],
+		u: "1f1f1-1f1e7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-lc",
+			"st. lucia flag"
+		],
+		u: "1f1f1-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-li",
+			"liechtenstein flag"
+		],
+		u: "1f1f1-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-lk",
+			"sri lanka flag"
+		],
+		u: "1f1f1-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-lr",
+			"liberia flag"
+		],
+		u: "1f1f1-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ls",
+			"lesotho flag"
+		],
+		u: "1f1f1-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-lt",
+			"lithuania flag"
+		],
+		u: "1f1f1-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-lu",
+			"luxembourg flag"
+		],
+		u: "1f1f1-1f1fa",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-lv",
+			"latvia flag"
+		],
+		u: "1f1f1-1f1fb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ly",
+			"libya flag"
+		],
+		u: "1f1f1-1f1fe",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ma",
+			"morocco flag"
+		],
+		u: "1f1f2-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mc",
+			"monaco flag"
+		],
+		u: "1f1f2-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-md",
+			"moldova flag"
+		],
+		u: "1f1f2-1f1e9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-me",
+			"montenegro flag"
+		],
+		u: "1f1f2-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mf",
+			"st. martin flag"
+		],
+		u: "1f1f2-1f1eb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mg",
+			"madagascar flag"
+		],
+		u: "1f1f2-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mh",
+			"marshall islands flag"
+		],
+		u: "1f1f2-1f1ed",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mk",
+			"north macedonia flag"
+		],
+		u: "1f1f2-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ml",
+			"mali flag"
+		],
+		u: "1f1f2-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mm",
+			"myanmar (burma) flag"
+		],
+		u: "1f1f2-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mn",
+			"mongolia flag"
+		],
+		u: "1f1f2-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mo",
+			"macao sar china flag"
+		],
+		u: "1f1f2-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mp",
+			"northern mariana islands flag"
+		],
+		u: "1f1f2-1f1f5",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mq",
+			"martinique flag"
+		],
+		u: "1f1f2-1f1f6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mr",
+			"mauritania flag"
+		],
+		u: "1f1f2-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ms",
+			"montserrat flag"
+		],
+		u: "1f1f2-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mt",
+			"malta flag"
+		],
+		u: "1f1f2-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mu",
+			"mauritius flag"
+		],
+		u: "1f1f2-1f1fa",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mv",
+			"maldives flag"
+		],
+		u: "1f1f2-1f1fb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mw",
+			"malawi flag"
+		],
+		u: "1f1f2-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mx",
+			"mexico flag"
+		],
+		u: "1f1f2-1f1fd",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-my",
+			"malaysia flag"
+		],
+		u: "1f1f2-1f1fe",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-mz",
+			"mozambique flag"
+		],
+		u: "1f1f2-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-na",
+			"namibia flag"
+		],
+		u: "1f1f3-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-nc",
+			"new caledonia flag"
+		],
+		u: "1f1f3-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ne",
+			"niger flag"
+		],
+		u: "1f1f3-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-nf",
+			"norfolk island flag"
+		],
+		u: "1f1f3-1f1eb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ng",
+			"nigeria flag"
+		],
+		u: "1f1f3-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ni",
+			"nicaragua flag"
+		],
+		u: "1f1f3-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-nl",
+			"netherlands flag"
+		],
+		u: "1f1f3-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-no",
+			"norway flag"
+		],
+		u: "1f1f3-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-np",
+			"nepal flag"
+		],
+		u: "1f1f3-1f1f5",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-nr",
+			"nauru flag"
+		],
+		u: "1f1f3-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-nu",
+			"niue flag"
+		],
+		u: "1f1f3-1f1fa",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-nz",
+			"new zealand flag"
+		],
+		u: "1f1f3-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-om",
+			"oman flag"
+		],
+		u: "1f1f4-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pa",
+			"panama flag"
+		],
+		u: "1f1f5-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pe",
+			"peru flag"
+		],
+		u: "1f1f5-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pf",
+			"french polynesia flag"
+		],
+		u: "1f1f5-1f1eb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pg",
+			"papua new guinea flag"
+		],
+		u: "1f1f5-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ph",
+			"philippines flag"
+		],
+		u: "1f1f5-1f1ed",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pk",
+			"pakistan flag"
+		],
+		u: "1f1f5-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pl",
+			"poland flag"
+		],
+		u: "1f1f5-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pm",
+			"st. pierre & miquelon flag"
+		],
+		u: "1f1f5-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pn",
+			"pitcairn islands flag"
+		],
+		u: "1f1f5-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pr",
+			"puerto rico flag"
+		],
+		u: "1f1f5-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ps",
+			"palestinian territories flag"
+		],
+		u: "1f1f5-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pt",
+			"portugal flag"
+		],
+		u: "1f1f5-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-pw",
+			"palau flag"
+		],
+		u: "1f1f5-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-py",
+			"paraguay flag"
+		],
+		u: "1f1f5-1f1fe",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-qa",
+			"qatar flag"
+		],
+		u: "1f1f6-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-re",
+			"réunion flag"
+		],
+		u: "1f1f7-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ro",
+			"romania flag"
+		],
+		u: "1f1f7-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-rs",
+			"serbia flag"
+		],
+		u: "1f1f7-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"ru",
+			"flag-ru",
+			"russia flag"
+		],
+		u: "1f1f7-1f1fa",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-rw",
+			"rwanda flag"
+		],
+		u: "1f1f7-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sa",
+			"saudi arabia flag"
+		],
+		u: "1f1f8-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sb",
+			"solomon islands flag"
+		],
+		u: "1f1f8-1f1e7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sc",
+			"seychelles flag"
+		],
+		u: "1f1f8-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sd",
+			"sudan flag"
+		],
+		u: "1f1f8-1f1e9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-se",
+			"sweden flag"
+		],
+		u: "1f1f8-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sg",
+			"singapore flag"
+		],
+		u: "1f1f8-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sh",
+			"st. helena flag"
+		],
+		u: "1f1f8-1f1ed",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-si",
+			"slovenia flag"
+		],
+		u: "1f1f8-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sj",
+			"svalbard & jan mayen flag"
+		],
+		u: "1f1f8-1f1ef",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sk",
+			"slovakia flag"
+		],
+		u: "1f1f8-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sl",
+			"sierra leone flag"
+		],
+		u: "1f1f8-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sm",
+			"san marino flag"
+		],
+		u: "1f1f8-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sn",
+			"senegal flag"
+		],
+		u: "1f1f8-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-so",
+			"somalia flag"
+		],
+		u: "1f1f8-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sr",
+			"suriname flag"
+		],
+		u: "1f1f8-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ss",
+			"south sudan flag"
+		],
+		u: "1f1f8-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-st",
+			"são tomé & príncipe flag"
+		],
+		u: "1f1f8-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sv",
+			"el salvador flag"
+		],
+		u: "1f1f8-1f1fb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sx",
+			"sint maarten flag"
+		],
+		u: "1f1f8-1f1fd",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sy",
+			"syria flag"
+		],
+		u: "1f1f8-1f1fe",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-sz",
+			"eswatini flag"
+		],
+		u: "1f1f8-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ta",
+			"tristan da cunha flag"
+		],
+		u: "1f1f9-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tc",
+			"turks & caicos islands flag"
+		],
+		u: "1f1f9-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-td",
+			"chad flag"
+		],
+		u: "1f1f9-1f1e9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tf",
+			"french southern territories flag"
+		],
+		u: "1f1f9-1f1eb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tg",
+			"togo flag"
+		],
+		u: "1f1f9-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-th",
+			"thailand flag"
+		],
+		u: "1f1f9-1f1ed",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tj",
+			"tajikistan flag"
+		],
+		u: "1f1f9-1f1ef",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tk",
+			"tokelau flag"
+		],
+		u: "1f1f9-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tl",
+			"timor-leste flag"
+		],
+		u: "1f1f9-1f1f1",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tm",
+			"turkmenistan flag"
+		],
+		u: "1f1f9-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tn",
+			"tunisia flag"
+		],
+		u: "1f1f9-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-to",
+			"tonga flag"
+		],
+		u: "1f1f9-1f1f4",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tr",
+			"türkiye flag"
+		],
+		u: "1f1f9-1f1f7",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tt",
+			"trinidad & tobago flag"
+		],
+		u: "1f1f9-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tv",
+			"tuvalu flag"
+		],
+		u: "1f1f9-1f1fb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tw",
+			"taiwan flag"
+		],
+		u: "1f1f9-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-tz",
+			"tanzania flag"
+		],
+		u: "1f1f9-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ua",
+			"ukraine flag"
+		],
+		u: "1f1fa-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ug",
+			"uganda flag"
+		],
+		u: "1f1fa-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-um",
+			"u.s. outlying islands flag"
+		],
+		u: "1f1fa-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-un",
+			"united nations flag"
+		],
+		u: "1f1fa-1f1f3",
+		a: "4.0"
+	},
+	{
+		n: [
+			"us",
+			"flag-us",
+			"united states flag"
+		],
+		u: "1f1fa-1f1f8",
+		a: "0.6"
+	},
+	{
+		n: [
+			"flag-uy",
+			"uruguay flag"
+		],
+		u: "1f1fa-1f1fe",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-uz",
+			"uzbekistan flag"
+		],
+		u: "1f1fa-1f1ff",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-va",
+			"vatican city flag"
+		],
+		u: "1f1fb-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-vc",
+			"st. vincent & grenadines flag"
+		],
+		u: "1f1fb-1f1e8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ve",
+			"venezuela flag"
+		],
+		u: "1f1fb-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-vg",
+			"british virgin islands flag"
+		],
+		u: "1f1fb-1f1ec",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-vi",
+			"u.s. virgin islands flag"
+		],
+		u: "1f1fb-1f1ee",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-vn",
+			"vietnam flag"
+		],
+		u: "1f1fb-1f1f3",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-vu",
+			"vanuatu flag"
+		],
+		u: "1f1fb-1f1fa",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-wf",
+			"wallis & futuna flag"
+		],
+		u: "1f1fc-1f1eb",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ws",
+			"samoa flag"
+		],
+		u: "1f1fc-1f1f8",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-xk",
+			"kosovo flag"
+		],
+		u: "1f1fd-1f1f0",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-ye",
+			"yemen flag"
+		],
+		u: "1f1fe-1f1ea",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-yt",
+			"mayotte flag"
+		],
+		u: "1f1fe-1f1f9",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-za",
+			"south africa flag"
+		],
+		u: "1f1ff-1f1e6",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-zm",
+			"zambia flag"
+		],
+		u: "1f1ff-1f1f2",
+		a: "2.0"
+	},
+	{
+		n: [
+			"flag-zw",
+			"zimbabwe flag"
+		],
+		u: "1f1ff-1f1fc",
+		a: "2.0"
+	},
+	{
+		n: [
+			"england flag",
+			"flag-england"
+		],
+		u: "1f3f4-e0067-e0062-e0065-e006e-e0067-e007f",
+		a: "5.0"
+	},
+	{
+		n: [
+			"scotland flag",
+			"flag-scotland"
+		],
+		u: "1f3f4-e0067-e0062-e0073-e0063-e0074-e007f",
+		a: "5.0"
+	},
+	{
+		n: [
+			"wales flag",
+			"flag-wales"
+		],
+		u: "1f3f4-e0067-e0062-e0077-e006c-e0073-e007f",
+		a: "5.0"
+	}
+];
 var emojis = {
-  custom: custom,
-  smileys_people: smileys_people,
-  animals_nature: animals_nature,
-  food_drink: food_drink,
-  travel_places: travel_places,
-  activities: activities,
-  objects: objects,
-  symbols: symbols,
-  flags: flags
+	custom: custom,
+	smileys_people: smileys_people,
+	animals_nature: animals_nature,
+	food_drink: food_drink,
+	travel_places: travel_places,
+	activities: activities,
+	objects: objects,
+	symbols: symbols,
+	flags: flags
 };
+
 var skinToneVariations = [SkinTones.NEUTRAL, SkinTones.LIGHT, SkinTones.MEDIUM_LIGHT, SkinTones.MEDIUM, SkinTones.MEDIUM_DARK, SkinTones.DARK];
 var skinTonesNamed = /*#__PURE__*/Object.entries(SkinTones).reduce(function (acc, _ref) {
   var key = _ref[0],
@@ -9067,6 +17877,7 @@ var skinTonesMapped = /*#__PURE__*/skinToneVariations.reduce(function (mapped, s
   var _Object$assign;
   return Object.assign(mapped, (_Object$assign = {}, _Object$assign[skinTone] = skinTone, _Object$assign));
 }, {});
+
 var EmojiProperties;
 (function (EmojiProperties) {
   EmojiProperties["name"] = "n";
@@ -9075,6 +17886,7 @@ var EmojiProperties;
   EmojiProperties["added_in"] = "a";
   EmojiProperties["imgUrl"] = "imgUrl";
 })(EmojiProperties || (EmojiProperties = {}));
+
 var SUGGESTED_LS_KEY = 'epr_suggested';
 function getSuggested(mode) {
   try {
@@ -9124,6 +17936,7 @@ function setSuggested(emoji, skinTone) {
     // ignore
   }
 }
+
 function emojiNames(emoji) {
   var _emoji$EmojiPropertie;
   return (_emoji$EmojiPropertie = emoji[EmojiProperties.name]) != null ? _emoji$EmojiPropertie : [];
@@ -9239,6 +18052,7 @@ function activeVariationFromUnified(unified) {
     suspectedSkinTone = _unified$split[1];
   return skinToneVariations.includes(suspectedSkinTone) ? suspectedSkinTone : null;
 }
+
 var KNOWN_FAILING_EMOJIS = ['2640-fe0f', '2642-fe0f', '2695-fe0f'];
 var DEFAULT_SEARCH_PLACEHOLDER = 'Search';
 var SEARCH_RESULTS_NO_RESULTS_FOUND = 'No results found';
@@ -9302,13 +18116,14 @@ var basePreviewConfig = {
   defaultCaption: "What's your mood?",
   showPreview: true
 };
+
 var _excluded$1 = ["children"];
-var ConfigContext = /*#__PURE__*/React.createContext(/*#__PURE__*/basePickerConfig());
+var ConfigContext = /*#__PURE__*/React.createContext( /*#__PURE__*/basePickerConfig());
 function PickerConfigProvider(_ref) {
   var children = _ref.children,
     config = _objectWithoutPropertiesLoose$1(_ref, _excluded$1);
   var mergedConfig = useSetConfig(config);
-  return /*#__PURE__*/React.createElement(ConfigContext.Provider, {
+  return React.createElement(ConfigContext.Provider, {
     value: mergedConfig
   }, children);
 }
@@ -9332,6 +18147,7 @@ function useSetConfig(config) {
 function usePickerConfig() {
   return React.useContext(ConfigContext);
 }
+
 var MutableConfigContext = /*#__PURE__*/React__default["default"].createContext({});
 function useMutableConfig() {
   var mutableConfig = React__default["default"].useContext(MutableConfigContext);
@@ -9353,6 +18169,7 @@ function useDefineMutableConfig(config) {
   return MutableConfigRef;
 }
 function emptyFunc() {}
+
 var MOUSE_EVENT_SOURCE;
 (function (MOUSE_EVENT_SOURCE) {
   MOUSE_EVENT_SOURCE["REACTIONS"] = "reactions";
@@ -9525,11 +18342,13 @@ function useSearchResultsConfig(searchResultsCount) {
   }
   return SEARCH_RESULTS_NO_RESULTS_FOUND;
 }
+
 function useIsSearchMode() {
   var _useSearchTermState = useSearchTermState(),
     searchTerm = _useSearchTermState[0];
   return !!searchTerm;
 }
+
 function focusElement(element) {
   if (!element) {
     return;
@@ -9553,9 +18372,11 @@ function focusFirstElementChild(element) {
   var first = element.firstElementChild;
   focusElement(first);
 }
+
 function getActiveElement() {
   return document.activeElement;
 }
+
 function ElementRefContextProvider(_ref) {
   var children = _ref.children;
   var PickerMainRef = React.useRef(null);
@@ -9567,7 +18388,7 @@ function ElementRefContextProvider(_ref) {
   var CategoryNavigationRef = React.useRef(null);
   var VariationPickerRef = React.useRef(null);
   var ReactionsRef = React.useRef(null);
-  return /*#__PURE__*/React.createElement(ElementRefContext.Provider, {
+  return React.createElement(ElementRefContext.Provider, {
     value: {
       AnchoredEmojiRef: AnchoredEmojiRef,
       BodyRef: BodyRef,
@@ -9631,6 +18452,7 @@ function useCategoryNavigationRef() {
 function useVariationPickerRef() {
   return useElementRef()['VariationPickerRef'];
 }
+
 function scrollTo(root, top) {
   if (top === void 0) {
     top = 0;
@@ -9673,6 +18495,7 @@ function scrollEmojiAboveLabel(emoji) {
   var by = emojiDistanceFromScrollTop(emoji);
   scrollBy(scrollBody, -(categoryLabelHeight(closestCategory(emoji)) - by));
 }
+
 function focusFirstVisibleEmoji(parent) {
   var emoji = firstVisibleEmoji(parent);
   focusElement(emoji);
@@ -9794,6 +18617,7 @@ function visibleEmojiOneRowDown(element) {
   }
   return (_emojisInNextCategory = emojisInNextCategory.at(0)) != null ? _emojisInNextCategory : null;
 }
+
 function useCloseAllOpenToggles() {
   var _useEmojiVariationPic = useEmojiVariationPickerState(),
     variationPicker = _useEmojiVariationPic[0],
@@ -9820,6 +18644,7 @@ function useHasOpenToggles() {
     return !!variationPicker || skinToneFanOpen;
   };
 }
+
 function useDisallowMouseMove() {
   var DisallowMouseRef = useDisallowMouseRef();
   return function disallowMouseMove() {
@@ -9857,6 +18682,7 @@ function useOnMouseMove() {
     };
   }, [BodyRef, allowMouseMove, isMouseDisallowed]);
 }
+
 function useFocusSearchInput() {
   var SearchInputRef = useSearchInputRef();
   return React.useCallback(function () {
@@ -9881,6 +18707,7 @@ function useFocusCategoryNavigation() {
     focusFirstElementChild(CategoryNavigationRef.current);
   }, [CategoryNavigationRef]);
 }
+
 function useSetFilterRef() {
   var filterRef = useFilterRef();
   return function setFilter(setter) {
@@ -10020,6 +18847,7 @@ function getStatusSearchResults(filterState, searchTerm) {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   return useSearchResultsConfig(searchResultsCount);
 }
+
 function useSetVariationPicker() {
   var setAnchoredEmojiRef = useSetAnchoredEmojiRef();
   var _useEmojiVariationPic = useEmojiVariationPickerState(),
@@ -10033,6 +18861,7 @@ function useSetVariationPicker() {
     }
   };
 }
+
 function useIsSkinToneInSearch() {
   var skinTonePickerLocationConfig = useSkinTonePickerLocationConfig();
   return skinTonePickerLocationConfig === SkinTonePickerLocation.SEARCH;
@@ -10041,6 +18870,7 @@ function useIsSkinToneInPreview() {
   var skinTonePickerLocationConfig = useSkinTonePickerLocationConfig();
   return skinTonePickerLocationConfig === SkinTonePickerLocation.PREVIEW;
 }
+
 var KeyboardEvents;
 (function (KeyboardEvents) {
   KeyboardEvents["ArrowDown"] = "ArrowDown";
@@ -10429,6 +19259,7 @@ function preloadImage(url) {
   var image = new Image();
   image.src = url;
 }
+
 function useOnFocus() {
   var BodyRef = useBodyRef();
   var emojiStyle = useEmojiStyleConfig();
@@ -10458,11 +19289,12 @@ function useOnFocus() {
     }
   }, [BodyRef, emojiStyle, getEmojiUrl]);
 }
+
 var _excluded$1$1 = ["width", "height"];
 var DEFAULT_LABEL_HEIGHT = 40;
 function PickerMain(_ref) {
   var children = _ref.children;
-  return /*#__PURE__*/React.createElement(PickerContextProvider, null, /*#__PURE__*/React.createElement(PickerRootElement, null, children));
+  return React.createElement(PickerContextProvider, null, React.createElement(PickerRootElement, null, children));
 }
 function PickerRootElement(_ref2) {
   var _cx;
@@ -10480,7 +19312,7 @@ function PickerRootElement(_ref2) {
     width = _ref3.width,
     height = _ref3.height,
     styleProps = _objectWithoutPropertiesLoose$1(_ref3, _excluded$1$1);
-  return /*#__PURE__*/React.createElement("aside", {
+  return React.createElement("aside", {
     className: cx(styles.main, styles.baseVariables, theme === Theme.DARK && styles.darkTheme, theme === Theme.AUTO && styles.autoThemeDark, (_cx = {}, _cx[ClassNames.searchActive] = searchModeActive, _cx), reactionsMode && styles.reactionsMenu, className),
     ref: PickerMainRef,
     style: _extends$1({}, styleProps, !reactionsMode && {
@@ -10632,6 +19464,7 @@ var styles = /*#__PURE__*/stylesheet.create({
     }
   }
 });
+
 function elementCountInRow(parent, element) {
   if (!parent || !element) {
     return 0;
@@ -10680,6 +19513,7 @@ function getLabelHeight(parentNode) {
   // fallback to default
   return DEFAULT_LABEL_HEIGHT;
 }
+
 var EmojiButtonSelector = "button" + /*#__PURE__*/asSelectors(ClassNames.emoji);
 var VisibleEmojiSelector = /*#__PURE__*/[EmojiButtonSelector, asSelectors(ClassNames.visible), ":not(" + asSelectors(ClassNames.hidden) + ")"].join('');
 function buttonFromTarget(emojiElement) {
@@ -10885,17 +19719,20 @@ function closestCategoryContent(element) {
   }
   return element.closest(asSelectors(ClassNames.categoryContent));
 }
+
 function parseNativeEmoji(unified) {
   return unified.split('-').map(function (hex) {
     return String.fromCodePoint(parseInt(hex, 16));
   }).join('');
 }
+
 function isCustomCategory(category) {
   return category.category === Categories.CUSTOM;
 }
 function isCustomEmoji(emoji) {
   return emoji.imgUrl !== undefined;
 }
+
 function useMouseDownHandlers(ContainerRef, mouseEventSource) {
   var mouseDownTimerRef = React.useRef();
   var setVariationPicker = useSetVariationPicker();
@@ -11021,8 +19858,9 @@ function emojiClickOutput(emoji, activeSkinTone, activeEmojiStyle, getEmojiUrl) 
     unifiedWithoutSkinTone: emojiUnified(emoji)
   };
 }
+
 function Button(props) {
-  return /*#__PURE__*/React.createElement("button", Object.assign({
+  return React.createElement("button", Object.assign({
     type: "button"
   }, props, {
     className: cx(styles$1.button, props.className)
@@ -11037,6 +19875,7 @@ var styles$1 = /*#__PURE__*/stylesheet.create({
     outline: 'none'
   }
 });
+
 function ClickableEmojiButton(_ref) {
   var _cx;
   var emojiNames = _ref.emojiNames,
@@ -11051,7 +19890,7 @@ function ClickableEmojiButton(_ref) {
     _ref$noBackground = _ref.noBackground,
     noBackground = _ref$noBackground === void 0 ? false : _ref$noBackground,
     style = _ref.style;
-  return /*#__PURE__*/React.createElement(Button, {
+  return React.createElement(Button, {
     className: cx(styles$2.emoji, hidden && commonStyles.hidden, hiddenOnSearch && commonInteractionStyles.hiddenOnSearch, (_cx = {}, _cx[ClassNames.visible] = !hidden && !hiddenOnSearch, _cx), !!(hasVariations && showVariations) && styles$2.hasVariations, noBackground && styles$2.noBackground, className),
     "data-unified": unified,
     "aria-label": getAriaLabel(emojiNames),
@@ -11117,6 +19956,7 @@ var styles$2 = /*#__PURE__*/stylesheet.create({
     }
   }
 });
+
 var emojiStyles = /*#__PURE__*/stylesheet.create({
   external: {
     '.': ClassNames.external,
@@ -11128,6 +19968,7 @@ var emojiStyles = /*#__PURE__*/stylesheet.create({
     display: 'block'
   }
 });
+
 function EmojiImg(_ref) {
   var emojiName = _ref.emojiName,
     style = _ref.style,
@@ -11136,7 +19977,7 @@ function EmojiImg(_ref) {
     imgUrl = _ref.imgUrl,
     onError = _ref.onError,
     className = _ref.className;
-  return /*#__PURE__*/React.createElement("img", {
+  return React.createElement("img", {
     src: imgUrl,
     alt: emojiName,
     className: cx(styles$3.emojiImag, emojiStyles.external, emojiStyles.common, className),
@@ -11155,11 +19996,12 @@ var styles$3 = /*#__PURE__*/stylesheet.create({
     padding: 'var(--epr-emoji-padding)'
   }
 });
+
 function NativeEmoji(_ref) {
   var unified = _ref.unified,
     style = _ref.style,
     className = _ref.className;
-  return /*#__PURE__*/React.createElement("span", {
+  return React.createElement("span", {
     className: cx(styles$4.nativeEmoji, emojiStyles.common, emojiStyles.external, className),
     "data-unified": unified,
     style: style
@@ -11179,6 +20021,7 @@ var styles$4 = /*#__PURE__*/stylesheet.create({
     padding: 'var(--epr-emoji-padding)'
   }
 });
+
 function ViewOnlyEmoji(_ref) {
   var emoji = _ref.emoji,
     unified = _ref.unified,
@@ -11199,7 +20042,7 @@ function ViewOnlyEmoji(_ref) {
     return null;
   }
   if (isCustomEmoji(emojiToRender)) {
-    return /*#__PURE__*/React.createElement(EmojiImg, {
+    return React.createElement(EmojiImg, {
       style: style,
       emojiName: unified,
       emojiStyle: EmojiStyle.NATIVE,
@@ -11209,11 +20052,11 @@ function ViewOnlyEmoji(_ref) {
       className: className
     });
   }
-  return /*#__PURE__*/React.createElement(React.Fragment, null, emojiStyle === EmojiStyle.NATIVE ? /*#__PURE__*/React.createElement(NativeEmoji, {
+  return React.createElement(React.Fragment, null, emojiStyle === EmojiStyle.NATIVE ? React.createElement(NativeEmoji, {
     unified: unified,
     style: style,
     className: className
-  }) : /*#__PURE__*/React.createElement(EmojiImg, {
+  }) : React.createElement(EmojiImg, {
     style: style,
     emojiName: emojiName(emojiToRender),
     emojiStyle: emojiStyle,
@@ -11228,6 +20071,7 @@ function ViewOnlyEmoji(_ref) {
     });
   }
 }
+
 function ClickableEmoji(_ref) {
   var emoji = _ref.emoji,
     unified = _ref.unified,
@@ -11244,7 +20088,7 @@ function ClickableEmoji(_ref) {
     noBackground = _ref$noBackground === void 0 ? false : _ref$noBackground,
     style = _ref.style;
   var hasVariations = emojiHasVariations(emoji);
-  return /*#__PURE__*/React.createElement(ClickableEmojiButton, {
+  return React.createElement(ClickableEmojiButton, {
     hasVariations: hasVariations,
     showVariations: showVariations,
     hidden: hidden,
@@ -11253,7 +20097,7 @@ function ClickableEmoji(_ref) {
     unified: unified,
     noBackground: noBackground,
     style: style
-  }, /*#__PURE__*/React.createElement(ViewOnlyEmoji, {
+  }, React.createElement(ViewOnlyEmoji, {
     unified: unified,
     emoji: emoji,
     size: size,
@@ -11263,11 +20107,13 @@ function ClickableEmoji(_ref) {
     className: className
   }));
 }
+
 var Plus = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI4LjEuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHdpZHRoPSIyMHB4IiBoZWlnaHQ9IjgwcHgiIHZpZXdCb3g9IjAgMCAyMCA4MCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMjAgODAiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8cGF0aCBmaWxsPSIjODY4Njg2IiBkPSJNNS43LDEwLjRjMCwwLjEsMC4xLDAuMywwLjIsMC40QzYsMTAuOSw2LjEsMTEsNi4zLDExaDMuNHYzLjRjMCwwLjEsMC4xLDAuMywwLjIsMC40CgljMC4xLDAuMSwwLjIsMC4yLDAuNCwwLjJjMC4zLDAsMC41LTAuMiwwLjUtMC41di0zLjRoMy40YzAuMywwLDAuNS0wLjIsMC41LTAuNXMtMC4yLTAuNS0wLjUtMC41aC0zLjRWNi43YzAtMC4zLTAuMi0wLjUtMC41LTAuNQoJQzkuOCw2LDkuNiw2LjIsOS42LDYuNXYzLjRINi4yQzUuOSw5LjksNS43LDEwLjEsNS43LDEwLjRMNS43LDEwLjR6Ii8+CjxwYXRoIGZpbGw9IiMzMzcxQjciIGQ9Ik01LjcsMzAuNGMwLDAuMSwwLjEsMC4zLDAuMiwwLjRTNi4xLDMxLDYuMywzMWgzLjR2My40YzAsMC4xLDAuMSwwLjMsMC4yLDAuNGMwLjEsMC4xLDAuMiwwLjIsMC40LDAuMgoJYzAuMywwLDAuNS0wLjIsMC41LTAuNXYtMy40aDMuNGMwLjMsMCwwLjUtMC4yLDAuNS0wLjVzLTAuMi0wLjUtMC41LTAuNWgtMy40di0zLjRjMC0wLjMtMC4yLTAuNS0wLjUtMC41cy0wLjUsMC4yLTAuNSwwLjV2My40SDYuMgoJQzUuOSwyOS45LDUuNywzMC4xLDUuNywzMC40TDUuNywzMC40eiIvPgo8cGF0aCBmaWxsPSIjQzBDMEJGIiBkPSJNNS43LDUwLjRjMCwwLjEsMC4xLDAuMywwLjIsMC40QzYsNTAuOSw2LjEsNTEsNi4zLDUxaDMuNHYzLjRjMCwwLjEsMC4xLDAuMywwLjIsMC40CgljMC4xLDAuMSwwLjIsMC4yLDAuNCwwLjJjMC4zLDAsMC41LTAuMiwwLjUtMC41di0zLjRoMy40YzAuMywwLDAuNS0wLjIsMC41LTAuNXMtMC4yLTAuNS0wLjUtMC41aC0zLjR2LTMuNGMwLTAuMy0wLjItMC41LTAuNS0wLjUKCXMtMC41LDAuMi0wLjUsMC41djMuNEg2LjJDNS45LDQ5LjksNS43LDUwLjEsNS43LDUwLjRMNS43LDUwLjR6Ii8+CjxwYXRoIGZpbGw9IiM2QUE5REQiIGQ9Ik01LjcsNzAuNGMwLDAuMSwwLjEsMC4zLDAuMiwwLjRTNi4xLDcxLDYuMyw3MWgzLjR2My40YzAsMC4xLDAuMSwwLjMsMC4yLDAuNGMwLjEsMC4xLDAuMiwwLjIsMC40LDAuMgoJYzAuMywwLDAuNS0wLjIsMC41LTAuNXYtMy40aDMuNGMwLjMsMCwwLjUtMC4yLDAuNS0wLjVzLTAuMi0wLjUtMC41LTAuNWgtMy40di0zLjRjMC0wLjMtMC4yLTAuNS0wLjUtMC41cy0wLjUsMC4yLTAuNSwwLjV2My40SDYuNAoJQzUuOSw2OS45LDUuNyw3MC4xLDUuNyw3MC40TDUuNyw3MC40eiIvPgo8L3N2Zz4=';
+
 function BtnPlus() {
   var _useReactionsModeStat = useReactionsModeState(),
     setReactionsMode = _useReactionsModeStat[1];
-  return /*#__PURE__*/React.createElement(Button, {
+  return React.createElement(Button, {
     "aria-label": "Show all Emojis",
     title: "Show all Emojis",
     tabIndex: 0,
@@ -11277,7 +20123,7 @@ function BtnPlus() {
     }
   });
 }
-var styles$5 = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
+var styles$5 = /*#__PURE__*/stylesheet.create( /*#__PURE__*/_extends$1({
   plusSign: {
     fontSize: '20px',
     padding: '17px',
@@ -11324,6 +20170,7 @@ var styles$5 = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
     backgroundPositionY: '-60px'
   }
 })));
+
 function Reactions() {
   var _useReactionsModeStat = useReactionsModeState(),
     reactionsOpen = _useReactionsModeStat[0];
@@ -11336,13 +20183,13 @@ function Reactions() {
   if (!reactionsOpen) {
     return null;
   }
-  return /*#__PURE__*/React.createElement("ul", {
+  return React.createElement("ul", {
     className: cx(styles$6.list, !reactionsOpen && commonStyles.hidden),
     ref: ReactionsRef
   }, reactions.map(function (reaction) {
-    return /*#__PURE__*/React.createElement("li", {
+    return React.createElement("li", {
       key: reaction
-    }, /*#__PURE__*/React.createElement(ClickableEmoji, {
+    }, React.createElement(ClickableEmoji, {
       emoji: emojiByUnified(reaction),
       emojiStyle: emojiStyle,
       unified: reaction,
@@ -11351,7 +20198,7 @@ function Reactions() {
       noBackground: true,
       getEmojiUrl: getEmojiUrl
     }));
-  }), allowExpandReactions ? /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(BtnPlus, null)) : null);
+  }), allowExpandReactions ? React.createElement("li", null, React.createElement(BtnPlus, null)) : null);
 }
 var styles$6 = /*#__PURE__*/stylesheet.create({
   list: {
@@ -11376,6 +20223,7 @@ var styles$6 = /*#__PURE__*/stylesheet.create({
     transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.5)'
   }
 });
+
 function useOnScroll(BodyRef) {
   var closeAllOpenToggles = useCloseAllOpenToggles();
   var _useState = React.useState(0),
@@ -11400,6 +20248,7 @@ function useOnScroll(BodyRef) {
   }, [BodyRef, closeAllOpenToggles]);
   return scrollTop;
 }
+
 function shouldVirtualize(_ref) {
   var scrollTop = _ref.scrollTop,
     clientHeight = _ref.clientHeight,
@@ -11420,6 +20269,7 @@ function getEmojiPositionStyle(dimensions, index) {
     left: index % dimensions.emojisPerRow * dimensions.emojiSize
   } : undefined;
 }
+
 var EMOJI_SIZE_DEFAULT = 32;
 function useCategoryHeight(emojiCount) {
   var EmojiListRef = useEmojiListRef();
@@ -11484,6 +20334,7 @@ function useCategoryHeight(emojiCount) {
   }, [PickerMainRef, computeAndSetDimensions]);
   return dimensions;
 }
+
 function useIsEmojiHidden() {
   var _useEmojisThatFailedT = useEmojisThatFailedToLoadState(),
     emojisThatFailedToLoad = _useEmojisThatFailedT[0];
@@ -11499,6 +20350,7 @@ function useIsEmojiHidden() {
     };
   };
 }
+
 function useEmojiVirtualization(_ref) {
   var categoryEmojis = _ref.categoryEmojis,
     topOffset = _ref.topOffset,
@@ -11549,7 +20401,7 @@ function useEmojiVirtualization(_ref) {
       virtualizedCounter++;
       return accumulator;
     }
-    accumulator.push(/*#__PURE__*/React.createElement(ClickableEmoji, {
+    accumulator.push(React.createElement(ClickableEmoji, {
       showVariations: showVariations,
       key: unified,
       emoji: emoji,
@@ -11569,6 +20421,7 @@ function useEmojiVirtualization(_ref) {
     dimensions: dimensions
   };
 }
+
 function EmojiCategory(_ref) {
   var categoryConfig = _ref.categoryConfig,
     children = _ref.children,
@@ -11577,13 +20430,13 @@ function EmojiCategory(_ref) {
     height = _ref.height;
   var category = categoryFromCategoryConfig(categoryConfig);
   var categoryName = categoryNameFromCategoryConfig(categoryConfig);
-  return /*#__PURE__*/React.createElement("li", {
+  return React.createElement("li", {
     className: cx(styles$7.category, hidden && commonStyles.hidden, hiddenOnSearch && commonInteractionStyles.hiddenOnSearch),
     "data-name": category,
     "aria-label": categoryName
-  }, /*#__PURE__*/React.createElement("h2", {
+  }, React.createElement("h2", {
     className: cx(styles$7.label)
-  }, categoryName), /*#__PURE__*/React.createElement("div", {
+  }, categoryName), React.createElement("div", {
     className: cx(styles$7.categoryContent),
     style: {
       height: height
@@ -11624,6 +20477,7 @@ var styles$7 = /*#__PURE__*/stylesheet.create({
     zIndex: 'var(--epr-category-label-z-index)'
   }
 });
+
 function EmojiList(_ref) {
   var scrollTop = _ref.scrollTop;
   var categories = useCategoriesConfig();
@@ -11634,7 +20488,7 @@ function EmojiList(_ref) {
   var getEmojisByCategory = useGetEmojisByCategory();
   var labelHeight = getLabelHeight(EmojiListRef.current);
   var topOffset = 0;
-  return /*#__PURE__*/React.createElement("ul", {
+  return React.createElement("ul", {
     className: cx(styles$8.emojiList),
     ref: EmojiListRef
   }, categories.map(function (categoryConfig) {
@@ -11644,9 +20498,9 @@ function EmojiList(_ref) {
     if (categoryHeight) {
       topOffset += categoryHeight + labelHeight;
     }
-    return /*#__PURE__*/React.createElement(React.Suspense, {
+    return React.createElement(React.Suspense, {
       key: category
-    }, /*#__PURE__*/React.createElement(RenderCategory, {
+    }, React.createElement(RenderCategory, {
       categoryEmojis: getEmojisByCategory(category),
       categoryConfig: categoryConfig,
       topOffset: currentOffset,
@@ -11680,7 +20534,7 @@ function RenderCategory(_ref2) {
     virtualizedCounter = _useEmojiVirtualizati.virtualizedCounter,
     emojis = _useEmojiVirtualizati.emojis,
     dimensions = _useEmojiVirtualizati.dimensions;
-  return /*#__PURE__*/React.createElement(EmojiCategory, {
+  return React.createElement(EmojiCategory, {
     categoryConfig: categoryConfig,
     height: dimensions == null ? void 0 : dimensions.categoryHeight,
     // Indicates that there are no visible emojis
@@ -11696,7 +20550,9 @@ var styles$8 = /*#__PURE__*/stylesheet.create({
     padding: '0'
   }
 });
+
 var SVGTriangle = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI2LjMuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI1MHB4IgoJIGhlaWdodD0iMTVweCIgdmlld0JveD0iMCAwIDUwIDE1IiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA1MCAxNSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxnIGlkPSJMYXllcl8xIj4KPC9nPgo8ZyBpZD0iTGF5ZXJfMiI+Cgk8cGF0aCBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiNFOEU3RTciIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTEuODYtMC40M2w5LjgzLDExLjUzYzAuNTksMC42OSwxLjU2LDAuNjksMi4xNCwwbDkuODMtMTEuNTMiLz4KCTxwYXRoIGZpbGw9IiMwMTAyMDIiIHN0cm9rZT0iIzE1MTYxNyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBkPSJNMjYuODYtMC40M2w5LjgzLDExLjUzYzAuNTksMC42OSwxLjU2LDAuNjksMi4xNCwwbDkuODMtMTEuNTMiLz4KPC9nPgo8L3N2Zz4=';
+
 var Direction;
 (function (Direction) {
   Direction[Direction["Up"] = 0] = "Up";
@@ -11730,14 +20586,14 @@ function EmojiVariationPicker() {
     top = getTop();
     pointerStyle = getPointerStyle();
   }
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     ref: VariationPickerRef,
     className: cx(styles$9.variationPicker, getMenuDirection() === Direction.Down && styles$9.pointingUp, visible && styles$9.visible),
     style: {
       top: top
     }
   }, visible && emoji ? [emojiUnified(emoji)].concat(emojiVariations(emoji)).slice(0, 6).map(function (unified) {
-    return /*#__PURE__*/React.createElement(ClickableEmoji, {
+    return React.createElement(ClickableEmoji, {
       key: unified,
       emoji: emoji,
       unified: unified,
@@ -11745,7 +20601,7 @@ function EmojiVariationPicker() {
       showVariations: false,
       getEmojiUrl: getEmojiUrl
     });
-  }) : null, /*#__PURE__*/React.createElement("div", {
+  }) : null, React.createElement("div", {
     className: cx(styles$9.pointer),
     style: pointerStyle
   }));
@@ -11802,7 +20658,7 @@ function useVariationPickerTop(VariationPickerRef) {
     return emojiOffsetTop - height;
   }
 }
-var styles$9 = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
+var styles$9 = /*#__PURE__*/stylesheet.create( /*#__PURE__*/_extends$1({
   variationPicker: {
     '.': ClassNames.variationPicker,
     position: 'absolute',
@@ -11858,15 +20714,16 @@ var styles$9 = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
 }, /*#__PURE__*/darkMode('pointer', {
   backgroundPosition: '-25px 0'
 })));
+
 function Body() {
   var BodyRef = useBodyRef();
   var scrollTop = useOnScroll(BodyRef);
   useMouseDownHandlers(BodyRef, MOUSE_EVENT_SOURCE.PICKER);
   useOnMouseMove();
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     className: cx(styles$a.body, commonInteractionStyles.hiddenOnReactions),
     ref: BodyRef
-  }, /*#__PURE__*/React.createElement(EmojiVariationPicker, null), /*#__PURE__*/React.createElement(EmojiList, {
+  }, React.createElement(EmojiVariationPicker, null), React.createElement(EmojiList, {
     scrollTop: scrollTop
   }));
 }
@@ -11879,6 +20736,7 @@ var styles$a = /*#__PURE__*/stylesheet.create({
     position: 'relative'
   }
 });
+
 function detectEmojyPartiallyBelowFold(button, bodyRef) {
   if (!button || !bodyRef) {
     return 0;
@@ -11888,6 +20746,7 @@ function detectEmojyPartiallyBelowFold(button, bodyRef) {
   // If the element is obscured by at least half of its size
   return bodyRect.height - (buttonRect.y - bodyRect.y);
 }
+
 function useEmojiPreviewEvents(allow, setPreviewEmoji) {
   var BodyRef = useBodyRef();
   var isMouseDisallowed = useIsMouseDisallowed();
@@ -11973,6 +20832,7 @@ function handlePartiallyVisibleElementFocus(button, setPreviewEmoji) {
     originalUnified: originalUnified
   });
 }
+
 var _stylesheet$create;
 var FlexDirection;
 (function (FlexDirection) {
@@ -11986,7 +20846,7 @@ function Flex(_ref) {
     style = _ref$style === void 0 ? {} : _ref$style,
     _ref$direction = _ref.direction,
     direction = _ref$direction === void 0 ? FlexDirection.ROW : _ref$direction;
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: _extends$1({}, style),
     className: cx(styles$b.flex, className, styles$b[direction])
   }, children);
@@ -12000,33 +20860,36 @@ var styles$b = /*#__PURE__*/stylesheet.create((_stylesheet$create = {
 }, _stylesheet$create[FlexDirection.COLUMN] = {
   flexDirection: 'column'
 }, _stylesheet$create));
+
 function Space(_ref) {
   var className = _ref.className,
     _ref$style = _ref.style,
     style = _ref$style === void 0 ? {} : _ref$style;
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: _extends$1({
       flex: 1
     }, style),
     className: cx(className)
   });
 }
+
 function Absolute(_ref) {
   var children = _ref.children,
     className = _ref.className,
     style = _ref.style;
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: _extends$1({}, style, {
       position: 'absolute'
     }),
     className: className
   }, children);
 }
+
 function Relative(_ref) {
   var children = _ref.children,
     className = _ref.className,
     style = _ref.style;
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: _extends$1({}, style, {
       position: 'relative'
     }),
@@ -12041,7 +20904,7 @@ function BtnSkinToneVariation(_ref) {
     isActive = _ref.isActive,
     skinToneVariation = _ref.skinToneVariation,
     style = _ref.style;
-  return /*#__PURE__*/React.createElement(Button, {
+  return React.createElement(Button, {
     style: style,
     onClick: onClick,
     className: cx("epr-tone-" + skinToneVariation, styles$c.tone, !isOpen && styles$c.closedTone, isActive && styles$c.active),
@@ -12102,16 +20965,16 @@ var styles$c = /*#__PURE__*/stylesheet.create({
 /* eslint-disable complexity */
 var ITEM_SIZE = 28;
 function SkinTonePickerMenu() {
-  return /*#__PURE__*/React.createElement(Relative, {
+  return React.createElement(Relative, {
     style: {
       height: ITEM_SIZE
     }
-  }, /*#__PURE__*/React.createElement(Absolute, {
+  }, React.createElement(Absolute, {
     style: {
       bottom: 0,
       right: 0
     }
-  }, /*#__PURE__*/React.createElement(SkinTonePicker, {
+  }, React.createElement(SkinTonePicker, {
     direction: SkinTonePickerDirection.VERTICAL
   })));
 }
@@ -12135,7 +20998,7 @@ function SkinTonePicker(_ref) {
   var fullWidth = ITEM_SIZE * skinToneVariations.length + "px";
   var expandedSize = isOpen ? fullWidth : ITEM_SIZE + 'px';
   var vertical = direction === SkinTonePickerDirection.VERTICAL;
-  return /*#__PURE__*/React.createElement(Relative, {
+  return React.createElement(Relative, {
     className: cx(styles$d.skinTones, vertical && styles$d.vertical, isOpen && styles$d.open, vertical && isOpen && styles$d.verticalShadow),
     style: vertical ? {
       flexBasis: expandedSize,
@@ -12143,12 +21006,12 @@ function SkinTonePicker(_ref) {
     } : {
       flexBasis: expandedSize
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     className: cx(styles$d.select),
     ref: SkinTonePickerRef
   }, skinToneVariations.map(function (skinToneVariation, i) {
     var active = skinToneVariation === activeSkinTone;
-    return /*#__PURE__*/React.createElement(BtnSkinToneVariation, {
+    return React.createElement(BtnSkinToneVariation, {
       key: skinToneVariation,
       skinToneVariation: skinToneVariation,
       isOpen: isOpen,
@@ -12211,6 +21074,7 @@ var styles$d = /*#__PURE__*/stylesheet.create({
     height: 'var(--epr-skin-tone-size)'
   }
 });
+
 function Preview() {
   var previewConfig = usePreviewConfig();
   var isSkinToneInPreview = useIsSkinToneInPreview();
@@ -12219,9 +21083,9 @@ function Preview() {
   if (!previewConfig.showPreview) {
     return null;
   }
-  return /*#__PURE__*/React.createElement(Flex, {
+  return React.createElement(Flex, {
     className: cx(styles$e.preview, commonInteractionStyles.hiddenOnReactions, reactionsOpen && styles$e.hideOnReactions)
-  }, /*#__PURE__*/React.createElement(PreviewBody, null), /*#__PURE__*/React.createElement(Space, null), isSkinToneInPreview ? /*#__PURE__*/React.createElement(SkinTonePickerMenu, null) : null);
+  }, React.createElement(PreviewBody, null), React.createElement(Space, null), isSkinToneInPreview ? React.createElement(SkinTonePickerMenu, null) : null);
 }
 function PreviewBody() {
   var _previewEmoji$unified;
@@ -12236,28 +21100,28 @@ function PreviewBody() {
   useEmojiPreviewEvents(previewConfig.showPreview, setPreviewEmoji);
   var emoji = emojiByUnified((_previewEmoji$unified = previewEmoji == null ? void 0 : previewEmoji.unified) != null ? _previewEmoji$unified : previewEmoji == null ? void 0 : previewEmoji.originalUnified);
   var show = emoji != null && previewEmoji != null;
-  return /*#__PURE__*/React.createElement(PreviewContent, null);
+  return React.createElement(PreviewContent, null);
   function PreviewContent() {
     var defaultEmoji = variationPickerEmoji != null ? variationPickerEmoji : emojiByUnified(previewConfig.defaultEmoji);
     if (!defaultEmoji) {
       return null;
     }
     var defaultText = variationPickerEmoji ? emojiName(variationPickerEmoji) : previewConfig.defaultCaption;
-    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", null, show ? /*#__PURE__*/React.createElement(ViewOnlyEmoji, {
+    return React.createElement(React.Fragment, null, React.createElement("div", null, show ? React.createElement(ViewOnlyEmoji, {
       unified: previewEmoji == null ? void 0 : previewEmoji.unified,
       emoji: emoji,
       emojiStyle: emojiStyle,
       size: 45,
       getEmojiUrl: getEmojiUrl,
       className: cx(styles$e.emoji)
-    }) : defaultEmoji ? /*#__PURE__*/React.createElement(ViewOnlyEmoji, {
+    }) : defaultEmoji ? React.createElement(ViewOnlyEmoji, {
       unified: emojiUnified(defaultEmoji),
       emoji: defaultEmoji,
       emojiStyle: emojiStyle,
       size: 45,
       getEmojiUrl: getEmojiUrl,
       className: cx(styles$e.emoji)
-    }) : null), /*#__PURE__*/React.createElement("div", {
+    }) : null), React.createElement("div", {
       className: cx(styles$e.label)
     }, show ? emojiName(emoji) : defaultText));
   }
@@ -12285,10 +21149,12 @@ var styles$e = /*#__PURE__*/stylesheet.create({
     transition: 'opacity 0.5s ease-in-out'
   }
 });
+
 function categoryNameFromDom($category) {
   var _$category$getAttribu;
   return (_$category$getAttribu = $category == null ? void 0 : $category.getAttribute('data-name')) != null ? _$category$getAttribu : null;
 }
+
 function useActiveCategoryScrollDetection(_ref) {
   var setActiveCategory = _ref.setActiveCategory,
     setVisibleCategories = _ref.setVisibleCategories;
@@ -12337,6 +21203,7 @@ function useActiveCategoryScrollDetection(_ref) {
     });
   }, [BodyRef, setActiveCategory, setVisibleCategories]);
 }
+
 function useScrollCategoryIntoView() {
   var BodyRef = useBodyRef();
   var PickerMainRef = usePickerMainRef();
@@ -12353,6 +21220,7 @@ function useScrollCategoryIntoView() {
     scrollTo(PickerMainRef.current, offsetTop);
   };
 }
+
 function useShouldHideCustomEmojis() {
   var customCategoryConfig = useCustomEmojisConfig();
   if (!customCategoryConfig) {
@@ -12360,7 +21228,9 @@ function useShouldHideCustomEmojis() {
   }
   return customCategoryConfig.length === 0;
 }
+
 var SVGNavigation = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI2LjMuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHdpZHRoPSIyMDBweCIgaGVpZ2h0PSI4MHB4IiB2aWV3Qm94PSIwIDAgMjAwIDgwIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCAyMDAgODAiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8ZyBpZD0iTGF5ZXJfMTEiPgoJPGc+CgkJPHBhdGggZmlsbD0iIzMzNzFCNyIgc3Ryb2tlPSIjMzM3MUI3IiBzdHJva2Utd2lkdGg9IjAuMSIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBkPSJNMTIuOCwyOS41YzAuNiwwLDEuMS0wLjUsMS4xLTEuMQoJCQljMC0wLjYtMC41LTEuMi0xLjEtMS4yYy0wLjYsMC0xLjIsMC41LTEuMiwxLjJDMTEuNiwyOSwxMi4yLDI5LjUsMTIuOCwyOS41eiBNMTIuOCwyOGMwLjIsMCwwLjQsMC4yLDAuNCwwLjQKCQkJYzAsMC4yLTAuMiwwLjQtMC40LDAuNGMtMC4yLDAtMC40LTAuMi0wLjQtMC40QzEyLjQsMjguMSwxMi42LDI4LDEyLjgsMjh6Ii8+CgkJPHBhdGggZmlsbD0iIzMzNzFCNyIgc3Ryb2tlPSIjMzM3MUI3IiBzdHJva2Utd2lkdGg9IjAuMSIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBkPSJNMTAsMjNjLTMuOCwwLTcsMy4xLTcsN2MwLDMuOCwzLjEsNyw3LDcKCQkJczctMy4xLDctN0MxNywyNi4yLDEzLjgsMjMsMTAsMjN6IE0xMCwzNi4yYy0zLjQsMC02LjItMi44LTYuMi02LjJjMC0zLjQsMi44LTYuMiw2LjItNi4yczYuMiwyLjgsNi4yLDYuMgoJCQlDMTYuMiwzMy40LDEzLjQsMzYuMiwxMCwzNi4yeiIvPgoJCTxwYXRoIGZpbGw9IiMzMzcxQjciIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLXdpZHRoPSIwLjEiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTE0LjYsMzEuMmMtMC4xLTAuMS0wLjItMC4yLTAuMy0wLjJINS43CgkJCWMtMC4xLDAtMC4yLDAuMS0wLjMsMC4yYy0wLjEsMC4xLTAuMSwwLjIsMCwwLjRjMC43LDIsMi41LDMuMyw0LjYsMy4zczMuOS0xLjMsNC42LTMuM0MxNC43LDMxLjUsMTQuNywzMS4zLDE0LjYsMzEuMnogTTEwLDM0LjEKCQkJYy0xLjYsMC0zLTAuOS0zLjctMi4yaDcuM0MxMywzMy4yLDExLjYsMzQuMSwxMCwzNC4xeiIvPgoJCTxwYXRoIGZpbGw9IiMzMzcxQjciIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLXdpZHRoPSIwLjEiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTcuMiwyOS41YzAuNiwwLDEuMi0wLjUsMS4yLTEuMQoJCQljMC0wLjYtMC41LTEuMi0xLjItMS4yYy0wLjYsMC0xLjEsMC41LTEuMSwxLjJDNi4xLDI5LDYuNiwyOS41LDcuMiwyOS41eiBNNy4yLDI4YzAuMiwwLDAuNCwwLjIsMC40LDAuNGMwLDAuMi0wLjIsMC40LTAuNCwwLjQKCQkJYy0wLjIsMC0wLjQtMC4yLTAuNC0wLjRDNi44LDI4LjEsNywyOCw3LjIsMjh6Ii8+Cgk8L2c+Cgk8Zz4KCQk8Zz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzM3MUI3IiBkPSJNNjQuMSwzMy40bDIuMywwYzAuMiwwLDAuNCwwLjIsMC40LDAuNHYyLjFjMCwwLjItMC4yLDAuNC0wLjQsMC40aC0yLjMKCQkJCWMtMC4yLDAtMC40LTAuMi0wLjQtMC40di0yLjFDNjMuNywzMy42LDYzLjgsMzMuNCw2NC4xLDMzLjR6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgZD0iTTczLjUsMzMuNWgyLjRjMC4yLDAsMC40LDAuMiwwLjQsMC40djJjMCwwLjItMC4yLDAuNC0wLjQsMC40aC0yLjQKCQkJCWMtMC4yLDAtMC40LTAuMi0wLjQtMC40bDAtMkM3My4xLDMzLjYsNzMuMywzMy41LDczLjUsMzMuNXoiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzM3MUI3IiBkPSJNNjMuNywyOC40aDEyLjZ2NUg2My43VjI4LjR6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgZD0iTTY1LjUsMjMuNmg4LjljMSwwLDEuOSwwLjgsMS45LDEuOXYzLjFINjMuN3YtMy4xQzYzLjcsMjQuNSw2NC41LDIzLjYsNjUuNSwyMy42eiIvPgoJCQk8ZWxsaXBzZSBmaWxsPSIjMzM3MUI3IiBjeD0iNjYuMiIgY3k9IjMwLjkiIHJ4PSIwLjkiIHJ5PSIxIi8+CgkJCTxlbGxpcHNlIGZpbGw9IiMzMzcxQjciIGN4PSI3My44IiBjeT0iMzAuOSIgcng9IjAuOSIgcnk9IjEiLz4KCQk8L2c+Cgk8L2c+Cgk8Zz4KCQk8Zz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzM3MUI3IiBkPSJNOTYuNCwzMGMwLDMuNi0yLjksNi41LTYuNCw2LjVzLTYuNC0yLjktNi40LTYuNXMyLjktNi41LDYuNC02LjVTOTYuNCwyNi40LDk2LjQsMzB6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgZD0iTTk2LjMsMjguNmMwLDAsMCwwLjEsMCwwLjFjLTAuOSwwLjEtMi45LDAuMS00LjYtMS4xYy0xLjEtMC44LTItMS43LTIuNi0yLjUKCQkJCWMtMC4zLTAuNC0wLjYtMC44LTAuNy0xYy0wLjEtMC4xLTAuMS0wLjEtMC4xLTAuMmMwLjUtMC4xLDEuMi0wLjIsMi0wLjFjMS4yLDAsMi41LDAuMywzLjUsMS4xYzEsMC44LDEuNywxLjgsMi4xLDIuOAoJCQkJQzk2LjEsMjcuOSw5Ni4yLDI4LjMsOTYuMywyOC42eiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMzMzcxQjciIGQ9Ik04NCwzMi4yYzAsMCwwLTAuMSwwLTAuMWMwLjktMC4yLDIuOS0wLjQsNC43LDAuNmMxLjEsMC43LDEuOSwxLjUsMi40LDIuMwoJCQkJYzAuNCwwLjUsMC42LDEsMC43LDEuM2MtMC40LDAuMS0xLDAuMi0xLjcsMC4zYy0xLDAtMi4xLTAuMS0zLjItMC44cy0xLjktMS42LTIuNC0yLjVDODQuMiwzMi44LDg0LjEsMzIuNSw4NCwzMi4yeiIvPgoJCTwvZz4KCTwvZz4KCTxnPgoJCTxnPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMzMzcxQjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTExNi4zLDI2LjhsLTEuNCwybC0wLjgtMC44bC0wLjYtMC42bDAsMC45bC0wLjEsOC4yaC02LjgKCQkJCWwtMC4xLTguMmwwLTAuOWwtMC42LDAuNmwtMC44LDAuOGwtMS40LTJsMi42LTIuOWMwLjEtMC4xLDAuMi0wLjEsMC4zLTAuMWgxLjNsMC40LDAuN2MwLjcsMS4zLDIuNiwxLjMsMy4zLTAuMWwwLjMtMC42aDEuMgoJCQkJYzAuMSwwLDAuMiwwLDAuMywwLjFsMC4zLTAuM2wtMC4zLDAuM0wxMTYuMywyNi44eiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMzMzcxQjciIGQ9Ik0xMTAuMSwyNy43aDJ2MC45YzAsMC40LTAuNCwwLjctMSwwLjdjLTAuNiwwLTEtMC4zLTEtMC43TDExMC4xLDI3LjdMMTEwLjEsMjcuN3oiLz4KCQk8L2c+Cgk8L2c+Cgk8Zz4KCQk8Zz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzM3MUI3IiBkPSJNMTI2LjgsMzQuM2MwLDEuMi0xLDIuMi0yLjIsMi4ycy0yLjItMS0yLjItMi4yczEtMi4yLDIuMi0yLjJTMTI2LjgsMzMuMSwxMjYuOCwzNC4zeiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMzMzcxQjciIGQ9Ik0xMzcuNiwzNC4zYzAsMS4yLTEsMi4yLTIuMiwyLjJjLTEuMiwwLTIuMi0xLTIuMi0yLjJzMS0yLjIsMi4yLTIuMgoJCQkJQzEzNi42LDMyLjEsMTM3LjYsMzMuMSwxMzcuNiwzNC4zeiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMzMzcxQjciIGQ9Ik0xMjYuOCwyNC40djkuOSIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMzMzcxQjciIGQ9Ik0xMzcuNywyNC40djkuOSIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMzMzcxQjciIGQ9Ik0xMjYuOCwyMy41aDEwLjh2Mi43aC0xMC44QzEyNi44LDI2LjIsMTI2LjgsMjMuNSwxMjYuOCwyMy41eiIvPgoJCTwvZz4KCTwvZz4KCTxnPgoJCTxnPgoJCQk8cGF0aCBmaWxsPSIjMzM3MUI3IiBkPSJNMTcwLjgsMjMuMUwxNzAuOCwyMy4xYy0wLjMsMC0wLjUsMC0wLjgsMGMtMi4xLDAtNCwxLTUuMywyLjVsLTAuMSwwbC0wLjEtMC4xbC0xLTEuMmwtMC4zLDMuNGwzLjQsMC4zCgkJCQlsLTEuMS0xLjNsLTAuMS0wLjFsMC4xLTAuMWMxLjEtMS41LDMtMi4zLDUtMi4xbDAsMGMzLjIsMC4zLDUuNSwzLjEsNS4yLDYuM2MtMC4zLDMtMy4xLDUuMy02LjEsNS4xYy0zLjEtMC4yLTUuNC0yLjktNS4zLTYKCQkJCWwtMS4zLTAuMWMtMC4yLDMuOCwyLjYsNy4xLDYuMyw3LjRjMy45LDAuMyw3LjMtMi42LDcuNi02LjVDMTc3LjIsMjYuOCwxNzQuNCwyMy41LDE3MC44LDIzLjF6Ii8+CgkJCTxwYXRoIGZpbGw9IiMzMzcxQjciIGQ9Ik0xNzAuMywyNy40YzAtMC4zLTAuMy0wLjYtMC42LTAuNnMtMC42LDAuMy0wLjYsMC42djMuMmMwLDAuMiwwLjEsMC4zLDAuMiwwLjRjMC4xLDAuMSwwLjMsMC4yLDAuNCwwLjIKCQkJCWgyLjRjMC40LDAsMC42LTAuMywwLjYtMC42YzAtMC40LTAuMy0wLjYtMC42LTAuNmgtMS42aC0wLjJ2LTAuMkwxNzAuMywyNy40TDE3MC4zLDI3LjR6Ii8+CgkJPC9nPgoJPC9nPgoJPGc+CgkJPGc+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgZD0iTTE4Ni4yLDIzLjRoNy43YzEuNSwwLDIuNywxLjIsMi43LDIuN3Y3LjdjMCwxLjUtMS4yLDIuNy0yLjcsMi43aC03LjcKCQkJCWMtMS41LDAtMi43LTEuMi0yLjctMi43di03LjdDMTgzLjQsMjQuNiwxODQuNywyMy40LDE4Ni4yLDIzLjR6Ii8+CgkJCTxlbGxpcHNlIGZpbGw9IiMzMzcxQjciIGN4PSIxODYiIGN5PSIyOC45IiByeD0iMC43IiByeT0iMC43Ii8+CgkJCTxlbGxpcHNlIGZpbGw9IiMzMzcxQjciIGN4PSIxOTQiIGN5PSIyNi43IiByeD0iMC43IiByeT0iMC43Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMTg2LDMzLjNsMC40LTAuM2MwLjQtMC4zLDEtMC4zLDEuNS0wLjFsMSwwLjQKCQkJCWMwLjUsMC4yLDEsMC4yLDEuNS0wLjFsMC44LTAuNWMwLjQtMC4zLDEtMC4zLDEuNS0wLjFsMS44LDAuOCIvPgoJCTwvZz4KCTwvZz4KCTxwYXRoIGZpbGw9IiMzMzcxQjciIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLXdpZHRoPSIwLjI1IiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIGQ9Ik0xNTYsMjQuM2MtMC4yLTAuMS0wLjQtMC4xLTAuNSwwCgkJYzAsMC0wLjIsMC4xLTAuOSwwLjJjLTAuNywwLTIuNC0wLjEtMy44LTAuNmMtMC44LTAuMy0xLjctMC41LTIuNS0wLjVjLTAuMiwwLTAuNCwwLTAuNSwwYy0xLjMsMC0yLjUsMC4zLTMuNiwxCgkJYy0wLjIsMC4xLTAuMiwwLjItMC4yLDAuNHYxMS42YzAsMC4zLDAuMSwwLjUsMC4zLDAuNWMwLjYsMCwwLjUtMC40LDAuNS0wLjZ2LTUuN2MwLjctMC4zLDMuMi0xLjEsNS44LTAuMQoJCWMxLjYsMC42LDMuNSwwLjcsNC4zLDAuN2MwLjgsMCwxLjMtMC4zLDEuMy0wLjNjMC4yLTAuMSwwLjMtMC4yLDAuMy0wLjR2LTUuN0MxNTYuMiwyNC42LDE1Ni4xLDI0LjQsMTU2LDI0LjN6IE0xNTUuNiwzMC4yCgkJYy0wLjEsMC0wLjcsMC4xLTEsMC4xYy0wLjcsMC0yLjQtMC4xLTMuOC0wLjZjLTIuNS0xLTUtMC41LTYuMi0wLjF2LTQuOWMwLjktMC41LDIuMi0wLjcsMy4yLTAuN2MwLjEsMCwwLjMsMCwwLjQsMAoJCWMwLjcsMCwxLjUsMC4yLDIuMiwwLjRjMS42LDAuNiwzLjUsMC43LDQuMywwLjdjMC4yLDAsMC44LDAsMS0wLjFWMzAuMnoiLz4KCTxnPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgZD0iTTQ4LjEsMjMuNWgzLjdjMi41LDAsNC41LDIsNC41LDQuNWMwLDAuNS0wLjQsMC45LTAuOSwwLjlINDQuNWMtMC41LDAtMC45LTAuNC0wLjktMC45CgkJCUM0My42LDI1LjUsNDUuNiwyMy41LDQ4LjEsMjMuNXoiLz4KCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMzMzcxQjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTQzLjUsMjguOGMtMC4yLDAuMS0wLjUsMS4yLDAsMS41YzEuNCwxLDguNSwwLjgsMTEuMywwLjYKCQkJYzAuOC0wLjEsMS42LTAuNCwxLjctMS4yYzAtMC4zLTAuMS0wLjYtMC42LTAuOSIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNNDMuNSwzMC42TDQzLjMsMzFjLTAuMiwwLjUsMC4yLDEsMC43LDAuOWMwLjMtMC4xLDAuNSwwLDAuNywwLjMKCQkJbDAuMSwwLjJjMC4zLDAuNSwxLDAuNiwxLjUsMC4ybDAsMGMwLjMtMC4yLDAuNy0wLjMsMS0wLjJsMC44LDAuM2MwLjQsMC4yLDAuOCwwLjEsMS4yLDBsMC41LTAuMmMwLjQtMC4yLDAuOS0wLjIsMS4zLDBsMC41LDAuMgoJCQljMC40LDAuMiwwLjgsMC4yLDEuMiwwbDAuMi0wLjFjMC4zLTAuMiwwLjgtMC4yLDEuMSwwLjFsMC4yLDAuMmMwLjMsMC4zLDAuOCwwLjIsMS0wLjJsMC4xLTAuMmMwLjEtMC4yLDAtMC4zLDAuMi0wLjMKCQkJYzAuNSwwLDEuMi0wLjMsMS4xLTAuN2wtMC40LTEuMSIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNNDMuNSwzMi4yYy0wLjEsMC4yLTAuMywwLjgsMCwxLjFjMC4zLDAuNCwzLDEuMSw2LjQsMS4xCgkJCWMyLjIsMCw0LjYtMC4zLDYtMC42YzAuNS0wLjEsMC45LTAuNSwwLjgtMC45YzAtMC4yLTAuMi0wLjUtMC40LTAuNyIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNNDMuNSwzMy4zYzAsMC41LDAuNiwyLjMsMS4zLDIuN2MxLjgsMC44LDUuNywwLjcsOC4xLDAuNQoJCQljMS4zLTAuMSwyLjUtMC43LDMuMi0xLjhjMC4zLTAuNSwwLjUtMSwwLjUtMS40Ii8+CgkJPGVsbGlwc2UgZmlsbD0iIzMzNzFCNyIgY3g9IjUxLjYiIGN5PSIyNi41IiByeD0iMC4zIiByeT0iMC40Ii8+CgkJPGVsbGlwc2UgZmlsbD0iIzMzNzFCNyIgY3g9IjUzIiBjeT0iMjUiIHJ4PSIwLjMiIHJ5PSIwLjQiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjMzM3MUI3IiBjeD0iNTMiIGN5PSIyNy4yIiByeD0iMC4zIiByeT0iMC40Ii8+CgkJPGVsbGlwc2UgZmlsbD0iIzMzNzFCNyIgY3g9IjU0LjMiIGN5PSIyNi41IiByeD0iMC4zIiByeT0iMC40Ii8+CgkJPGVsbGlwc2UgZmlsbD0iIzMzNzFCNyIgY3g9IjUwLjkiIGN5PSIyNSIgcng9IjAuMyIgcnk9IjAuNCIvPgoJPC9nPgoJPGc+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzM3MUI3IiBkPSJNMjQuMiwzMXYtNy42YzAuMSwwLjEsMC44LDAuOSwyLjgsMy4xYzIuNS0xLjYsNS42LTAuNyw2LjksMGwyLjQtMy4xdjcuMQoJCQljMCwxLjItMC4xLDIuNS0wLjksMy40Yy0xLDEuMi0yLjcsMi41LTUuMywyLjVjLTIuOSwwLTQuNS0xLjUtNS4zLTIuOUMyNC4yLDMyLjksMjQuMiwzMiwyNC4yLDMxeiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMjEuMiwzMGw1LjQsMS4yIi8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzM3MUI3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0yMS4yLDM0LjFsNS40LTEuMiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMzguOCwzMGwtNS40LDEuMiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzNzFCNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMzguOCwzNC4xbC01LjQtMS4yIi8+CgkJPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiMzMzcxQjciIGQ9Ik0yOS41LDMyLjRMMjksMzEuN2MtMC4yLTAuMywwLTAuNiwwLjMtMC42aDEuNAoJCQljMC4zLDAsMC41LDAuNCwwLjMsMC42bC0wLjcsMWwwLDBjLTAuNywxLjItMi42LDEuMS0zLjEtMC4zbC0wLjEtMC4yYy0wLjEtMC4yLDAtMC40LDAuMi0wLjVzMC40LDAsMC41LDAuMmwwLjEsMC4yCgkJCUMyOC4zLDMyLjgsMjkuMSwzMi45LDI5LjUsMzIuNHoiLz4KCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMzMzcxQjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTMyLjQsMzIuMWwtMC4xLDAuMmMtMC40LDEtMS44LDEuMS0yLjMsMC4yIi8+CgkJPGVsbGlwc2UgZmlsbD0iIzMzNzFCNyIgY3g9IjI3LjYiIGN5PSIyOS43IiByeD0iMC43IiByeT0iMC43Ii8+CgkJPGVsbGlwc2UgZmlsbD0iIzMzNzFCNyIgY3g9IjMyLjQiIGN5PSIyOS43IiByeD0iMC43IiByeT0iMC43Ii8+Cgk8L2c+Cgk8Zz4KCQk8cGF0aCBmaWxsPSIjQzBDMEJGIiBzdHJva2U9IiNDMEMwQkYiIHN0cm9rZS13aWR0aD0iMC4xIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIGQ9Ik0xMi44LDQ5LjVjMC42LDAsMS4xLTAuNSwxLjEtMS4xCgkJCWMwLTAuNi0wLjUtMS4yLTEuMS0xLjJjLTAuNiwwLTEuMiwwLjUtMS4yLDEuMkMxMS42LDQ5LDEyLjIsNDkuNSwxMi44LDQ5LjV6IE0xMi44LDQ4YzAuMiwwLDAuNCwwLjIsMC40LDAuNAoJCQljMCwwLjItMC4yLDAuNC0wLjQsMC40Yy0wLjIsMC0wLjQtMC4yLTAuNC0wLjRDMTIuNCw0OC4xLDEyLjYsNDgsMTIuOCw0OHoiLz4KCQk8cGF0aCBmaWxsPSIjQzBDMEJGIiBzdHJva2U9IiNDMEMwQkYiIHN0cm9rZS13aWR0aD0iMC4xIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIGQ9Ik0xNC42LDUxLjJjLTAuMS0wLjEtMC4yLTAuMi0wLjMtMC4ySDUuNwoJCQljLTAuMSwwLTAuMiwwLjEtMC4zLDAuMmMtMC4xLDAuMS0wLjEsMC4yLDAsMC40YzAuNywyLDIuNSwzLjMsNC42LDMuM3MzLjktMS4zLDQuNi0zLjNDMTQuNyw1MS41LDE0LjcsNTEuMywxNC42LDUxLjJ6IE0xMCw1NC4xCgkJCWMtMS42LDAtMy0wLjktMy43LTIuMmg3LjNDMTMsNTMuMiwxMS42LDU0LjEsMTAsNTQuMXoiLz4KCQk8cGF0aCBmaWxsPSIjQzBDMEJGIiBzdHJva2U9IiNDMEMwQkYiIHN0cm9rZS13aWR0aD0iMC4xIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIGQ9Ik03LjIsNDkuNWMwLjYsMCwxLjItMC41LDEuMi0xLjEKCQkJYzAtMC42LTAuNS0xLjItMS4yLTEuMmMtMC42LDAtMS4xLDAuNS0xLjEsMS4yQzYuMSw0OSw2LjYsNDkuNSw3LjIsNDkuNXogTTcuMiw0OGMwLjIsMCwwLjQsMC4yLDAuNCwwLjRjMCwwLjItMC4yLDAuNC0wLjQsMC40CgkJCWMtMC4yLDAtMC40LTAuMi0wLjQtMC40QzYuOCw0OC4xLDcsNDgsNy4yLDQ4eiIvPgoJCTxwYXRoIGZpbGw9IiNDMEMwQkYiIHN0cm9rZT0iI0MwQzBCRiIgc3Ryb2tlLXdpZHRoPSIwLjEiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTEwLDQzYy0zLjgsMC03LDMuMS03LDdjMCwzLjgsMy4xLDcsNyw3CgkJCXM3LTMuMSw3LTdDMTcsNDYuMiwxMy44LDQzLDEwLDQzeiBNMTAsNTYuMmMtMy40LDAtNi4yLTIuOC02LjItNi4yYzAtMy40LDIuOC02LjIsNi4yLTYuMnM2LjIsMi44LDYuMiw2LjIKCQkJQzE2LjIsNTMuNCwxMy40LDU2LjIsMTAsNTYuMnoiLz4KCTwvZz4KCTxnPgoJCTxnPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNDMEMwQkYiIGQ9Ik02NC4xLDUzLjRsMi4zLDBjMC4yLDAsMC40LDAuMiwwLjQsMC40djIuMWMwLDAuMi0wLjIsMC40LTAuNCwwLjRoLTIuMwoJCQkJYy0wLjIsMC0wLjQtMC4yLTAuNC0wLjR2LTIuMUM2My43LDUzLjYsNjMuOCw1My40LDY0LjEsNTMuNHoiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBkPSJNNzMuNSw1My41aDIuNGMwLjIsMCwwLjQsMC4yLDAuNCwwLjR2MmMwLDAuMi0wLjIsMC40LTAuNCwwLjRoLTIuNAoJCQkJYy0wLjIsMC0wLjQtMC4yLTAuNC0wLjRsMC0yQzczLjEsNTMuNiw3My4zLDUzLjUsNzMuNSw1My41eiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNDMEMwQkYiIGQ9Ik02My43LDQ4LjRoMTIuNnY1SDYzLjdWNDguNHoiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBkPSJNNjUuNSw0My42aDguOWMxLDAsMS45LDAuOCwxLjksMS45djMuMUg2My43di0zLjFDNjMuNyw0NC41LDY0LjUsNDMuNiw2NS41LDQzLjZ6Ii8+CgkJCTxlbGxpcHNlIGZpbGw9IiNDMEMwQkYiIGN4PSI2Ni4yIiBjeT0iNTAuOSIgcng9IjAuOSIgcnk9IjEiLz4KCQkJPGVsbGlwc2UgZmlsbD0iI0MwQzBCRiIgY3g9IjczLjgiIGN5PSI1MC45IiByeD0iMC45IiByeT0iMSIvPgoJCTwvZz4KCTwvZz4KCTxnPgoJCTxnPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNDMEMwQkYiIGQ9Ik05Ni40LDUwYzAsMy42LTIuOSw2LjUtNi40LDYuNXMtNi40LTIuOS02LjQtNi41czIuOS02LjUsNi40LTYuNVM5Ni40LDQ2LjQsOTYuNCw1MHoiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBkPSJNOTYuMyw0OC42YzAsMCwwLDAuMSwwLDAuMWMtMC45LDAuMS0yLjksMC4xLTQuNi0xLjJjLTEuMS0wLjgtMi0xLjctMi42LTIuNQoJCQkJYy0wLjMtMC40LTAuNi0wLjgtMC43LTFjLTAuMS0wLjEtMC4xLTAuMi0wLjEtMC4yYzAuNS0wLjEsMS4yLTAuMiwyLTAuMmMxLjIsMCwyLjUsMC4zLDMuNSwxLjFjMSwwLjgsMS43LDEuOCwyLjEsMi44CgkJCQlDOTYuMSw0Ny45LDk2LjIsNDguMyw5Ni4zLDQ4LjZ6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0MwQzBCRiIgZD0iTTg0LDUyLjJjMCwwLDAtMC4xLDAtMC4xYzAuOS0wLjIsMi45LTAuNCw0LjcsMC42YzEuMSwwLjcsMS45LDEuNSwyLjQsMi4zCgkJCQljMC40LDAuNSwwLjYsMSwwLjcsMS4zYy0wLjQsMC4xLTEsMC4yLTEuNywwLjNjLTEsMC0yLjEtMC4xLTMuMi0wLjhzLTEuOS0xLjYtMi40LTIuNUM4NC4yLDUyLjgsODQuMSw1Mi41LDg0LDUyLjJ6Ii8+CgkJPC9nPgoJPC9nPgoJPGc+CgkJPGc+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0MwQzBCRiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMTE2LjMsNDYuOGwtMS40LDJsLTAuOC0wLjhsLTAuNi0wLjdsMCwwLjlsLTAuMSw4LjJoLTYuOAoJCQkJbC0wLjEtOC4ybDAtMC45bC0wLjYsMC43bC0wLjgsMC44bC0xLjQtMmwyLjYtMi45YzAuMS0wLjEsMC4yLTAuMSwwLjMtMC4xaDEuM2wwLjQsMC43YzAuNywxLjMsMi42LDEuMywzLjMtMC4xbDAuMy0wLjZoMS4yCgkJCQljMC4xLDAsMC4yLDAsMC4zLDAuMWwwLjMtMC4zbC0wLjMsMC4zTDExNi4zLDQ2Ljh6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0MwQzBCRiIgZD0iTTExMC4xLDQ3LjdoMnYwLjljMCwwLjQtMC40LDAuNy0xLDAuN2MtMC42LDAtMS0wLjMtMS0wLjdMMTEwLjEsNDcuN0wxMTAuMSw0Ny43eiIvPgoJCTwvZz4KCTwvZz4KCTxnPgoJCTxnPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNDMEMwQkYiIGQ9Ik0xMjYuOCw1NC4zYzAsMS4yLTEsMi4yLTIuMiwyLjJzLTIuMi0xLTIuMi0yLjJzMS0yLjIsMi4yLTIuMlMxMjYuOCw1My4xLDEyNi44LDU0LjN6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0MwQzBCRiIgZD0iTTEzNy42LDU0LjNjMCwxLjItMSwyLjItMi4yLDIuMmMtMS4yLDAtMi4yLTEtMi4yLTIuMnMxLTIuMiwyLjItMi4yCgkJCQlDMTM2LjYsNTIuMSwxMzcuNiw1My4xLDEzNy42LDU0LjN6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0MwQzBCRiIgZD0iTTEyNi44LDQ0LjR2OS45Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0MwQzBCRiIgZD0iTTEzNy43LDQ0LjR2OS45Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0MwQzBCRiIgZD0iTTEyNi44LDQzLjVoMTAuOHYyLjdoLTEwLjhDMTI2LjgsNDYuMiwxMjYuOCw0My41LDEyNi44LDQzLjV6Ii8+CgkJPC9nPgoJPC9nPgoJPGc+CgkJPGc+CgkJCTxwYXRoIGZpbGw9IiNDMEMwQkYiIGQ9Ik0xNzAuOCw0My4xTDE3MC44LDQzLjFjLTAuMywwLTAuNSwwLTAuOCwwYy0yLjEsMC00LDEtNS4zLDIuNWwtMC4xLDBsLTAuMS0wLjFsLTEtMS4ybC0wLjMsMy40bDMuNCwwLjMKCQkJCWwtMS4xLTEuM2wtMC4xLTAuMWwwLjEtMC4xYzEuMS0xLjUsMy0yLjMsNS0yLjFsMCwwYzMuMiwwLjMsNS41LDMuMSw1LjIsNi4zYy0wLjMsMy0zLjEsNS4zLTYuMSw1LjFjLTMuMS0wLjItNS40LTIuOS01LjMtNgoJCQkJbC0xLjMtMC4xYy0wLjIsMy44LDIuNiw3LjEsNi4zLDcuNGMzLjksMC4zLDcuMy0yLjYsNy42LTYuNUMxNzcuMiw0Ni44LDE3NC40LDQzLjUsMTcwLjgsNDMuMXoiLz4KCQkJPHBhdGggZmlsbD0iI0MwQzBCRiIgZD0iTTE3MC4zLDQ3LjRjMC0wLjMtMC4zLTAuNi0wLjYtMC42cy0wLjYsMC4zLTAuNiwwLjZ2My4yYzAsMC4yLDAuMSwwLjMsMC4yLDAuNGMwLjEsMC4xLDAuMywwLjIsMC40LDAuMgoJCQkJaDIuNGMwLjQsMCwwLjYtMC4zLDAuNi0wLjZjMC0wLjMtMC4zLTAuNi0wLjYtMC42aC0xLjZoLTAuMnYtMC4yTDE3MC4zLDQ3LjRMMTcwLjMsNDcuNHoiLz4KCQk8L2c+Cgk8L2c+Cgk8Zz4KCQk8Zz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBkPSJNMTg2LjIsNDMuNGg3LjdjMS41LDAsMi43LDEuMiwyLjcsMi43djcuN2MwLDEuNS0xLjIsMi43LTIuNywyLjdoLTcuNwoJCQkJYy0xLjUsMC0yLjctMS4yLTIuNy0yLjd2LTcuN0MxODMuNCw0NC43LDE4NC43LDQzLjQsMTg2LjIsNDMuNHoiLz4KCQkJPGVsbGlwc2UgZmlsbD0iI0MwQzBCRiIgY3g9IjE4NiIgY3k9IjQ4LjkiIHJ4PSIwLjciIHJ5PSIwLjciLz4KCQkJPGVsbGlwc2UgZmlsbD0iI0MwQzBCRiIgY3g9IjE5NCIgY3k9IjQ2LjciIHJ4PSIwLjciIHJ5PSIwLjciLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0xODYsNTMuM2wwLjQtMC4zYzAuNC0wLjMsMS0wLjMsMS41LTAuMWwxLDAuNAoJCQkJYzAuNSwwLjIsMSwwLjIsMS41LTAuMWwwLjgtMC41YzAuNC0wLjMsMS0wLjMsMS41LTAuMWwxLjgsMC44Ii8+CgkJPC9nPgoJPC9nPgoJPHBhdGggZmlsbD0iI0MwQzBCRiIgc3Ryb2tlPSIjQzBDMEJGIiBzdHJva2Utd2lkdGg9IjAuMjUiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTE1Niw0NC4zYy0wLjItMC4xLTAuNC0wLjEtMC41LDAKCQljMCwwLTAuMiwwLjEtMC45LDAuMmMtMC43LDAtMi40LTAuMS0zLjgtMC42Yy0wLjgtMC4zLTEuNy0wLjUtMi41LTAuNWMtMC4yLDAtMC40LDAtMC41LDBjLTEuMywwLTIuNSwwLjMtMy42LDEKCQljLTAuMiwwLjEtMC4yLDAuMi0wLjIsMC40djExLjZjMCwwLjMsMC4xLDAuNSwwLjMsMC41YzAuNiwwLDAuNS0wLjQsMC41LTAuNnYtNS43YzAuNy0wLjMsMy4yLTEuMSw1LjgtMC4xCgkJYzEuNiwwLjYsMy41LDAuNyw0LjMsMC43YzAuOCwwLDEuMy0wLjMsMS4zLTAuM2MwLjItMC4xLDAuMy0wLjIsMC4zLTAuNHYtNS43QzE1Ni4yLDQ0LjYsMTU2LjEsNDQuNCwxNTYsNDQuM3ogTTE1NS42LDUwLjIKCQljLTAuMSwwLTAuNywwLjEtMSwwLjFjLTAuNywwLTIuNC0wLjEtMy44LTAuNmMtMi41LTEtNS0wLjUtNi4yLTAuMXYtNC45YzAuOS0wLjUsMi4yLTAuNywzLjItMC43YzAuMSwwLDAuMywwLDAuNCwwCgkJYzAuNywwLDEuNSwwLjIsMi4yLDAuNGMxLjYsMC42LDMuNSwwLjcsNC4zLDAuN2MwLjIsMCwwLjgsMCwxLTAuMVY1MC4yeiIvPgoJPGc+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBkPSJNNDguMSw0My41aDMuN2MyLjUsMCw0LjUsMiw0LjUsNC41YzAsMC41LTAuNCwwLjktMC45LDAuOUg0NC41Yy0wLjUsMC0wLjktMC40LTAuOS0wLjkKCQkJQzQzLjYsNDUuNSw0NS42LDQzLjUsNDguMSw0My41eiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0MwQzBCRiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNNDMuNSw0OC44Yy0wLjIsMC4xLTAuNSwxLjIsMCwxLjVjMS40LDEsOC41LDAuOCwxMS4zLDAuNgoJCQljMC44LTAuMSwxLjYtMC40LDEuNy0xLjJjMC0wLjMtMC4xLTAuNi0wLjYtMC45Ii8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik00My41LDUwLjZMNDMuMyw1MWMtMC4yLDAuNSwwLjIsMSwwLjcsMC45YzAuMy0wLjEsMC41LDAsMC43LDAuMwoJCQlsMC4xLDAuMmMwLjMsMC41LDEsMC42LDEuNSwwLjJsMCwwYzAuMy0wLjIsMC43LTAuMywxLTAuMmwwLjgsMC4zYzAuNCwwLjIsMC44LDAuMSwxLjIsMGwwLjUtMC4yYzAuNC0wLjIsMC45LTAuMiwxLjMsMGwwLjUsMC4yCgkJCWMwLjQsMC4yLDAuOCwwLjIsMS4yLDBsMC4yLTAuMWMwLjMtMC4yLDAuOC0wLjIsMS4xLDAuMWwwLjIsMC4yYzAuMywwLjMsMC44LDAuMiwxLTAuMmwwLjEtMC4yYzAuMS0wLjIsMC0wLjMsMC4yLTAuMwoJCQljMC41LDAsMS4yLTAuMywxLjEtMC43bC0wLjQtMS4xIi8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik00My41LDUyLjJjLTAuMSwwLjItMC4zLDAuOCwwLDEuMWMwLjMsMC40LDMsMS4xLDYuNCwxLjEKCQkJYzIuMiwwLDQuNi0wLjMsNi0wLjZjMC41LTAuMSwwLjktMC41LDAuOC0wLjljMC0wLjItMC4yLTAuNS0wLjQtMC43Ii8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik00My41LDUzLjNjMCwwLjUsMC42LDIuMywxLjMsMi43YzEuOCwwLjgsNS43LDAuNyw4LjEsMC41CgkJCWMxLjMtMC4xLDIuNS0wLjcsMy4yLTEuOGMwLjMtMC41LDAuNS0xLDAuNS0xLjQiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjQzBDMEJGIiBjeD0iNTEuNiIgY3k9IjQ2LjUiIHJ4PSIwLjMiIHJ5PSIwLjQiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjQzBDMEJGIiBjeD0iNTMiIGN5PSI0NSIgcng9IjAuMyIgcnk9IjAuNCIvPgoJCTxlbGxpcHNlIGZpbGw9IiNDMEMwQkYiIGN4PSI1MyIgY3k9IjQ3LjIiIHJ4PSIwLjMiIHJ5PSIwLjQiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjQzBDMEJGIiBjeD0iNTQuMyIgY3k9IjQ2LjUiIHJ4PSIwLjMiIHJ5PSIwLjQiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjQzBDMEJGIiBjeD0iNTAuOSIgY3k9IjQ1IiByeD0iMC4zIiByeT0iMC40Ii8+Cgk8L2c+Cgk8Zz4KCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNDMEMwQkYiIGQ9Ik0yNC4yLDUxdi03LjZjMC4xLDAuMSwwLjgsMC45LDIuOCwzLjFjMi41LTEuNyw1LjYtMC43LDYuOSwwbDIuNC0zLjF2Ny4xCgkJCWMwLDEuMi0wLjEsMi41LTAuOSwzLjRjLTEsMS4yLTIuNywyLjUtNS4zLDIuNWMtMi45LDAtNC41LTEuNS01LjMtMi45QzI0LjIsNTIuOSwyNC4yLDUyLDI0LjIsNTF6Ii8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0yMS4yLDUwbDUuNCwxLjIiLz4KCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNDMEMwQkYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTIxLjIsNTQuMWw1LjQtMS4yIi8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0zOC44LDUwbC01LjQsMS4yIi8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzBDMEJGIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0zOC44LDU0LjFsLTUuNC0xLjIiLz4KCQk8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI0MwQzBCRiIgZD0iTTI5LjUsNTIuNEwyOSw1MS43Yy0wLjItMC4zLDAtMC42LDAuMy0wLjZoMS40CgkJCWMwLjMsMCwwLjUsMC40LDAuMywwLjZsLTAuNywxbDAsMGMtMC43LDEuMi0yLjYsMS4xLTMuMS0wLjNsLTAuMS0wLjJjLTAuMS0wLjIsMC0wLjQsMC4yLTAuNXMwLjQsMCwwLjUsMC4ybDAuMSwwLjIKCQkJQzI4LjMsNTIuOCwyOS4xLDUyLjksMjkuNSw1Mi40eiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0MwQzBCRiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMzIuNCw1Mi4xbC0wLjEsMC4yYy0wLjQsMS0xLjgsMS4xLTIuMywwLjIiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjQzBDMEJGIiBjeD0iMjcuNiIgY3k9IjQ5LjciIHJ4PSIwLjciIHJ5PSIwLjciLz4KCQk8ZWxsaXBzZSBmaWxsPSIjQzBDMEJGIiBjeD0iMzIuNCIgY3k9IjQ5LjciIHJ4PSIwLjciIHJ5PSIwLjciLz4KCTwvZz4KCTxnPgoJCTxwYXRoIGZpbGw9IiM2QUE5REQiIHN0cm9rZT0iIzZBQTlERCIgc3Ryb2tlLXdpZHRoPSIwLjEiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTE0LjYsNzEuMmMtMC4xLTAuMS0wLjItMC4yLTAuMy0wLjJINS43CgkJCWMtMC4xLDAtMC4yLDAuMS0wLjMsMC4yYy0wLjEsMC4xLTAuMSwwLjIsMCwwLjRjMC43LDIsMi41LDMuMyw0LjYsMy4zczMuOS0xLjMsNC42LTMuM0MxNC43LDcxLjUsMTQuNyw3MS4zLDE0LjYsNzEuMnogTTEwLDc0LjEKCQkJYy0xLjYsMC0zLTAuOS0zLjctMi4yaDcuM0MxMyw3My4yLDExLjYsNzQuMSwxMCw3NC4xeiIvPgoJCTxwYXRoIGZpbGw9IiM2QUE5REQiIHN0cm9rZT0iIzZBQTlERCIgc3Ryb2tlLXdpZHRoPSIwLjEiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTEyLjgsNjkuNWMwLjYsMCwxLjEtMC41LDEuMS0xLjEKCQkJYzAtMC42LTAuNS0xLjItMS4xLTEuMmMtMC42LDAtMS4yLDAuNS0xLjIsMS4yQzExLjYsNjksMTIuMiw2OS41LDEyLjgsNjkuNXogTTEyLjgsNjhjMC4yLDAsMC40LDAuMiwwLjQsMC40CgkJCWMwLDAuMi0wLjIsMC40LTAuNCwwLjRjLTAuMiwwLTAuNC0wLjItMC40LTAuNEMxMi40LDY4LjEsMTIuNiw2OCwxMi44LDY4eiIvPgoJCTxwYXRoIGZpbGw9IiM2QUE5REQiIHN0cm9rZT0iIzZBQTlERCIgc3Ryb2tlLXdpZHRoPSIwLjEiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTcuMiw2OS41YzAuNiwwLDEuMi0wLjUsMS4yLTEuMQoJCQljMC0wLjYtMC41LTEuMi0xLjItMS4yYy0wLjYsMC0xLjEsMC41LTEuMSwxLjJDNi4xLDY5LDYuNiw2OS41LDcuMiw2OS41eiBNNy4yLDY4YzAuMiwwLDAuNCwwLjIsMC40LDAuNGMwLDAuMi0wLjIsMC40LTAuNCwwLjQKCQkJYy0wLjIsMC0wLjQtMC4yLTAuNC0wLjRDNi44LDY4LjEsNyw2OCw3LjIsNjh6Ii8+CgkJPHBhdGggZmlsbD0iIzZBQTlERCIgc3Ryb2tlPSIjNkFBOUREIiBzdHJva2Utd2lkdGg9IjAuMSIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBkPSJNMTAsNjNjLTMuOCwwLTcsMy4xLTcsN2MwLDMuOCwzLjEsNyw3LDcKCQkJczctMy4xLDctN0MxNyw2Ni4yLDEzLjgsNjMsMTAsNjN6IE0xMCw3Ni4yYy0zLjQsMC02LjItMi44LTYuMi02LjJjMC0zLjQsMi44LTYuMiw2LjItNi4yczYuMiwyLjgsNi4yLDYuMgoJCQlDMTYuMiw3My40LDEzLjQsNzYuMiwxMCw3Ni4yeiIvPgoJPC9nPgoJPGc+CgkJPGc+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgZD0iTTY0LjEsNzMuNGwyLjMsMGMwLjIsMCwwLjQsMC4yLDAuNCwwLjR2Mi4xYzAsMC4yLTAuMiwwLjQtMC40LDAuNGgtMi4zCgkJCQljLTAuMiwwLTAuNC0wLjItMC40LTAuNHYtMi4xQzYzLjcsNzMuNiw2My44LDczLjQsNjQuMSw3My40eiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM2QUE5REQiIGQ9Ik03My41LDczLjVoMi40YzAuMiwwLDAuNCwwLjIsMC40LDAuNHYyLjFjMCwwLjItMC4yLDAuNC0wLjQsMC40aC0yLjQKCQkJCWMtMC4yLDAtMC40LTAuMi0wLjQtMC40bDAtMi4xQzczLjEsNzMuNiw3My4zLDczLjUsNzMuNSw3My41eiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM2QUE5REQiIGQ9Ik02My43LDY4LjRoMTIuNnY1SDYzLjdWNjguNHoiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNkFBOUREIiBkPSJNNjUuNSw2My42aDguOWMxLDAsMS45LDAuOCwxLjksMS45djMuMUg2My43di0zLjFDNjMuNyw2NC41LDY0LjUsNjMuNiw2NS41LDYzLjZ6Ii8+CgkJCTxlbGxpcHNlIGZpbGw9IiM2QUE5REQiIGN4PSI2Ni4yIiBjeT0iNzAuOSIgcng9IjAuOSIgcnk9IjAuOSIvPgoJCQk8ZWxsaXBzZSBmaWxsPSIjNkFBOUREIiBjeD0iNzMuOCIgY3k9IjcwLjkiIHJ4PSIwLjkiIHJ5PSIwLjkiLz4KCQk8L2c+Cgk8L2c+Cgk8Zz4KCQk8Zz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNkFBOUREIiBkPSJNOTYuNCw3MGMwLDMuNi0yLjksNi41LTYuNCw2LjVzLTYuNC0yLjktNi40LTYuNXMyLjktNi41LDYuNC02LjVTOTYuNCw2Ni40LDk2LjQsNzB6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgZD0iTTk2LjMsNjguNmMwLDAsMCwwLjEsMCwwLjFjLTAuOSwwLjEtMi45LDAuMS00LjYtMS4yYy0xLjEtMC44LTItMS43LTIuNi0yLjUKCQkJCWMtMC4zLTAuNC0wLjYtMC44LTAuNy0xLjFjLTAuMS0wLjEtMC4xLTAuMi0wLjEtMC4yYzAuNS0wLjEsMS4yLTAuMiwyLTAuMmMxLjIsMCwyLjUsMC4zLDMuNSwxLjFjMSwwLjgsMS43LDEuOCwyLjEsMi44CgkJCQlDOTYuMSw2Ny45LDk2LjIsNjguMyw5Ni4zLDY4LjZ6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgZD0iTTg0LDcyLjJjMCwwLDAtMC4xLDAtMC4xYzAuOS0wLjIsMi45LTAuNCw0LjcsMC42YzEuMSwwLjcsMS45LDEuNSwyLjQsMi4zCgkJCQljMC40LDAuNSwwLjYsMSwwLjcsMS4zYy0wLjQsMC4xLTEsMC4yLTEuNywwLjNjLTEsMC0yLjEtMC4xLTMuMi0wLjhzLTEuOS0xLjYtMi40LTIuNUM4NC4yLDcyLjgsODQuMSw3Mi40LDg0LDcyLjJ6Ii8+CgkJPC9nPgoJPC9nPgoJPGc+CgkJPGc+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMTE2LjMsNjYuOGwtMS40LDJsLTAuOC0wLjhsLTAuNi0wLjdsMCwwLjlsLTAuMSw4LjJoLTYuOAoJCQkJbC0wLjEtOC4ybDAtMC45bC0wLjYsMC43bC0wLjgsMC44bC0xLjQtMmwyLjYtMi45YzAuMS0wLjEsMC4yLTAuMSwwLjMtMC4xaDEuM2wwLjQsMC43YzAuNywxLjMsMi42LDEuMywzLjMtMC4xbDAuMy0wLjZoMS4yCgkJCQljMC4xLDAsMC4yLDAsMC4zLDAuMWwwLjMtMC4zbC0wLjMsMC4zTDExNi4zLDY2Ljh6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgZD0iTTExMC4xLDY3LjdoMnYwLjljMCwwLjQtMC40LDAuNy0xLDAuN2MtMC42LDAtMS0wLjMtMS0wLjdMMTEwLjEsNjcuN0wxMTAuMSw2Ny43eiIvPgoJCTwvZz4KCTwvZz4KCTxnPgoJCTxnPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM2QUE5REQiIGQ9Ik0xMjYuOCw3NC4zYzAsMS4yLTEsMi4yLTIuMiwyLjJzLTIuMi0xLTIuMi0yLjJzMS0yLjIsMi4yLTIuMlMxMjYuOCw3My4xLDEyNi44LDc0LjN6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgZD0iTTEzNy42LDc0LjNjMCwxLjItMSwyLjItMi4yLDIuMmMtMS4yLDAtMi4yLTEtMi4yLTIuMnMxLTIuMiwyLjItMi4yCgkJCQlDMTM2LjYsNzIuMSwxMzcuNiw3My4xLDEzNy42LDc0LjN6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgZD0iTTEyNi44LDY0LjR2OS45Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgZD0iTTEzNy43LDY0LjR2OS45Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgZD0iTTEyNi44LDYzLjVoMTAuOHYyLjdoLTEwLjhDMTI2LjgsNjYuMiwxMjYuOCw2My41LDEyNi44LDYzLjV6Ii8+CgkJPC9nPgoJPC9nPgoJPGc+CgkJPGc+CgkJCTxwYXRoIGZpbGw9IiM2QUE5REQiIGQ9Ik0xNzAuOCw2My4xTDE3MC44LDYzLjFjLTAuMywwLTAuNSwwLTAuOCwwYy0yLjEsMC00LDEtNS4zLDIuNWwtMC4xLDBsLTAuMS0wLjFsLTEtMS4ybC0wLjMsMy40bDMuNCwwLjMKCQkJCWwtMS4xLTEuM2wtMC4xLTAuMWwwLjEtMC4xYzEuMS0xLjQsMy0yLjMsNS0yLjFsMCwwYzMuMiwwLjMsNS41LDMuMSw1LjIsNi4zYy0wLjMsMy0zLjEsNS4zLTYuMSw1LjFjLTMuMS0wLjItNS40LTIuOS01LjMtNgoJCQkJbC0xLjMtMC4xYy0wLjIsMy44LDIuNiw3LjEsNi4zLDcuNGMzLjksMC4zLDcuMy0yLjYsNy42LTYuNUMxNzcuMiw2Ni44LDE3NC40LDYzLjUsMTcwLjgsNjMuMXoiLz4KCQkJPHBhdGggZmlsbD0iIzZBQTlERCIgZD0iTTE3MC4zLDY3LjRjMC0wLjMtMC4zLTAuNi0wLjYtMC42cy0wLjYsMC4zLTAuNiwwLjZ2My4yYzAsMC4yLDAuMSwwLjMsMC4yLDAuNGMwLjEsMC4xLDAuMywwLjIsMC40LDAuMgoJCQkJaDIuNGMwLjQsMCwwLjYtMC4zLDAuNi0wLjZTMTcyLjQsNzAsMTcyLDcwaC0xLjZoLTAuMnYtMC4yTDE3MC4zLDY3LjRMMTcwLjMsNjcuNHoiLz4KCQk8L2c+Cgk8L2c+Cgk8Zz4KCQk8Zz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNkFBOUREIiBkPSJNMTg2LjIsNjMuNGg3LjdjMS41LDAsMi43LDEuMiwyLjcsMi43djcuN2MwLDEuNS0xLjIsMi43LTIuNywyLjdoLTcuNwoJCQkJYy0xLjUsMC0yLjctMS4yLTIuNy0yLjd2LTcuN0MxODMuNCw2NC43LDE4NC43LDYzLjQsMTg2LjIsNjMuNHoiLz4KCQkJPGVsbGlwc2UgZmlsbD0iIzZBQTlERCIgY3g9IjE4NiIgY3k9IjY4LjkiIHJ4PSIwLjciIHJ5PSIwLjciLz4KCQkJPGVsbGlwc2UgZmlsbD0iIzZBQTlERCIgY3g9IjE5NCIgY3k9IjY2LjciIHJ4PSIwLjciIHJ5PSIwLjciLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNkFBOUREIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0xODYsNzMuM2wwLjQtMC4zYzAuNC0wLjMsMS0wLjMsMS41LTAuMWwxLDAuNAoJCQkJYzAuNSwwLjIsMSwwLjIsMS41LTAuMWwwLjgtMC41YzAuNC0wLjMsMS0wLjMsMS41LTAuMWwxLjgsMC44Ii8+CgkJPC9nPgoJPC9nPgoJPHBhdGggZmlsbD0iIzZBQTlERCIgc3Ryb2tlPSIjNkFBOUREIiBzdHJva2Utd2lkdGg9IjAuMjUiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTE1Niw2NC4zYy0wLjItMC4xLTAuNC0wLjEtMC41LDAKCQljMCwwLTAuMiwwLjEtMC45LDAuMmMtMC43LDAtMi40LTAuMS0zLjgtMC42Yy0wLjgtMC4zLTEuNy0wLjUtMi41LTAuNWMtMC4yLDAtMC40LDAtMC41LDBjLTEuMywwLTIuNSwwLjMtMy42LDEKCQljLTAuMiwwLjEtMC4yLDAuMi0wLjIsMC40djExLjZjMCwwLjMsMC4xLDAuNSwwLjMsMC41YzAuNiwwLDAuNS0wLjQsMC41LTAuNnYtNS43YzAuNy0wLjMsMy4yLTEuMSw1LjgtMC4xCgkJYzEuNiwwLjYsMy41LDAuNyw0LjMsMC43YzAuOCwwLDEuMy0wLjMsMS4zLTAuM2MwLjItMC4xLDAuMy0wLjIsMC4zLTAuNHYtNS43QzE1Ni4yLDY0LjYsMTU2LjEsNjQuNCwxNTYsNjQuM3ogTTE1NS42LDcwLjIKCQljLTAuMSwwLTAuNywwLjEtMSwwLjFjLTAuNywwLTIuNC0wLjEtMy44LTAuNmMtMi41LTEtNS0wLjUtNi4yLTAuMXYtNC45YzAuOS0wLjUsMi4yLTAuNywzLjItMC43YzAuMSwwLDAuMywwLDAuNCwwCgkJYzAuNywwLDEuNSwwLjIsMi4yLDAuNGMxLjYsMC42LDMuNSwwLjcsNC4zLDAuN2MwLjIsMCwwLjgsMCwxLTAuMVY3MC4yeiIvPgoJPGc+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNkFBOUREIiBkPSJNNDguMSw2My41aDMuN2MyLjUsMCw0LjUsMiw0LjUsNC41YzAsMC41LTAuNCwwLjktMC45LDAuOUg0NC41Yy0wLjUsMC0wLjktMC40LTAuOS0wLjkKCQkJQzQzLjYsNjUuNSw0NS42LDYzLjUsNDguMSw2My41eiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNNDMuNSw2OC44Yy0wLjIsMC4xLTAuNSwxLjIsMCwxLjVjMS40LDAuOSw4LjUsMC44LDExLjMsMC42CgkJCWMwLjgtMC4xLDEuNi0wLjQsMS43LTEuMmMwLTAuMy0wLjEtMC42LTAuNi0wLjkiLz4KCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM2QUE5REQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTQzLjUsNzAuNkw0My4zLDcxYy0wLjIsMC41LDAuMiwxLDAuNywwLjljMC4zLTAuMSwwLjUsMC4xLDAuNywwLjMKCQkJbDAuMSwwLjJjMC4zLDAuNSwxLDAuNiwxLjUsMC4ybDAsMGMwLjMtMC4yLDAuNy0wLjMsMS0wLjJsMC44LDAuM2MwLjQsMC4yLDAuOCwwLjEsMS4yLDBsMC41LTAuMmMwLjQtMC4yLDAuOS0wLjIsMS4zLDBsMC41LDAuMgoJCQljMC40LDAuMiwwLjgsMC4yLDEuMi0wLjFsMC4yLTAuMWMwLjMtMC4yLDAuOC0wLjIsMS4xLDAuMWwwLjIsMC4yYzAuMywwLjMsMC44LDAuMiwxLTAuMmwwLjEtMC4yYzAuMS0wLjIsMC0wLjMsMC4yLTAuMwoJCQljMC41LDAsMS4yLTAuMywxLjEtMC43bC0wLjQtMS4xIi8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNkFBOUREIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik00My41LDcyLjJjLTAuMSwwLjItMC4zLDAuOCwwLDEuMWMwLjMsMC40LDMsMS4xLDYuNCwxLjEKCQkJYzIuMiwwLDQuNi0wLjMsNi0wLjZjMC41LTAuMSwwLjktMC40LDAuOC0wLjljMC0wLjItMC4yLTAuNS0wLjQtMC43Ii8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNkFBOUREIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik00My41LDczLjNjMCwwLjUsMC42LDIuMywxLjMsMi43YzEuOCwwLjgsNS43LDAuNyw4LjEsMC41CgkJCWMxLjMtMC4xLDIuNS0wLjcsMy4yLTEuOGMwLjMtMC41LDAuNS0xLDAuNS0xLjQiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjNkFBOUREIiBjeD0iNTEuNiIgY3k9IjY2LjUiIHJ4PSIwLjMiIHJ5PSIwLjQiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjNkFBOUREIiBjeD0iNTMiIGN5PSI2NSIgcng9IjAuMyIgcnk9IjAuNCIvPgoJCTxlbGxpcHNlIGZpbGw9IiM2QUE5REQiIGN4PSI1MyIgY3k9IjY3LjIiIHJ4PSIwLjMiIHJ5PSIwLjQiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjNkFBOUREIiBjeD0iNTQuMyIgY3k9IjY2LjUiIHJ4PSIwLjMiIHJ5PSIwLjQiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjNkFBOUREIiBjeD0iNTAuOSIgY3k9IjY1IiByeD0iMC4zIiByeT0iMC40Ii8+Cgk8L2c+Cgk8Zz4KCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM2QUE5REQiIGQ9Ik0yNC4yLDcxdi03LjZjMC4xLDAuMSwwLjgsMC45LDIuOCwzLjFjMi41LTEuNyw1LjYtMC43LDYuOSwwbDIuNC0zLjF2Ny4xCgkJCWMwLDEuMi0wLjEsMi41LTAuOSwzLjRjLTEsMS4yLTIuNywyLjUtNS4zLDIuNWMtMi45LDAtNC41LTEuNS01LjMtMi45QzI0LjIsNzIuOSwyNC4yLDcyLDI0LjIsNzF6Ii8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNkFBOUREIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0yMS4yLDcwLjFsNS40LDEuMiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMjEuMiw3NC4xbDUuNC0xLjIiLz4KCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM2QUE5REQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTM4LjgsNzAuMWwtNS40LDEuMiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMzguOCw3NC4xbC01LjQtMS4yIi8+CgkJPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiM2QUE5REQiIGQ9Ik0yOS41LDcyLjRMMjksNzEuN2MtMC4yLTAuMywwLTAuNiwwLjMtMC42aDEuNAoJCQljMC4zLDAsMC41LDAuNCwwLjMsMC42bC0wLjcsMWwwLDBjLTAuNywxLjItMi42LDEuMS0zLjEtMC4zbC0wLjEtMC4yYy0wLjEtMC4yLDAtMC40LDAuMi0wLjVjMC4yLTAuMSwwLjQsMCwwLjUsMC4ybDAuMSwwLjIKCQkJQzI4LjMsNzIuOCwyOS4xLDcyLjksMjkuNSw3Mi40eiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZBQTlERCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMzIuNCw3Mi4xbC0wLjEsMC4yYy0wLjQsMS0xLjgsMS4xLTIuMywwLjIiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjNkFBOUREIiBjeD0iMjcuNiIgY3k9IjY5LjciIHJ4PSIwLjciIHJ5PSIwLjciLz4KCQk8ZWxsaXBzZSBmaWxsPSIjNkFBOUREIiBjeD0iMzIuNCIgY3k9IjY5LjciIHJ4PSIwLjciIHJ5PSIwLjciLz4KCTwvZz4KPC9nPgo8Zz4KCTxwYXRoIGZpbGw9IiM4Njg2ODYiIHN0cm9rZT0iIzg2ODY4NiIgc3Ryb2tlLXdpZHRoPSIwLjEiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTEyLjgsOS41YzAuNiwwLDEuMS0wLjUsMS4xLTEuMgoJCWMwLTAuNi0wLjUtMS4xLTEuMS0xLjFjLTAuNiwwLTEuMiwwLjUtMS4yLDEuMVMxMi4yLDkuNSwxMi44LDkuNXogTTEyLjgsNy45YzAuMiwwLDAuNCwwLjIsMC40LDAuNGMwLDAuMi0wLjIsMC40LTAuNCwwLjQKCQljLTAuMiwwLTAuNC0wLjItMC40LTAuNEMxMi40LDguMSwxMi42LDcuOSwxMi44LDcuOXoiLz4KCTxwYXRoIGZpbGw9IiM4Njg2ODYiIHN0cm9rZT0iIzg2ODY4NiIgc3Ryb2tlLXdpZHRoPSIwLjEiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgZD0iTTcuMiw5LjVjMC42LDAsMS4yLTAuNSwxLjItMS4yCgkJYzAtMC42LTAuNS0xLjEtMS4yLTEuMWMtMC42LDAtMS4xLDAuNS0xLjEsMS4xUzYuNiw5LjUsNy4yLDkuNXogTTcuMiw3LjljMC4yLDAsMC40LDAuMiwwLjQsMC40YzAsMC4yLTAuMiwwLjQtMC40LDAuNAoJCUM3LDguNyw2LjgsOC41LDYuOCw4LjNDNi44LDguMSw3LDcuOSw3LjIsNy45eiIvPgoJPHBhdGggZmlsbD0iIzg2ODY4NiIgc3Ryb2tlPSIjODY4Njg2IiBzdHJva2Utd2lkdGg9IjAuMSIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBkPSJNMTQuNiwxMS4yYy0wLjEtMC4xLTAuMi0wLjItMC4zLTAuMkg1LjcKCQljLTAuMSwwLTAuMiwwLjEtMC4zLDAuMmMtMC4xLDAuMS0wLjEsMC4yLDAsMC40YzAuNywyLDIuNSwzLjMsNC42LDMuM3MzLjktMS4zLDQuNi0zLjNDMTQuNywxMS40LDE0LjcsMTEuMywxNC42LDExLjJ6IE0xMCwxNC4xCgkJYy0xLjYsMC0zLTAuOS0zLjctMi4yaDcuM0MxMywxMy4yLDExLjYsMTQuMSwxMCwxNC4xeiIvPgoJPHBhdGggZmlsbD0iIzg2ODY4NiIgc3Ryb2tlPSIjODY4Njg2IiBzdHJva2Utd2lkdGg9IjAuMSIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBkPSJNMTAsM2MtMy44LDAtNywzLjEtNyw3czMuMSw3LDcsN3M3LTMuMSw3LTcKCQlTMTMuOCwzLDEwLDN6IE0xMCwxNi4yYy0zLjQsMC02LjItMi44LTYuMi02LjJTNi42LDMuOCwxMCwzLjhzNi4yLDIuOCw2LjIsNi4yUzEzLjQsMTYuMiwxMCwxNi4yeiIvPgo8L2c+CjxnIGlkPSJDYXJfMDAwMDAwMTg5MzUzOTUwODU0MTM0MTM3NTAwMDAwMDA4MjUyNzM4Nzc4NDI3NzU3MTVfIj4KCTxnPgoJCTxnPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM4Njg2ODYiIGQ9Ik02NC4xLDEzLjRsMi4zLDBjMC4yLDAsMC40LDAuMiwwLjQsMC40djIuMWMwLDAuMi0wLjIsMC40LTAuNCwwLjRoLTIuMwoJCQkJYy0wLjIsMC0wLjQtMC4yLTAuNC0wLjR2LTIuMUM2My43LDEzLjYsNjMuOCwxMy40LDY0LjEsMTMuNHoiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBkPSJNNzMuNSwxMy40aDIuNGMwLjIsMCwwLjQsMC4yLDAuNCwwLjR2Mi4xYzAsMC4yLTAuMiwwLjQtMC40LDAuNGgtMi40CgkJCQljLTAuMiwwLTAuNC0wLjItMC40LTAuNGwwLTIuMUM3My4xLDEzLjYsNzMuMywxMy40LDczLjUsMTMuNHoiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBkPSJNNjMuNyw4LjRoMTIuNnY1SDYzLjdWOC40eiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM4Njg2ODYiIGQ9Ik02NS41LDMuNmg4LjljMSwwLDEuOSwwLjgsMS45LDEuOXYzLjFINjMuN1Y1LjVDNjMuNyw0LjQsNjQuNSwzLjYsNjUuNSwzLjZ6Ii8+CgkJCTxlbGxpcHNlIGZpbGw9IiM4Njg2ODYiIGN4PSI2Ni4yIiBjeT0iMTAuOSIgcng9IjAuOSIgcnk9IjAuOSIvPgoJCQk8ZWxsaXBzZSBmaWxsPSIjODY4Njg2IiBjeD0iNzMuOCIgY3k9IjEwLjkiIHJ4PSIwLjkiIHJ5PSIwLjkiLz4KCQk8L2c+Cgk8L2c+CjwvZz4KPGcgaWQ9IkFjdGl2aXRpZXMiPgoJPGc+CgkJPGc+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg2ODY4NiIgZD0iTTk2LjQsMTBjMCwzLjYtMi45LDYuNS02LjQsNi41cy02LjQtMi45LTYuNC02LjVzMi45LTYuNSw2LjQtNi41Uzk2LjQsNi40LDk2LjQsMTB6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg2ODY4NiIgZD0iTTk2LjMsOC42YzAsMCwwLDAuMSwwLDAuMWMtMC45LDAuMS0yLjksMC4xLTQuNi0xLjJjLTEuMS0wLjgtMi0xLjctMi42LTIuNQoJCQkJYy0wLjMtMC40LTAuNi0wLjgtMC43LTEuMWMtMC4xLTAuMS0wLjEtMC4yLTAuMS0wLjJjMC41LTAuMSwxLjItMC4yLDItMC4yYzEuMiwwLDIuNSwwLjMsMy41LDEuMWMxLDAuOCwxLjcsMS44LDIuMSwyLjgKCQkJCUM5Ni4xLDcuOSw5Ni4yLDguMyw5Ni4zLDguNnoiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBkPSJNODQsMTIuMWMwLDAsMC0wLjEsMC0wLjFjMC45LTAuMiwyLjktMC40LDQuNywwLjZjMS4xLDAuNiwxLjksMS41LDIuNCwyLjMKCQkJCWMwLjQsMC41LDAuNiwxLDAuNywxLjNjLTAuNCwwLjEtMSwwLjItMS43LDAuM2MtMSwwLTIuMS0wLjEtMy4yLTAuOGMtMS4xLTAuNi0xLjktMS42LTIuNC0yLjVDODQuMiwxMi44LDg0LjEsMTIuNCw4NCwxMi4xeiIvPgoJCTwvZz4KCTwvZz4KPC9nPgo8ZyBpZD0iT2JqZWN0c18wMDAwMDA2NDMxMjM3MTczOTEzMDMxNTI1MDAwMDAxMDIyNTg4OTAzMjIyODYzMjk3NV8iPgoJPGc+CgkJPGc+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg2ODY4NiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMTE2LjMsNi44bC0xLjQsMkwxMTQuMSw4bC0wLjYtMC43bDAsMC45bC0wLjEsOC4yaC02LjhsLTAuMS04LjIKCQkJCWwwLTAuOUwxMDUuOSw4bC0wLjgsMC44bC0xLjQtMmwyLjYtMi45YzAuMS0wLjEsMC4yLTAuMSwwLjMtMC4xaDEuM2wwLjQsMC43YzAuNywxLjMsMi42LDEuMywzLjMtMC4xbDAuMy0wLjZoMS4yCgkJCQljMC4xLDAsMC4yLDAsMC4zLDAuMWwwLjMtMC4zbC0wLjMsMC4zTDExNi4zLDYuOHoiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBkPSJNMTEwLjEsNy43aDJ2MC45YzAsMC40LTAuNCwwLjctMSwwLjdjLTAuNiwwLTEtMC4zLTEtMC43TDExMC4xLDcuN0wxMTAuMSw3Ljd6Ii8+CgkJPC9nPgoJPC9nPgo8L2c+CjxnIGlkPSJTeW1ib2xzXzAwMDAwMDk2NzQ2OTA3ODY5OTI5OTIxMTgwMDAwMDA2NDg0ODEyODMwMjgyNTgyNDE2XyI+Cgk8Zz4KCQk8Zz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBkPSJNMTI2LjgsMTQuM2MwLDEuMi0xLDIuMi0yLjIsMi4ycy0yLjItMS0yLjItMi4yczEtMi4yLDIuMi0yLjJTMTI2LjgsMTMuMSwxMjYuOCwxNC4zeiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM4Njg2ODYiIGQ9Ik0xMzcuNiwxNC4zYzAsMS4yLTEsMi4yLTIuMiwyLjJjLTEuMiwwLTIuMi0xLTIuMi0yLjJzMS0yLjIsMi4yLTIuMgoJCQkJQzEzNi42LDEyLjEsMTM3LjYsMTMuMSwxMzcuNiwxNC4zeiIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM4Njg2ODYiIGQ9Ik0xMjYuOCw0LjR2OS45Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg2ODY4NiIgZD0iTTEzNy43LDQuNHY5LjkiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBkPSJNMTI2LjgsMy41aDEwLjh2Mi43aC0xMC44QzEyNi44LDYuMiwxMjYuOCwzLjUsMTI2LjgsMy41eiIvPgoJCTwvZz4KCTwvZz4KPC9nPgo8ZyBpZD0iUmVjZW50cyI+Cgk8Zz4KCQk8Zz4KCQkJPHBhdGggZmlsbD0iIzg2ODY4NiIgZD0iTTE3MC44LDMuMUwxNzAuOCwzLjFjLTAuMywwLTAuNSwwLTAuOCwwYy0yLjEsMC00LDEtNS4zLDIuNWwtMC4xLDBsLTAuMS0wLjFsLTEtMS4ybC0wLjMsMy40bDMuNCwwLjMKCQkJCWwtMS4xLTEuM2wtMC4xLTAuMWwwLjEtMC4xYzEuMS0xLjQsMy0yLjMsNS0yLjFsMCwwYzMuMiwwLjMsNS41LDMuMSw1LjIsNi4zYy0wLjMsMy0zLjEsNS4zLTYuMSw1LjFjLTMuMS0wLjItNS40LTIuOS01LjMtNgoJCQkJTDE2Myw5LjVjLTAuMiwzLjgsMi42LDcuMSw2LjMsNy40YzMuOSwwLjQsNy4zLTIuNiw3LjYtNi41QzE3Ny4yLDYuOCwxNzQuNCwzLjUsMTcwLjgsMy4xeiIvPgoJCQk8cGF0aCBmaWxsPSIjODY4Njg2IiBkPSJNMTcwLjMsNy40YzAtMC4zLTAuMy0wLjYtMC42LTAuNlMxNjksNy4xLDE2OSw3LjR2My4yYzAsMC4yLDAuMSwwLjMsMC4yLDAuNGMwLjEsMC4xLDAuMywwLjIsMC40LDAuMgoJCQkJaDIuNGMwLjQsMCwwLjYtMC4zLDAuNi0wLjZzLTAuMy0wLjYtMC42LTAuNmgtMS42aC0wLjJWOS44TDE3MC4zLDcuNEwxNzAuMyw3LjR6Ii8+CgkJPC9nPgoJPC9nPgo8L2c+CjxnIGlkPSJDdXN0b21fMDAwMDAxODEwODcyMjk0MzQzMDIzMzY3ODAwMDAwMDUxNTIyNzc5NDU5NDA2NzQ0ODhfIj4KCTxnPgoJCTxnPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM4Njg2ODYiIGQ9Ik0xODYuMiwzLjRoNy43YzEuNSwwLDIuNywxLjIsMi43LDIuN3Y3LjdjMCwxLjUtMS4yLDIuNy0yLjcsMi43aC03LjcKCQkJCWMtMS41LDAtMi43LTEuMi0yLjctMi43VjYuMUMxODMuNCw0LjYsMTg0LjcsMy40LDE4Ni4yLDMuNHoiLz4KCQkJPGVsbGlwc2UgZmlsbD0iIzg2ODY4NiIgY3g9IjE4NiIgY3k9IjguOSIgcng9IjAuNyIgcnk9IjAuNyIvPgoJCQk8ZWxsaXBzZSBmaWxsPSIjODY4Njg2IiBjeD0iMTk0IiBjeT0iNi43IiByeD0iMC43IiByeT0iMC43Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg2ODY4NiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMTg2LDEzLjNsMC40LTAuM2MwLjQtMC4zLDEtMC4zLDEuNS0wLjFsMSwwLjQKCQkJCWMwLjUsMC4yLDEsMC4yLDEuNS0wLjFsMC44LTAuNWMwLjQtMC4zLDEtMC4zLDEuNS0wLjFsMS44LDAuOCIvPgoJCTwvZz4KCTwvZz4KPC9nPgo8cGF0aCBmaWxsPSIjODY4Njg2IiBzdHJva2U9IiM4Njg2ODYiIHN0cm9rZS13aWR0aD0iMC4yNSIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBkPSJNMTU2LDQuM2MtMC4yLTAuMS0wLjQtMC4xLTAuNSwwCgljMCwwLTAuMiwwLjEtMC45LDAuMWMtMC43LDAtMi40LTAuMS0zLjgtMC42Yy0wLjgtMC4zLTEuNy0wLjUtMi41LTAuNWMtMC4yLDAtMC40LDAtMC41LDBjLTEuMywwLTIuNSwwLjMtMy42LDEKCWMtMC4yLDAuMS0wLjIsMC4yLTAuMiwwLjR2MTEuNmMwLDAuMywwLjEsMC41LDAuMywwLjVjMC42LDAsMC41LTAuNCwwLjUtMC42di01LjdjMC43LTAuMywzLjItMS4xLDUuOC0wLjFjMS42LDAuNiwzLjUsMC43LDQuMywwLjcKCWMwLjgsMCwxLjMtMC4zLDEuMy0wLjNjMC4yLTAuMSwwLjMtMC4yLDAuMy0wLjRWNC43QzE1Ni4yLDQuNSwxNTYuMSw0LjQsMTU2LDQuM3ogTTE1NS42LDEwLjJjLTAuMSwwLTAuNywwLjEtMSwwLjEKCWMtMC43LDAtMi40LTAuMS0zLjgtMC42Yy0yLjUtMS01LTAuNS02LjItMC4xVjQuN2MwLjktMC41LDIuMi0wLjcsMy4yLTAuN2MwLjEsMCwwLjMsMCwwLjQsMGMwLjcsMCwxLjUsMC4yLDIuMiwwLjQKCWMxLjYsMC42LDMuNSwwLjcsNC4zLDAuN2MwLjIsMCwwLjgsMCwxLTAuMVYxMC4yeiIvPgo8ZyBpZD0iRm9vZCI+Cgk8ZyBpZD0iTGF5ZXJfMTIiPgoJCTxnPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM4Njg2ODYiIGQ9Ik00OC4xLDMuNWgzLjdjMi41LDAsNC41LDIsNC41LDQuNWMwLDAuNS0wLjQsMC45LTAuOSwwLjlINDQuNWMtMC41LDAtMC45LTAuNC0wLjktMC45CgkJCQlDNDMuNiw1LjUsNDUuNiwzLjUsNDguMSwzLjV6Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg2ODY4NiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNNDMuNSw4LjdjLTAuMiwwLjEtMC41LDEuMiwwLDEuNWMxLjQsMC45LDguNSwwLjgsMTEuMywwLjYKCQkJCWMwLjgtMC4xLDEuNi0wLjQsMS43LTEuMmMwLTAuMy0wLjEtMC42LTAuNi0wLjkiLz4KCQkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik00My41LDEwLjZMNDMuMywxMWMtMC4yLDAuNSwwLjIsMSwwLjcsMC45CgkJCQljMC4zLTAuMSwwLjUsMC4xLDAuNywwLjNsMC4xLDAuMmMwLjMsMC41LDEsMC42LDEuNSwwLjJsMCwwYzAuMy0wLjIsMC43LTAuMywxLTAuMmwwLjgsMC4zYzAuNCwwLjEsMC44LDAuMSwxLjIsMGwwLjUtMC4yCgkJCQljMC40LTAuMiwwLjktMC4yLDEuMywwbDAuNSwwLjJjMC40LDAuMiwwLjgsMC4xLDEuMi0wLjFsMC4yLTAuMWMwLjMtMC4yLDAuOC0wLjEsMS4xLDAuMWwwLjIsMC4yYzAuMywwLjMsMC44LDAuMiwxLTAuMmwwLjEtMC4yCgkJCQljMC4xLTAuMiwwLTAuMywwLjItMC40YzAuNSwwLDEuMi0wLjMsMS4xLTAuN2wtMC40LTEuMSIvPgoJCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM4Njg2ODYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTQzLjUsMTIuMWMtMC4xLDAuMi0wLjMsMC44LDAsMS4xYzAuMywwLjQsMywxLjEsNi40LDEuMQoJCQkJYzIuMiwwLDQuNi0wLjMsNi0wLjZjMC41LTAuMSwwLjktMC40LDAuOC0wLjljMC0wLjItMC4yLTAuNS0wLjQtMC43Ii8+CgkJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg2ODY4NiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNNDMuNSwxMy4zYzAsMC41LDAuNiwyLjQsMS4zLDIuNmMxLjgsMC44LDUuNywwLjcsOC4xLDAuNQoJCQkJYzEuMy0wLjEsMi41LTAuNywzLjItMS44YzAuMy0wLjUsMC41LTEsMC41LTEuNCIvPgoJCQk8ZWxsaXBzZSBmaWxsPSIjODY4Njg2IiBjeD0iNTEuNiIgY3k9IjYuNSIgcng9IjAuMyIgcnk9IjAuNCIvPgoJCQk8ZWxsaXBzZSBmaWxsPSIjODY4Njg2IiBjeD0iNTMiIGN5PSI0LjkiIHJ4PSIwLjMiIHJ5PSIwLjQiLz4KCQkJPGVsbGlwc2UgZmlsbD0iIzg2ODY4NiIgY3g9IjUzIiBjeT0iNy4yIiByeD0iMC4zIiByeT0iMC40Ii8+CgkJCTxlbGxpcHNlIGZpbGw9IiM4Njg2ODYiIGN4PSI1NC4zIiBjeT0iNi41IiByeD0iMC4zIiByeT0iMC40Ii8+CgkJCTxlbGxpcHNlIGZpbGw9IiM4Njg2ODYiIGN4PSI1MC45IiBjeT0iNC45IiByeD0iMC4zIiByeT0iMC40Ii8+CgkJPC9nPgoJPC9nPgo8L2c+CjxnIGlkPSJBbmltYWxzIj4KCTxnPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg2ODY4NiIgZD0iTTI0LjIsMTFWMy41YzAuMSwwLjEsMC44LDAuOSwyLjgsMy4xYzIuNS0xLjcsNS42LTAuNyw2LjksMGwyLjQtMy4xdjcuMQoJCQljMCwxLjItMC4xLDIuNS0wLjksMy40Yy0xLDEuMi0yLjcsMi41LTUuMywyLjVjLTIuOSwwLTQuNS0xLjUtNS4zLTIuOUMyNC4yLDEyLjksMjQuMiwxMS45LDI0LjIsMTF6Ii8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0yMS4yLDEwbDUuNCwxLjIiLz4KCQk8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM4Njg2ODYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZD0iTTIxLjIsMTQuMWw1LjQtMS4yIi8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0zOC44LDEwbC01LjQsMS4yIi8+CgkJPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4Njg2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGQ9Ik0zOC44LDE0LjFsLTUuNC0xLjIiLz4KCQk8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzg2ODY4NiIgZD0iTTI5LjUsMTIuNEwyOSwxMS43Yy0wLjItMC4zLDAtMC42LDAuMy0wLjZoMS40CgkJCWMwLjMsMCwwLjUsMC40LDAuMywwLjZsLTAuNywxbDAsMGMtMC43LDEuMi0yLjYsMS4xLTMuMS0wLjNsLTAuMS0wLjJjLTAuMS0wLjIsMC0wLjQsMC4yLTAuNXMwLjQsMCwwLjUsMC4ybDAuMSwwLjIKCQkJQzI4LjMsMTIuNywyOS4xLDEyLjksMjkuNSwxMi40eiIvPgoJCTxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzg2ODY4NiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBkPSJNMzIuNCwxMi4xbC0wLjEsMC4yYy0wLjQsMS0xLjgsMS4xLTIuMywwLjIiLz4KCQk8ZWxsaXBzZSBmaWxsPSIjODY4Njg2IiBjeD0iMjcuNiIgY3k9IjkuNyIgcng9IjAuNyIgcnk9IjAuNyIvPgoJCTxlbGxpcHNlIGZpbGw9IiM4Njg2ODYiIGN4PSIzMi40IiBjeT0iOS43IiByeD0iMC43IiByeT0iMC43Ii8+Cgk8L2c+CjwvZz4KPC9zdmc+';
+
 function CategoryButton(_ref) {
   var _cx;
   var isActiveCategory = _ref.isActiveCategory,
@@ -12368,7 +21238,7 @@ function CategoryButton(_ref) {
     allowNavigation = _ref.allowNavigation,
     categoryConfig = _ref.categoryConfig,
     onClick = _ref.onClick;
-  return /*#__PURE__*/React.createElement(Button, {
+  return React.createElement(Button, {
     tabIndex: allowNavigation ? 0 : -1,
     className: cx(styles$f.catBtn, commonInteractionStyles.categoryBtn, "epr-icn-" + category, (_cx = {}, _cx[ClassNames.active] = isActiveCategory, _cx)),
     onClick: onClick,
@@ -12392,7 +21262,7 @@ var DarkInactivePosition = {
     }
   }
 };
-var styles$f = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
+var styles$f = /*#__PURE__*/stylesheet.create( /*#__PURE__*/_extends$1({
   catBtn: {
     '.': 'epr-cat-btn',
     display: 'inline-block',
@@ -12449,6 +21319,7 @@ var styles$f = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
   '.epr-dark-theme': /*#__PURE__*/_extends$1({}, DarkInactivePosition),
   '.epr-auto-theme': /*#__PURE__*/_extends$1({}, DarkInactivePosition)
 }));
+
 function CategoryNavigation() {
   var _useState = React.useState(null),
     activeCategory = _useState[0],
@@ -12464,7 +21335,7 @@ function CategoryNavigation() {
   var categoriesConfig = useCategoriesConfig();
   var CategoryNavigationRef = useCategoryNavigationRef();
   var hideCustomCategory = useShouldHideCustomEmojis();
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     className: cx(styles$g.nav),
     role: "tablist",
     "aria-label": "Category navigation",
@@ -12477,7 +21348,7 @@ function CategoryNavigation() {
       return null;
     }
     var allowNavigation = !isSearchMode && !isActiveCategory;
-    return /*#__PURE__*/React.createElement(CategoryButton, {
+    return React.createElement(CategoryButton, {
       key: category,
       category: category,
       isActiveCategory: isActiveCategory,
@@ -12515,15 +21386,17 @@ var styles$g = /*#__PURE__*/stylesheet.create({
     }
   }
 });
+
 var SVGTimes = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI2LjMuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHdpZHRoPSIyMHB4IiBoZWlnaHQ9IjgwcHgiIHZpZXdCb3g9IjAgMCAyMCA4MCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMjAgODAiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8cGF0aCBmaWxsPSIjODY4Njg2IiBkPSJNNi45OCwxMy41OWMwLjEsMC4xLDAuMjQsMC4xNSwwLjM3LDAuMTVzMC4yNy0wLjA1LDAuMzctMC4xNWwyLjQyLTIuNDJsMi40MywyLjQzCgljMC4xLDAuMSwwLjI0LDAuMTUsMC4zNywwLjE1YzAuMTQsMCwwLjI3LTAuMDUsMC4zNy0wLjE1YzAuMjEtMC4yMSwwLjIxLTAuNTQsMC0wLjc1bC0yLjQzLTIuNDNMMTMuMzIsOAoJYzAuMjEtMC4yMSwwLjIxLTAuNTQsMC0wLjc1Yy0wLjIxLTAuMjEtMC41NC0wLjIxLTAuNzUsMGwtMi40MiwyLjQyTDcuNzQsNy4yN2MtMC4yMS0wLjIxLTAuNTQtMC4yMS0wLjc1LDAKCWMtMC4yMSwwLjIxLTAuMjEsMC41NCwwLDAuNzVsMi40MSwyLjQxbC0yLjQyLDIuNDJDNi43NywxMy4wNSw2Ljc3LDEzLjM5LDYuOTgsMTMuNTlMNi45OCwxMy41OXoiLz4KPHBhdGggZmlsbD0iIzg2ODY4NiIgZD0iTTEwLjE1LDE4LjQzYzQuNDEsMCw4LTMuNTksOC04YzAtNC40MS0zLjU5LTgtOC04Yy00LjQxLDAtOCwzLjU5LTgsOEMyLjE1LDE0Ljg0LDUuNzQsMTguNDMsMTAuMTUsMTguNDN6CgkgTTEwLjE1LDMuNDljMy44MywwLDYuOTQsMy4xMSw2Ljk0LDYuOTRjMCwzLjgzLTMuMTEsNi45NC02Ljk0LDYuOTRjLTMuODMsMC02Ljk0LTMuMTEtNi45NC02Ljk0QzMuMjEsNi42LDYuMzMsMy40OSwxMC4xNSwzLjQ5CglMMTAuMTUsMy40OXoiLz4KPHBhdGggZmlsbD0iIzMzNzFCNyIgZD0iTTYuOTgsMzMuNTljMC4xLDAuMSwwLjI0LDAuMTUsMC4zNywwLjE1czAuMjctMC4wNSwwLjM3LTAuMTVsMi40Mi0yLjQybDIuNDMsMi40MwoJYzAuMSwwLjEsMC4yNCwwLjE1LDAuMzcsMC4xNWMwLjE0LDAsMC4yNy0wLjA1LDAuMzctMC4xNWMwLjIxLTAuMjEsMC4yMS0wLjU0LDAtMC43NWwtMi40My0yLjQzTDEzLjMyLDI4CgljMC4yMS0wLjIxLDAuMjEtMC41NCwwLTAuNzVjLTAuMjEtMC4yMS0wLjU0LTAuMjEtMC43NSwwbC0yLjQyLDIuNDJsLTIuNDEtMi40MWMtMC4yMS0wLjIxLTAuNTQtMC4yMS0wLjc1LDAKCWMtMC4yMSwwLjIxLTAuMjEsMC41NCwwLDAuNzVsMi40MSwyLjQxbC0yLjQyLDIuNDJDNi43NywzMy4wNSw2Ljc3LDMzLjM5LDYuOTgsMzMuNTlMNi45OCwzMy41OXoiLz4KPHBhdGggZmlsbD0iIzMzNzFCNyIgZD0iTTEwLjE1LDM4LjQzYzQuNDEsMCw4LTMuNTksOC04YzAtNC40MS0zLjU5LTgtOC04Yy00LjQxLDAtOCwzLjU5LTgsOEMyLjE1LDM0Ljg0LDUuNzQsMzguNDMsMTAuMTUsMzguNDN6CgkgTTEwLjE1LDIzLjQ5YzMuODMsMCw2Ljk0LDMuMTEsNi45NCw2Ljk0YzAsMy44My0zLjExLDYuOTQtNi45NCw2Ljk0Yy0zLjgzLDAtNi45NC0zLjExLTYuOTQtNi45NAoJQzMuMjEsMjYuNiw2LjMzLDIzLjQ5LDEwLjE1LDIzLjQ5TDEwLjE1LDIzLjQ5eiIvPgo8cGF0aCBmaWxsPSIjQzBDMEJGIiBkPSJNNi45OCw1My41OWMwLjEsMC4xLDAuMjQsMC4xNSwwLjM3LDAuMTVzMC4yNy0wLjA1LDAuMzctMC4xNWwyLjQyLTIuNDJsMi40MywyLjQzCgljMC4xLDAuMSwwLjI0LDAuMTUsMC4zNywwLjE1YzAuMTQsMCwwLjI3LTAuMDUsMC4zNy0wLjE1YzAuMjEtMC4yMSwwLjIxLTAuNTQsMC0wLjc1bC0yLjQzLTIuNDNMMTMuMzIsNDgKCWMwLjIxLTAuMjEsMC4yMS0wLjU0LDAtMC43NWMtMC4yMS0wLjIxLTAuNTQtMC4yMS0wLjc1LDBsLTIuNDIsMi40MmwtMi40MS0yLjQxYy0wLjIxLTAuMjEtMC41NC0wLjIxLTAuNzUsMAoJYy0wLjIxLDAuMjEtMC4yMSwwLjU0LDAsMC43NWwyLjQxLDIuNDFsLTIuNDIsMi40MkM2Ljc3LDUzLjA1LDYuNzcsNTMuMzksNi45OCw1My41OUw2Ljk4LDUzLjU5eiIvPgo8cGF0aCBmaWxsPSIjQzBDMEJGIiBkPSJNMTAuMTUsNTguNDNjNC40MSwwLDgtMy41OSw4LThjMC00LjQxLTMuNTktOC04LThjLTQuNDEsMC04LDMuNTktOCw4QzIuMTUsNTQuODQsNS43NCw1OC40MywxMC4xNSw1OC40M3oKCSBNMTAuMTUsNDMuNDljMy44MywwLDYuOTQsMy4xMSw2Ljk0LDYuOTRjMCwzLjgzLTMuMTEsNi45NC02Ljk0LDYuOTRjLTMuODMsMC02Ljk0LTMuMTEtNi45NC02Ljk0CglDMy4yMSw0Ni42LDYuMzMsNDMuNDksMTAuMTUsNDMuNDlMMTAuMTUsNDMuNDl6Ii8+CjxwYXRoIGZpbGw9IiM2QUE5REQiIGQ9Ik02Ljk4LDczLjU5YzAuMSwwLjEsMC4yNCwwLjE1LDAuMzcsMC4xNXMwLjI3LTAuMDUsMC4zNy0wLjE1bDIuNDItMi40MmwyLjQzLDIuNDMKCWMwLjEsMC4xLDAuMjQsMC4xNSwwLjM3LDAuMTVjMC4xNCwwLDAuMjctMC4wNSwwLjM3LTAuMTVjMC4yMS0wLjIxLDAuMjEtMC41NCwwLTAuNzVsLTIuNDMtMi40M0wxMy4zMiw2OAoJYzAuMjEtMC4yMSwwLjIxLTAuNTQsMC0wLjc1Yy0wLjIxLTAuMjEtMC41NC0wLjIxLTAuNzUsMGwtMi40MiwyLjQybC0yLjQxLTIuNDFjLTAuMjEtMC4yMS0wLjU0LTAuMjEtMC43NSwwCgljLTAuMjEsMC4yMS0wLjIxLDAuNTQsMCwwLjc1bDIuNDEsMi40MWwtMi40MiwyLjQyQzYuNzcsNzMuMDUsNi43Nyw3My4zOSw2Ljk4LDczLjU5TDYuOTgsNzMuNTl6Ii8+CjxwYXRoIGZpbGw9IiM2QUE5REQiIGQ9Ik0xMC4xNSw3OC40M2M0LjQxLDAsOC0zLjU5LDgtOGMwLTQuNDEtMy41OS04LTgtOGMtNC40MSwwLTgsMy41OS04LDhDMi4xNSw3NC44NCw1Ljc0LDc4LjQzLDEwLjE1LDc4LjQzegoJIE0xMC4xNSw2My40OWMzLjgzLDAsNi45NCwzLjExLDYuOTQsNi45NGMwLDMuODMtMy4xMSw2Ljk0LTYuOTQsNi45NGMtMy44MywwLTYuOTQtMy4xMS02Ljk0LTYuOTQKCUMzLjIxLDY2LjYsNi4zMyw2My40OSwxMC4xNSw2My40OUwxMC4xNSw2My40OXoiLz4KPC9zdmc+';
+
 function BtnClearSearch() {
   var clearSearch = useClearSearch();
-  return /*#__PURE__*/React.createElement(Button, {
+  return React.createElement(Button, {
     className: cx(styles$h.btnClearSearch, commonInteractionStyles.visibleOnSearchOnly),
     onClick: clearSearch,
     "aria-label": "Clear",
     title: "Clear"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     className: cx(styles$h.icnClearnSearch)
   }));
 }
@@ -12534,7 +21407,7 @@ var HoverDark = {
     }
   }
 };
-var styles$h = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
+var styles$h = /*#__PURE__*/stylesheet.create( /*#__PURE__*/_extends$1({
   btnClearSearch: {
     '.': 'epr-btn-clear-search',
     position: 'absolute',
@@ -12573,13 +21446,15 @@ var styles$h = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
 }, /*#__PURE__*/darkMode('icnClearnSearch', {
   backgroundPositionY: '-40px'
 }), /*#__PURE__*/darkMode('btnClearSearch', HoverDark)));
+
 var SVGMagnifier = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI2LjMuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHdpZHRoPSIyMHB4IiBoZWlnaHQ9IjQwcHgiIHZpZXdCb3g9IjAgMCAyMCA0MCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMjAgNDAiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzg2ODY4NiIgZD0iTTEyLDguODFjMCwyLjA4LTEuNjgsMy43Ni0zLjc2LDMuNzZjLTIuMDgsMC0zLjc2LTEuNjgtMy43Ni0zLjc2CgljMC0yLjA4LDEuNjgtMy43NiwzLjc2LTMuNzZDMTAuMzIsNS4wNSwxMiw2LjczLDEyLDguODF6IE0xMS4yMywxMi43MmMtMC44MywwLjY0LTEuODcsMS4wMS0yLjk5LDEuMDFjLTIuNzIsMC00LjkyLTIuMi00LjkyLTQuOTIKCWMwLTIuNzIsMi4yLTQuOTIsNC45Mi00LjkyYzIuNzIsMCw0LjkyLDIuMiw0LjkyLDQuOTJjMCwxLjEzLTAuMzgsMi4xNi0xLjAxLDIuOTlsMy45NCwzLjkzYzAuMjUsMC4yNSwwLjI1LDAuNjYsMCwwLjkyCgljLTAuMjUsMC4yNS0wLjY2LDAuMjUtMC45MiwwTDExLjIzLDEyLjcyeiIvPgo8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI0MwQzBCRiIgZD0iTTEyLDI4LjgxYzAsMi4wOC0xLjY4LDMuNzYtMy43NiwzLjc2Yy0yLjA4LDAtMy43Ni0xLjY4LTMuNzYtMy43NgoJYzAtMi4wOCwxLjY4LTMuNzYsMy43Ni0zLjc2QzEwLjMyLDI1LjA1LDEyLDI2LjczLDEyLDI4LjgxeiBNMTEuMjMsMzIuNzJjLTAuODMsMC42NC0xLjg3LDEuMDEtMi45OSwxLjAxCgljLTIuNzIsMC00LjkyLTIuMi00LjkyLTQuOTJjMC0yLjcyLDIuMi00LjkyLDQuOTItNC45MmMyLjcyLDAsNC45MiwyLjIsNC45Miw0LjkyYzAsMS4xMy0wLjM4LDIuMTYtMS4wMSwyLjk5bDMuOTQsMy45MwoJYzAuMjUsMC4yNSwwLjI1LDAuNjYsMCwwLjkyYy0wLjI1LDAuMjUtMC42NiwwLjI1LTAuOTIsMEwxMS4yMywzMi43MnoiLz4KPC9zdmc+';
+
 function IcnSearch() {
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     className: cx(styles$i.icnSearch)
   });
 }
-var styles$i = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
+var styles$i = /*#__PURE__*/stylesheet.create( /*#__PURE__*/_extends$1({
   icnSearch: {
     '.': 'epr-icn-search',
     content: '',
@@ -12597,15 +21472,16 @@ var styles$i = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
 }, /*#__PURE__*/darkMode('icnSearch', {
   backgroundPositionY: '-20px'
 })));
+
 function SearchContainer() {
   var searchDisabled = useSearchDisabledConfig();
   var isSkinToneInSearch = useIsSkinToneInSearch();
   if (searchDisabled) {
     return null;
   }
-  return /*#__PURE__*/React.createElement(Flex, {
+  return React.createElement(Flex, {
     className: cx(styles$j.overlay)
-  }, /*#__PURE__*/React.createElement(Search, null), isSkinToneInSearch ? /*#__PURE__*/React.createElement(SkinTonePicker, null) : null);
+  }, React.createElement(Search, null), isSkinToneInSearch ? React.createElement(SkinTonePicker, null) : null);
 }
 function Search() {
   var closeAllOpenToggles = useCloseAllOpenToggles();
@@ -12618,9 +21494,9 @@ function Search() {
     _onChange = _useFilter.onChange;
   var input = SearchInputRef == null ? void 0 : SearchInputRef.current;
   var value = input == null ? void 0 : input.value;
-  return /*#__PURE__*/React.createElement(Relative, {
+  return React.createElement(Relative, {
     className: cx(styles$j.searchContainer)
-  }, /*#__PURE__*/React.createElement("input", {
+  }, React.createElement("input", {
     // eslint-disable-next-line jsx-a11y/no-autofocus
     autoFocus: autoFocus,
     "aria-label": 'Type to search for an emoji',
@@ -12634,15 +21510,15 @@ function Search() {
       _onChange((_event$target$value = event == null ? void 0 : (_event$target = event.target) == null ? void 0 : _event$target.value) != null ? _event$target$value : value);
     },
     ref: SearchInputRef
-  }), searchTerm ? /*#__PURE__*/React.createElement("div", {
+  }), searchTerm ? React.createElement("div", {
     role: "status",
     className: cx('epr-status-search-results', styles$j.visuallyHidden),
     "aria-live": "polite",
     id: "epr-search-id",
     "aria-atomic": "true"
-  }, statusSearchResults) : null, /*#__PURE__*/React.createElement(IcnSearch, null), /*#__PURE__*/React.createElement(BtnClearSearch, null));
+  }, statusSearchResults) : null, React.createElement(IcnSearch, null), React.createElement(BtnClearSearch, null));
 }
-var styles$j = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
+var styles$j = /*#__PURE__*/stylesheet.create( /*#__PURE__*/_extends$1({
   overlay: {
     padding: 'var(--epr-header-padding)',
     zIndex: 'var(--epr-header-overlay-z-index)'
@@ -12722,13 +21598,15 @@ var styles$j = /*#__PURE__*/stylesheet.create(/*#__PURE__*/_extends$1({
     backgroundPositionY: '-60px'
   }
 })));
+
 function Header() {
-  return /*#__PURE__*/React.createElement(Relative, {
+  return React.createElement(Relative, {
     className: cx('epr-header', commonInteractionStyles.hiddenOnReactions)
-  }, /*#__PURE__*/React.createElement(SearchContainer, null), /*#__PURE__*/React.createElement(CategoryNavigation, null));
+  }, React.createElement(SearchContainer, null), React.createElement(CategoryNavigation, null));
 }
+
 function EmojiPicker(props) {
-  return /*#__PURE__*/React.createElement(ElementRefContextProvider, null, /*#__PURE__*/React.createElement(PickerStyleTag, null), /*#__PURE__*/React.createElement(PickerConfigProvider, Object.assign({}, props), /*#__PURE__*/React.createElement(ContentControl, null)));
+  return React.createElement(ElementRefContextProvider, null, React.createElement(PickerStyleTag, null), React.createElement(PickerConfigProvider, Object.assign({}, props), React.createElement(ContentControl, null)));
 }
 function ContentControl() {
   var _useReactionsModeStat = useReactionsModeState(),
@@ -12749,7 +21627,7 @@ function ContentControl() {
   if (!isOpen) {
     return null;
   }
-  return /*#__PURE__*/React.createElement(PickerMain, null, /*#__PURE__*/React.createElement(Reactions, null), /*#__PURE__*/React.createElement(ExpandedPickerContent, {
+  return React.createElement(PickerMain, null, React.createElement(Reactions, null), React.createElement(ExpandedPickerContent, {
     renderAll: renderAll
   }));
 }
@@ -12758,10 +21636,11 @@ function ExpandedPickerContent(_ref) {
   if (!renderAll) {
     return null;
   }
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Header, null), /*#__PURE__*/React.createElement(Body, null), /*#__PURE__*/React.createElement(Preview, null));
+  return React.createElement(React.Fragment, null, React.createElement(Header, null), React.createElement(Body, null), React.createElement(Preview, null));
 }
 // eslint-disable-next-line complexity
 var EmojiPickerReact = /*#__PURE__*/React.memo(EmojiPicker, compareConfig);
+
 var ErrorBoundary = /*#__PURE__*/function (_React$Component) {
   _inheritsLoose(ErrorBoundary, _React$Component);
   function ErrorBoundary(props) {
@@ -12790,15 +21669,16 @@ var ErrorBoundary = /*#__PURE__*/function (_React$Component) {
   };
   return ErrorBoundary;
 }(React.Component);
+
 function EmojiPicker$1(props) {
   var MutableConfigRef = useDefineMutableConfig({
     onEmojiClick: props.onEmojiClick,
     onReactionClick: props.onReactionClick,
     onSkinToneChange: props.onSkinToneChange
   });
-  return /*#__PURE__*/React.createElement(ErrorBoundary, null, /*#__PURE__*/React.createElement(MutableConfigContext.Provider, {
+  return React.createElement(ErrorBoundary, null, React.createElement(MutableConfigContext.Provider, {
     value: MutableConfigRef
-  }, /*#__PURE__*/React.createElement(EmojiPickerReact, Object.assign({}, props))));
+  }, React.createElement(EmojiPickerReact, Object.assign({}, props))));
 }
 
 var DefaultContext = {
@@ -12811,114 +21691,31 @@ var DefaultContext = {
 var IconContext = React__default["default"].createContext && /*#__PURE__*/React__default["default"].createContext(DefaultContext);
 
 var _excluded = ["attr", "size", "title"];
-function _objectWithoutProperties(source, excluded) {
-  if (source == null) return {};
-  var target = _objectWithoutPropertiesLoose(source, excluded);
-  var key, i;
-  if (Object.getOwnPropertySymbols) {
-    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
-    for (i = 0; i < sourceSymbolKeys.length; i++) {
-      key = sourceSymbolKeys[i];
-      if (excluded.indexOf(key) >= 0) continue;
-      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
-      target[key] = source[key];
-    }
-  }
-  return target;
-}
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  for (var key in source) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) {
-      if (excluded.indexOf(key) >= 0) continue;
-      target[key] = source[key];
-    }
-  }
-  return target;
-}
-function _extends() {
-  _extends = Object.assign ? Object.assign.bind() : function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-    return target;
-  };
-  return _extends.apply(this, arguments);
-}
-function ownKeys(e, r) {
-  var t = Object.keys(e);
-  if (Object.getOwnPropertySymbols) {
-    var o = Object.getOwnPropertySymbols(e);
-    r && (o = o.filter(function (r) {
-      return Object.getOwnPropertyDescriptor(e, r).enumerable;
-    })), t.push.apply(t, o);
-  }
-  return t;
-}
-function _objectSpread(e) {
-  for (var r = 1; r < arguments.length; r++) {
-    var t = null != arguments[r] ? arguments[r] : {};
-    r % 2 ? ownKeys(Object(t), !0).forEach(function (r) {
-      _defineProperty(e, r, t[r]);
-    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) {
-      Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
-    });
-  }
-  return e;
-}
-function _defineProperty(obj, key, value) {
-  key = _toPropertyKey(key);
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-function _toPropertyKey(t) {
-  var i = _toPrimitive(t, "string");
-  return "symbol" == _typeof(i) ? i : i + "";
-}
-function _toPrimitive(t, r) {
-  if ("object" != _typeof(t) || !t) return t;
-  var e = t[Symbol.toPrimitive];
-  if (void 0 !== e) {
-    var i = e.call(t, r || "default");
-    if ("object" != _typeof(i)) return i;
-    throw new TypeError("@@toPrimitive must return a primitive value.");
-  }
-  return ("string" === r ? String : Number)(t);
-}
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } } return target; }
+function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 function Tree2Element(tree) {
-  return tree && tree.map(function (node, i) {
-    return /*#__PURE__*/React__default["default"].createElement(node.tag, _objectSpread({
-      key: i
-    }, node.attr), Tree2Element(node.child));
-  });
+  return tree && tree.map((node, i) => /*#__PURE__*/React__default["default"].createElement(node.tag, _objectSpread({
+    key: i
+  }, node.attr), Tree2Element(node.child)));
 }
 function GenIcon(data) {
-  return function (props) {
-    return /*#__PURE__*/React__default["default"].createElement(IconBase, _extends({
-      attr: _objectSpread({}, data.attr)
-    }, props), Tree2Element(data.child));
-  };
+  return props => /*#__PURE__*/React__default["default"].createElement(IconBase, _extends({
+    attr: _objectSpread({}, data.attr)
+  }, props), Tree2Element(data.child));
 }
 function IconBase(props) {
-  var elem = function elem(conf) {
-    var attr = props.attr,
-      size = props.size,
-      title = props.title,
+  var elem = conf => {
+    var {
+        attr,
+        size,
+        title
+      } = props,
       svgProps = _objectWithoutProperties(props, _excluded);
     var computedSize = size || conf.size || "1em";
     var className;
@@ -12938,13 +21735,95 @@ function IconBase(props) {
       xmlns: "http://www.w3.org/2000/svg"
     }), title && /*#__PURE__*/React__default["default"].createElement("title", null, title), props.children);
   };
-  return IconContext !== undefined ? /*#__PURE__*/React__default["default"].createElement(IconContext.Consumer, null, function (conf) {
-    return elem(conf);
-  }) : elem(DefaultContext);
+  return IconContext !== undefined ? /*#__PURE__*/React__default["default"].createElement(IconContext.Consumer, null, conf => elem(conf)) : elem(DefaultContext);
 }
 
 // THIS FILE IS AUTO GENERATED
-function FaAlignCenter(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M432 160H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0 256H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM108.1 96h231.81A12.09 12.09 0 0 0 352 83.9V44.09A12.09 12.09 0 0 0 339.91 32H108.1A12.09 12.09 0 0 0 96 44.09V83.9A12.1 12.1 0 0 0 108.1 96zm231.81 256A12.09 12.09 0 0 0 352 339.9v-39.81A12.09 12.09 0 0 0 339.91 288H108.1A12.09 12.09 0 0 0 96 300.09v39.81a12.1 12.1 0 0 0 12.1 12.1z"},"child":[]}]})(props);}function FaAlignLeft(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M12.83 352h262.34A12.82 12.82 0 0 0 288 339.17v-38.34A12.82 12.82 0 0 0 275.17 288H12.83A12.82 12.82 0 0 0 0 300.83v38.34A12.82 12.82 0 0 0 12.83 352zm0-256h262.34A12.82 12.82 0 0 0 288 83.17V44.83A12.82 12.82 0 0 0 275.17 32H12.83A12.82 12.82 0 0 0 0 44.83v38.34A12.82 12.82 0 0 0 12.83 96zM432 160H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0 256H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaAlignRight(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M16 224h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16zm416 192H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm3.17-384H172.83A12.82 12.82 0 0 0 160 44.83v38.34A12.82 12.82 0 0 0 172.83 96h262.34A12.82 12.82 0 0 0 448 83.17V44.83A12.82 12.82 0 0 0 435.17 32zm0 256H172.83A12.82 12.82 0 0 0 160 300.83v38.34A12.82 12.82 0 0 0 172.83 352h262.34A12.82 12.82 0 0 0 448 339.17v-38.34A12.82 12.82 0 0 0 435.17 288z"},"child":[]}]})(props);}function FaBold(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 384 512"},"child":[{"tag":"path","attr":{"d":"M333.49 238a122 122 0 0 0 27-65.21C367.87 96.49 308 32 233.42 32H34a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h31.87v288H34a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h209.32c70.8 0 134.14-51.75 141-122.4 4.74-48.45-16.39-92.06-50.83-119.6zM145.66 112h87.76a48 48 0 0 1 0 96h-87.76zm87.76 288h-87.76V288h87.76a56 56 0 0 1 0 112z"},"child":[]}]})(props);}function FaCaretDown(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 320 512"},"child":[{"tag":"path","attr":{"d":"M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z"},"child":[]}]})(props);}function FaCheck(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"},"child":[]}]})(props);}function FaChevronDown(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"},"child":[]}]})(props);}function FaChevronUp(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M240.971 130.524l194.343 194.343c9.373 9.373 9.373 24.569 0 33.941l-22.667 22.667c-9.357 9.357-24.522 9.375-33.901.04L224 227.495 69.255 381.516c-9.379 9.335-24.544 9.317-33.901-.04l-22.667-22.667c-9.373-9.373-9.373-24.569 0-33.941L207.03 130.525c9.372-9.373 24.568-9.373 33.941-.001z"},"child":[]}]})(props);}function FaCode(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 640 512"},"child":[{"tag":"path","attr":{"d":"M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z"},"child":[]}]})(props);}function FaCog(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"},"child":[]}]})(props);}function FaCopy(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M320 448v40c0 13.255-10.745 24-24 24H24c-13.255 0-24-10.745-24-24V120c0-13.255 10.745-24 24-24h72v296c0 30.879 25.121 56 56 56h168zm0-344V0H152c-13.255 0-24 10.745-24 24v368c0 13.255 10.745 24 24 24h272c13.255 0 24-10.745 24-24V128H344c-13.2 0-24-10.8-24-24zm120.971-31.029L375.029 7.029A24 24 0 0 0 358.059 0H352v96h96v-6.059a24 24 0 0 0-7.029-16.97z"},"child":[]}]})(props);}function FaCut(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M278.06 256L444.48 89.57c4.69-4.69 4.69-12.29 0-16.97-32.8-32.8-85.99-32.8-118.79 0L210.18 188.12l-24.86-24.86c4.31-10.92 6.68-22.81 6.68-35.26 0-53.02-42.98-96-96-96S0 74.98 0 128s42.98 96 96 96c4.54 0 8.99-.32 13.36-.93L142.29 256l-32.93 32.93c-4.37-.61-8.83-.93-13.36-.93-53.02 0-96 42.98-96 96s42.98 96 96 96 96-42.98 96-96c0-12.45-2.37-24.34-6.68-35.26l24.86-24.86L325.69 439.4c32.8 32.8 85.99 32.8 118.79 0 4.69-4.68 4.69-12.28 0-16.97L278.06 256zM96 160c-17.64 0-32-14.36-32-32s14.36-32 32-32 32 14.36 32 32-14.36 32-32 32zm0 256c-17.64 0-32-14.36-32-32s14.36-32 32-32 32 14.36 32 32-14.36 32-32 32z"},"child":[]}]})(props);}function FaEdit(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 576 512"},"child":[{"tag":"path","attr":{"d":"M402.6 83.2l90.2 90.2c3.8 3.8 3.8 10 0 13.8L274.4 405.6l-92.8 10.3c-12.4 1.4-22.9-9.1-21.5-21.5l10.3-92.8L388.8 83.2c3.8-3.8 10-3.8 13.8 0zm162-22.9l-48.8-48.8c-15.2-15.2-39.9-15.2-55.2 0l-35.4 35.4c-3.8 3.8-3.8 10 0 13.8l90.2 90.2c3.8 3.8 10 3.8 13.8 0l35.4-35.4c15.2-15.3 15.2-40 0-55.2zM384 346.2V448H64V128h229.8c3.2 0 6.2-1.3 8.5-3.5l40-40c7.6-7.6 2.2-20.5-8.5-20.5H48C21.5 64 0 85.5 0 112v352c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V306.2c0-10.7-12.9-16-20.5-8.5l-40 40c-2.2 2.3-3.5 5.3-3.5 8.5z"},"child":[]}]})(props);}function FaEye(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 576 512"},"child":[{"tag":"path","attr":{"d":"M572.52 241.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400a144 144 0 1 1 144-144 143.93 143.93 0 0 1-144 144zm0-240a95.31 95.31 0 0 0-25.31 3.79 47.85 47.85 0 0 1-66.9 66.9A95.78 95.78 0 1 0 288 160z"},"child":[]}]})(props);}function FaHeading(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M448 96v320h32a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16H320a16 16 0 0 1-16-16v-32a16 16 0 0 1 16-16h32V288H160v128h32a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16H32a16 16 0 0 1-16-16v-32a16 16 0 0 1 16-16h32V96H32a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16h-32v128h192V96h-32a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16z"},"child":[]}]})(props);}function FaHighlighter(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 544 512"},"child":[{"tag":"path","attr":{"d":"M0 479.98L99.92 512l35.45-35.45-67.04-67.04L0 479.98zm124.61-240.01a36.592 36.592 0 0 0-10.79 38.1l13.05 42.83-50.93 50.94 96.23 96.23 50.86-50.86 42.74 13.08c13.73 4.2 28.65-.01 38.15-10.78l35.55-41.64-173.34-173.34-41.52 35.44zm403.31-160.7l-63.2-63.2c-20.49-20.49-53.38-21.52-75.12-2.35L190.55 183.68l169.77 169.78L530.27 154.4c19.18-21.74 18.15-54.63-2.35-75.13z"},"child":[]}]})(props);}function FaImage(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M464 448H48c-26.51 0-48-21.49-48-48V112c0-26.51 21.49-48 48-48h416c26.51 0 48 21.49 48 48v288c0 26.51-21.49 48-48 48zM112 120c-30.928 0-56 25.072-56 56s25.072 56 56 56 56-25.072 56-56-25.072-56-56-56zM64 384h384V272l-87.515-87.515c-4.686-4.686-12.284-4.686-16.971 0L208 320l-55.515-55.515c-4.686-4.686-12.284-4.686-16.971 0L64 336v48z"},"child":[]}]})(props);}function FaItalic(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 320 512"},"child":[{"tag":"path","attr":{"d":"M320 48v32a16 16 0 0 1-16 16h-62.76l-80 320H208a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16H16a16 16 0 0 1-16-16v-32a16 16 0 0 1 16-16h62.76l80-320H112a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h192a16 16 0 0 1 16 16z"},"child":[]}]})(props);}function FaLink(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z"},"child":[]}]})(props);}function FaListOl(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M61.77 401l17.5-20.15a19.92 19.92 0 0 0 5.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h22.83a157.41 157.41 0 0 0-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33 0 15.94 2.44 15.94 9.09 0 4.72-4.2 8.22-14.36 8.22a41.54 41.54 0 0 1-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16 0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM16 160h64a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H64V40a8 8 0 0 0-8-8H32a8 8 0 0 0-7.14 4.42l-8 16A8 8 0 0 0 24 64h8v64H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8zm-3.91 160H80a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44 0-29.06-25-39.56-44.47-39.56-21.36 0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44 0 0 1 9.46-3.84c3.33 0 9.28 1.56 9.28 8.75C51 248.19 0 257.31 0 304.59v4C0 316 5.08 320 12.09 320z"},"child":[]}]})(props);}function FaListUl(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M48 48a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm448 16H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaMinus(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M416 208H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h384c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"},"child":[]}]})(props);}function FaMoon(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M283.211 512c78.962 0 151.079-35.925 198.857-94.792 7.068-8.708-.639-21.43-11.562-19.35-124.203 23.654-238.262-71.576-238.262-196.954 0-72.222 38.662-138.635 101.498-174.394 9.686-5.512 7.25-20.197-3.756-22.23A258.156 258.156 0 0 0 283.211 0c-141.309 0-256 114.511-256 256 0 141.309 114.511 256 256 256z"},"child":[]}]})(props);}function FaMousePointer(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 320 512"},"child":[{"tag":"path","attr":{"d":"M302.189 329.126H196.105l55.831 135.993c3.889 9.428-.555 19.999-9.444 23.999l-49.165 21.427c-9.165 4-19.443-.571-23.332-9.714l-53.053-129.136-86.664 89.138C18.729 472.71 0 463.554 0 447.977V18.299C0 1.899 19.921-6.096 30.277 5.443l284.412 292.542c11.472 11.179 3.007 31.141-12.5 31.141z"},"child":[]}]})(props);}function FaPalette(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M204.3 5C104.9 24.4 24.8 104.3 5.2 203.4c-37 187 131.7 326.4 258.8 306.7 41.2-6.4 61.4-54.6 42.5-91.7-23.1-45.4 9.9-98.4 60.9-98.4h79.7c35.8 0 64.8-29.6 64.9-65.3C511.5 97.1 368.1-26.9 204.3 5zM96 320c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm32-128c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128-64c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 64c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z"},"child":[]}]})(props);}function FaPaste(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M128 184c0-30.879 25.122-56 56-56h136V56c0-13.255-10.745-24-24-24h-80.61C204.306 12.89 183.637 0 160 0s-44.306 12.89-55.39 32H24C10.745 32 0 42.745 0 56v336c0 13.255 10.745 24 24 24h104V184zm32-144c13.255 0 24 10.745 24 24s-10.745 24-24 24-24-10.745-24-24 10.745-24 24-24zm184 248h104v200c0 13.255-10.745 24-24 24H184c-13.255 0-24-10.745-24-24V184c0-13.255 10.745-24 24-24h136v104c0 13.2 10.8 24 24 24zm104-38.059V256h-96v-96h6.059a24 24 0 0 1 16.97 7.029l65.941 65.941a24.002 24.002 0 0 1 7.03 16.971z"},"child":[]}]})(props);}function FaQuoteRight(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M464 32H336c-26.5 0-48 21.5-48 48v128c0 26.5 21.5 48 48 48h80v64c0 35.3-28.7 64-64 64h-8c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h8c88.4 0 160-71.6 160-160V80c0-26.5-21.5-48-48-48zm-288 0H48C21.5 32 0 53.5 0 80v128c0 26.5 21.5 48 48 48h80v64c0 35.3-28.7 64-64 64h-8c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h8c88.4 0 160-71.6 160-160V80c0-26.5-21.5-48-48-48z"},"child":[]}]})(props);}function FaRedo(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M500.33 0h-47.41a12 12 0 0 0-12 12.57l4 82.76A247.42 247.42 0 0 0 256 8C119.34 8 7.9 119.53 8 256.19 8.1 393.07 119.1 504 256 504a247.1 247.1 0 0 0 166.18-63.91 12 12 0 0 0 .48-17.43l-34-34a12 12 0 0 0-16.38-.55A176 176 0 1 1 402.1 157.8l-101.53-4.87a12 12 0 0 0-12.57 12v47.41a12 12 0 0 0 12 12h200.33a12 12 0 0 0 12-12V12a12 12 0 0 0-12-12z"},"child":[]}]})(props);}function FaSearch(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"},"child":[]}]})(props);}function FaSmile(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 496 512"},"child":[{"tag":"path","attr":{"d":"M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm80 168c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm-160 0c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm194.8 170.2C334.3 380.4 292.5 400 248 400s-86.3-19.6-114.8-53.8c-13.6-16.3 11-36.7 24.6-20.5 22.4 26.9 55.2 42.2 90.2 42.2s67.8-15.4 90.2-42.2c13.4-16.2 38.1 4.2 24.6 20.5z"},"child":[]}]})(props);}function FaStrikethrough(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 224H293.9l-87.17-26.83A43.55 43.55 0 0 1 219.55 112h66.79A49.89 49.89 0 0 1 331 139.58a16 16 0 0 0 21.46 7.15l42.94-21.47a16 16 0 0 0 7.16-21.46l-.53-1A128 128 0 0 0 287.51 32h-68a123.68 123.68 0 0 0-123 135.64c2 20.89 10.1 39.83 21.78 56.36H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h480a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm-180.24 96A43 43 0 0 1 336 356.45 43.59 43.59 0 0 1 292.45 400h-66.79A49.89 49.89 0 0 1 181 372.42a16 16 0 0 0-21.46-7.15l-42.94 21.47a16 16 0 0 0-7.16 21.46l.53 1A128 128 0 0 0 224.49 480h68a123.68 123.68 0 0 0 123-135.64 114.25 114.25 0 0 0-5.34-24.36z"},"child":[]}]})(props);}function FaSubscript(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 448h-16V304a16 16 0 0 0-16-16h-48a16 16 0 0 0-14.29 8.83l-16 32A16 16 0 0 0 400 352h16v96h-16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h96a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM336 64h-67a16 16 0 0 0-13.14 6.87l-79.9 115-79.9-115A16 16 0 0 0 83 64H16A16 16 0 0 0 0 80v48a16 16 0 0 0 16 16h33.48l77.81 112-77.81 112H16a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h67a16 16 0 0 0 13.14-6.87l79.9-115 79.9 115A16 16 0 0 0 269 448h67a16 16 0 0 0 16-16v-48a16 16 0 0 0-16-16h-33.48l-77.81-112 77.81-112H336a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaSun(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M256 160c-52.9 0-96 43.1-96 96s43.1 96 96 96 96-43.1 96-96-43.1-96-96-96zm246.4 80.5l-94.7-47.3 33.5-100.4c4.5-13.6-8.4-26.5-21.9-21.9l-100.4 33.5-47.4-94.8c-6.4-12.8-24.6-12.8-31 0l-47.3 94.7L92.7 70.8c-13.6-4.5-26.5 8.4-21.9 21.9l33.5 100.4-94.7 47.4c-12.8 6.4-12.8 24.6 0 31l94.7 47.3-33.5 100.5c-4.5 13.6 8.4 26.5 21.9 21.9l100.4-33.5 47.3 94.7c6.4 12.8 24.6 12.8 31 0l47.3-94.7 100.4 33.5c13.6 4.5 26.5-8.4 21.9-21.9l-33.5-100.4 94.7-47.3c13-6.5 13-24.7.2-31.1zm-155.9 106c-49.9 49.9-131.1 49.9-181 0-49.9-49.9-49.9-131.1 0-181 49.9-49.9 131.1-49.9 181 0 49.9 49.9 49.9 131.1 0 181z"},"child":[]}]})(props);}function FaSuperscript(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 160h-16V16a16 16 0 0 0-16-16h-48a16 16 0 0 0-14.29 8.83l-16 32A16 16 0 0 0 400 64h16v96h-16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h96a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM336 64h-67a16 16 0 0 0-13.14 6.87l-79.9 115-79.9-115A16 16 0 0 0 83 64H16A16 16 0 0 0 0 80v48a16 16 0 0 0 16 16h33.48l77.81 112-77.81 112H16a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h67a16 16 0 0 0 13.14-6.87l79.9-115 79.9 115A16 16 0 0 0 269 448h67a16 16 0 0 0 16-16v-48a16 16 0 0 0-16-16h-33.48l-77.81-112 77.81-112H336a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaTable(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M464 32H48C21.49 32 0 53.49 0 80v352c0 26.51 21.49 48 48 48h416c26.51 0 48-21.49 48-48V80c0-26.51-21.49-48-48-48zM224 416H64v-96h160v96zm0-160H64v-96h160v96zm224 160H288v-96h160v96zm0-160H288v-96h160v96z"},"child":[]}]})(props);}function FaTextHeight(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 576 512"},"child":[{"tag":"path","attr":{"d":"M304 32H16A16 16 0 0 0 0 48v96a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32h56v304H80a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16h-40V112h56v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zm256 336h-48V144h48c14.31 0 21.33-17.31 11.31-27.31l-80-80a16 16 0 0 0-22.62 0l-80 80C379.36 126 384.36 144 400 144h48v224h-48c-14.31 0-21.32 17.31-11.31 27.31l80 80a16 16 0 0 0 22.62 0l80-80C580.64 386 575.64 368 560 368z"},"child":[]}]})(props);}function FaTextWidth(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M432 32H16A16 16 0 0 0 0 48v80a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-16h120v112h-24a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16h-24V112h120v16a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zm-68.69 260.69C354 283.36 336 288.36 336 304v48H112v-48c0-14.31-17.31-21.32-27.31-11.31l-80 80a16 16 0 0 0 0 22.62l80 80C94 484.64 112 479.64 112 464v-48h224v48c0 14.31 17.31 21.33 27.31 11.31l80-80a16 16 0 0 0 0-22.62z"},"child":[]}]})(props);}function FaTimes(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 352 512"},"child":[{"tag":"path","attr":{"d":"M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"},"child":[]}]})(props);}function FaTrash(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"},"child":[]}]})(props);}function FaUnderline(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M32 64h32v160c0 88.22 71.78 160 160 160s160-71.78 160-160V64h32a16 16 0 0 0 16-16V16a16 16 0 0 0-16-16H272a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32v160a80 80 0 0 1-160 0V64h32a16 16 0 0 0 16-16V16a16 16 0 0 0-16-16H32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16zm400 384H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"},"child":[]}]})(props);}function FaUndo(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M212.333 224.333H12c-6.627 0-12-5.373-12-12V12C0 5.373 5.373 0 12 0h48c6.627 0 12 5.373 12 12v78.112C117.773 39.279 184.26 7.47 258.175 8.007c136.906.994 246.448 111.623 246.157 248.532C504.041 393.258 393.12 504 256.333 504c-64.089 0-122.496-24.313-166.51-64.215-5.099-4.622-5.334-12.554-.467-17.42l33.967-33.967c4.474-4.474 11.662-4.717 16.401-.525C170.76 415.336 211.58 432 256.333 432c97.268 0 176-78.716 176-176 0-97.267-78.716-176-176-176-58.496 0-110.28 28.476-142.274 72.333h98.274c6.627 0 12 5.373 12 12v48c0 6.627-5.373 12-12 12z"},"child":[]}]})(props);}function FaUnlink(props){return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M304.083 405.907c4.686 4.686 4.686 12.284 0 16.971l-44.674 44.674c-59.263 59.262-155.693 59.266-214.961 0-59.264-59.265-59.264-155.696 0-214.96l44.675-44.675c4.686-4.686 12.284-4.686 16.971 0l39.598 39.598c4.686 4.686 4.686 12.284 0 16.971l-44.675 44.674c-28.072 28.073-28.072 73.75 0 101.823 28.072 28.072 73.75 28.073 101.824 0l44.674-44.674c4.686-4.686 12.284-4.686 16.971 0l39.597 39.598zm-56.568-260.216c4.686 4.686 12.284 4.686 16.971 0l44.674-44.674c28.072-28.075 73.75-28.073 101.824 0 28.072 28.073 28.072 73.75 0 101.823l-44.675 44.674c-4.686 4.686-4.686 12.284 0 16.971l39.598 39.598c4.686 4.686 12.284 4.686 16.971 0l44.675-44.675c59.265-59.265 59.265-155.695 0-214.96-59.266-59.264-155.695-59.264-214.961 0l-44.674 44.674c-4.686 4.686-4.686 12.284 0 16.971l39.597 39.598zm234.828 359.28l22.627-22.627c9.373-9.373 9.373-24.569 0-33.941L63.598 7.029c-9.373-9.373-24.569-9.373-33.941 0L7.029 29.657c-9.373 9.373-9.373 24.569 0 33.941l441.373 441.373c9.373 9.372 24.569 9.372 33.941 0z"},"child":[]}]})(props);}
+function FaAlignCenter (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M432 160H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0 256H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM108.1 96h231.81A12.09 12.09 0 0 0 352 83.9V44.09A12.09 12.09 0 0 0 339.91 32H108.1A12.09 12.09 0 0 0 96 44.09V83.9A12.1 12.1 0 0 0 108.1 96zm231.81 256A12.09 12.09 0 0 0 352 339.9v-39.81A12.09 12.09 0 0 0 339.91 288H108.1A12.09 12.09 0 0 0 96 300.09v39.81a12.1 12.1 0 0 0 12.1 12.1z"},"child":[]}]})(props);
+}function FaAlignLeft (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M12.83 352h262.34A12.82 12.82 0 0 0 288 339.17v-38.34A12.82 12.82 0 0 0 275.17 288H12.83A12.82 12.82 0 0 0 0 300.83v38.34A12.82 12.82 0 0 0 12.83 352zm0-256h262.34A12.82 12.82 0 0 0 288 83.17V44.83A12.82 12.82 0 0 0 275.17 32H12.83A12.82 12.82 0 0 0 0 44.83v38.34A12.82 12.82 0 0 0 12.83 96zM432 160H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0 256H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"},"child":[]}]})(props);
+}function FaAlignRight (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M16 224h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16zm416 192H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm3.17-384H172.83A12.82 12.82 0 0 0 160 44.83v38.34A12.82 12.82 0 0 0 172.83 96h262.34A12.82 12.82 0 0 0 448 83.17V44.83A12.82 12.82 0 0 0 435.17 32zm0 256H172.83A12.82 12.82 0 0 0 160 300.83v38.34A12.82 12.82 0 0 0 172.83 352h262.34A12.82 12.82 0 0 0 448 339.17v-38.34A12.82 12.82 0 0 0 435.17 288z"},"child":[]}]})(props);
+}function FaBold (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 384 512"},"child":[{"tag":"path","attr":{"d":"M333.49 238a122 122 0 0 0 27-65.21C367.87 96.49 308 32 233.42 32H34a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h31.87v288H34a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h209.32c70.8 0 134.14-51.75 141-122.4 4.74-48.45-16.39-92.06-50.83-119.6zM145.66 112h87.76a48 48 0 0 1 0 96h-87.76zm87.76 288h-87.76V288h87.76a56 56 0 0 1 0 112z"},"child":[]}]})(props);
+}function FaCaretDown (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 320 512"},"child":[{"tag":"path","attr":{"d":"M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z"},"child":[]}]})(props);
+}function FaCheck (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"},"child":[]}]})(props);
+}function FaChevronDown (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"},"child":[]}]})(props);
+}function FaChevronUp (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M240.971 130.524l194.343 194.343c9.373 9.373 9.373 24.569 0 33.941l-22.667 22.667c-9.357 9.357-24.522 9.375-33.901.04L224 227.495 69.255 381.516c-9.379 9.335-24.544 9.317-33.901-.04l-22.667-22.667c-9.373-9.373-9.373-24.569 0-33.941L207.03 130.525c9.372-9.373 24.568-9.373 33.941-.001z"},"child":[]}]})(props);
+}function FaCode (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 640 512"},"child":[{"tag":"path","attr":{"d":"M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z"},"child":[]}]})(props);
+}function FaCog (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"},"child":[]}]})(props);
+}function FaCopy (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M320 448v40c0 13.255-10.745 24-24 24H24c-13.255 0-24-10.745-24-24V120c0-13.255 10.745-24 24-24h72v296c0 30.879 25.121 56 56 56h168zm0-344V0H152c-13.255 0-24 10.745-24 24v368c0 13.255 10.745 24 24 24h272c13.255 0 24-10.745 24-24V128H344c-13.2 0-24-10.8-24-24zm120.971-31.029L375.029 7.029A24 24 0 0 0 358.059 0H352v96h96v-6.059a24 24 0 0 0-7.029-16.97z"},"child":[]}]})(props);
+}function FaCut (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M278.06 256L444.48 89.57c4.69-4.69 4.69-12.29 0-16.97-32.8-32.8-85.99-32.8-118.79 0L210.18 188.12l-24.86-24.86c4.31-10.92 6.68-22.81 6.68-35.26 0-53.02-42.98-96-96-96S0 74.98 0 128s42.98 96 96 96c4.54 0 8.99-.32 13.36-.93L142.29 256l-32.93 32.93c-4.37-.61-8.83-.93-13.36-.93-53.02 0-96 42.98-96 96s42.98 96 96 96 96-42.98 96-96c0-12.45-2.37-24.34-6.68-35.26l24.86-24.86L325.69 439.4c32.8 32.8 85.99 32.8 118.79 0 4.69-4.68 4.69-12.28 0-16.97L278.06 256zM96 160c-17.64 0-32-14.36-32-32s14.36-32 32-32 32 14.36 32 32-14.36 32-32 32zm0 256c-17.64 0-32-14.36-32-32s14.36-32 32-32 32 14.36 32 32-14.36 32-32 32z"},"child":[]}]})(props);
+}function FaEdit (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 576 512"},"child":[{"tag":"path","attr":{"d":"M402.6 83.2l90.2 90.2c3.8 3.8 3.8 10 0 13.8L274.4 405.6l-92.8 10.3c-12.4 1.4-22.9-9.1-21.5-21.5l10.3-92.8L388.8 83.2c3.8-3.8 10-3.8 13.8 0zm162-22.9l-48.8-48.8c-15.2-15.2-39.9-15.2-55.2 0l-35.4 35.4c-3.8 3.8-3.8 10 0 13.8l90.2 90.2c3.8 3.8 10 3.8 13.8 0l35.4-35.4c15.2-15.3 15.2-40 0-55.2zM384 346.2V448H64V128h229.8c3.2 0 6.2-1.3 8.5-3.5l40-40c7.6-7.6 2.2-20.5-8.5-20.5H48C21.5 64 0 85.5 0 112v352c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V306.2c0-10.7-12.9-16-20.5-8.5l-40 40c-2.2 2.3-3.5 5.3-3.5 8.5z"},"child":[]}]})(props);
+}function FaEye (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 576 512"},"child":[{"tag":"path","attr":{"d":"M572.52 241.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400a144 144 0 1 1 144-144 143.93 143.93 0 0 1-144 144zm0-240a95.31 95.31 0 0 0-25.31 3.79 47.85 47.85 0 0 1-66.9 66.9A95.78 95.78 0 1 0 288 160z"},"child":[]}]})(props);
+}function FaHeading (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M448 96v320h32a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16H320a16 16 0 0 1-16-16v-32a16 16 0 0 1 16-16h32V288H160v128h32a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16H32a16 16 0 0 1-16-16v-32a16 16 0 0 1 16-16h32V96H32a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16h-32v128h192V96h-32a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h160a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16z"},"child":[]}]})(props);
+}function FaHighlighter (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 544 512"},"child":[{"tag":"path","attr":{"d":"M0 479.98L99.92 512l35.45-35.45-67.04-67.04L0 479.98zm124.61-240.01a36.592 36.592 0 0 0-10.79 38.1l13.05 42.83-50.93 50.94 96.23 96.23 50.86-50.86 42.74 13.08c13.73 4.2 28.65-.01 38.15-10.78l35.55-41.64-173.34-173.34-41.52 35.44zm403.31-160.7l-63.2-63.2c-20.49-20.49-53.38-21.52-75.12-2.35L190.55 183.68l169.77 169.78L530.27 154.4c19.18-21.74 18.15-54.63-2.35-75.13z"},"child":[]}]})(props);
+}function FaImage (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M464 448H48c-26.51 0-48-21.49-48-48V112c0-26.51 21.49-48 48-48h416c26.51 0 48 21.49 48 48v288c0 26.51-21.49 48-48 48zM112 120c-30.928 0-56 25.072-56 56s25.072 56 56 56 56-25.072 56-56-25.072-56-56-56zM64 384h384V272l-87.515-87.515c-4.686-4.686-12.284-4.686-16.971 0L208 320l-55.515-55.515c-4.686-4.686-12.284-4.686-16.971 0L64 336v48z"},"child":[]}]})(props);
+}function FaItalic (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 320 512"},"child":[{"tag":"path","attr":{"d":"M320 48v32a16 16 0 0 1-16 16h-62.76l-80 320H208a16 16 0 0 1 16 16v32a16 16 0 0 1-16 16H16a16 16 0 0 1-16-16v-32a16 16 0 0 1 16-16h62.76l80-320H112a16 16 0 0 1-16-16V48a16 16 0 0 1 16-16h192a16 16 0 0 1 16 16z"},"child":[]}]})(props);
+}function FaLink (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M326.612 185.391c59.747 59.809 58.927 155.698.36 214.59-.11.12-.24.25-.36.37l-67.2 67.2c-59.27 59.27-155.699 59.262-214.96 0-59.27-59.26-59.27-155.7 0-214.96l37.106-37.106c9.84-9.84 26.786-3.3 27.294 10.606.648 17.722 3.826 35.527 9.69 52.721 1.986 5.822.567 12.262-3.783 16.612l-13.087 13.087c-28.026 28.026-28.905 73.66-1.155 101.96 28.024 28.579 74.086 28.749 102.325.51l67.2-67.19c28.191-28.191 28.073-73.757 0-101.83-3.701-3.694-7.429-6.564-10.341-8.569a16.037 16.037 0 0 1-6.947-12.606c-.396-10.567 3.348-21.456 11.698-29.806l21.054-21.055c5.521-5.521 14.182-6.199 20.584-1.731a152.482 152.482 0 0 1 20.522 17.197zM467.547 44.449c-59.261-59.262-155.69-59.27-214.96 0l-67.2 67.2c-.12.12-.25.25-.36.37-58.566 58.892-59.387 154.781.36 214.59a152.454 152.454 0 0 0 20.521 17.196c6.402 4.468 15.064 3.789 20.584-1.731l21.054-21.055c8.35-8.35 12.094-19.239 11.698-29.806a16.037 16.037 0 0 0-6.947-12.606c-2.912-2.005-6.64-4.875-10.341-8.569-28.073-28.073-28.191-73.639 0-101.83l67.2-67.19c28.239-28.239 74.3-28.069 102.325.51 27.75 28.3 26.872 73.934-1.155 101.96l-13.087 13.087c-4.35 4.35-5.769 10.79-3.783 16.612 5.864 17.194 9.042 34.999 9.69 52.721.509 13.906 17.454 20.446 27.294 10.606l37.106-37.106c59.271-59.259 59.271-155.699.001-214.959z"},"child":[]}]})(props);
+}function FaListOl (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M61.77 401l17.5-20.15a19.92 19.92 0 0 0 5.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h22.83a157.41 157.41 0 0 0-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33 0 15.94 2.44 15.94 9.09 0 4.72-4.2 8.22-14.36 8.22a41.54 41.54 0 0 1-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16 0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM16 160h64a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H64V40a8 8 0 0 0-8-8H32a8 8 0 0 0-7.14 4.42l-8 16A8 8 0 0 0 24 64h8v64H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8zm-3.91 160H80a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44 0-29.06-25-39.56-44.47-39.56-21.36 0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44 0 0 1 9.46-3.84c3.33 0 9.28 1.56 9.28 8.75C51 248.19 0 257.31 0 304.59v4C0 316 5.08 320 12.09 320z"},"child":[]}]})(props);
+}function FaListUl (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M48 48a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm448 16H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"},"child":[]}]})(props);
+}function FaMinus (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M416 208H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h384c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"},"child":[]}]})(props);
+}function FaMoon (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M283.211 512c78.962 0 151.079-35.925 198.857-94.792 7.068-8.708-.639-21.43-11.562-19.35-124.203 23.654-238.262-71.576-238.262-196.954 0-72.222 38.662-138.635 101.498-174.394 9.686-5.512 7.25-20.197-3.756-22.23A258.156 258.156 0 0 0 283.211 0c-141.309 0-256 114.511-256 256 0 141.309 114.511 256 256 256z"},"child":[]}]})(props);
+}function FaMousePointer (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 320 512"},"child":[{"tag":"path","attr":{"d":"M302.189 329.126H196.105l55.831 135.993c3.889 9.428-.555 19.999-9.444 23.999l-49.165 21.427c-9.165 4-19.443-.571-23.332-9.714l-53.053-129.136-86.664 89.138C18.729 472.71 0 463.554 0 447.977V18.299C0 1.899 19.921-6.096 30.277 5.443l284.412 292.542c11.472 11.179 3.007 31.141-12.5 31.141z"},"child":[]}]})(props);
+}function FaPalette (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M204.3 5C104.9 24.4 24.8 104.3 5.2 203.4c-37 187 131.7 326.4 258.8 306.7 41.2-6.4 61.4-54.6 42.5-91.7-23.1-45.4 9.9-98.4 60.9-98.4h79.7c35.8 0 64.8-29.6 64.9-65.3C511.5 97.1 368.1-26.9 204.3 5zM96 320c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm32-128c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128-64c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 64c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z"},"child":[]}]})(props);
+}function FaPaste (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M128 184c0-30.879 25.122-56 56-56h136V56c0-13.255-10.745-24-24-24h-80.61C204.306 12.89 183.637 0 160 0s-44.306 12.89-55.39 32H24C10.745 32 0 42.745 0 56v336c0 13.255 10.745 24 24 24h104V184zm32-144c13.255 0 24 10.745 24 24s-10.745 24-24 24-24-10.745-24-24 10.745-24 24-24zm184 248h104v200c0 13.255-10.745 24-24 24H184c-13.255 0-24-10.745-24-24V184c0-13.255 10.745-24 24-24h136v104c0 13.2 10.8 24 24 24zm104-38.059V256h-96v-96h6.059a24 24 0 0 1 16.97 7.029l65.941 65.941a24.002 24.002 0 0 1 7.03 16.971z"},"child":[]}]})(props);
+}function FaQuoteRight (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M464 32H336c-26.5 0-48 21.5-48 48v128c0 26.5 21.5 48 48 48h80v64c0 35.3-28.7 64-64 64h-8c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h8c88.4 0 160-71.6 160-160V80c0-26.5-21.5-48-48-48zm-288 0H48C21.5 32 0 53.5 0 80v128c0 26.5 21.5 48 48 48h80v64c0 35.3-28.7 64-64 64h-8c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h8c88.4 0 160-71.6 160-160V80c0-26.5-21.5-48-48-48z"},"child":[]}]})(props);
+}function FaRedo (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M500.33 0h-47.41a12 12 0 0 0-12 12.57l4 82.76A247.42 247.42 0 0 0 256 8C119.34 8 7.9 119.53 8 256.19 8.1 393.07 119.1 504 256 504a247.1 247.1 0 0 0 166.18-63.91 12 12 0 0 0 .48-17.43l-34-34a12 12 0 0 0-16.38-.55A176 176 0 1 1 402.1 157.8l-101.53-4.87a12 12 0 0 0-12.57 12v47.41a12 12 0 0 0 12 12h200.33a12 12 0 0 0 12-12V12a12 12 0 0 0-12-12z"},"child":[]}]})(props);
+}function FaSearch (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"},"child":[]}]})(props);
+}function FaSmile (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 496 512"},"child":[{"tag":"path","attr":{"d":"M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm80 168c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm-160 0c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm194.8 170.2C334.3 380.4 292.5 400 248 400s-86.3-19.6-114.8-53.8c-13.6-16.3 11-36.7 24.6-20.5 22.4 26.9 55.2 42.2 90.2 42.2s67.8-15.4 90.2-42.2c13.4-16.2 38.1 4.2 24.6 20.5z"},"child":[]}]})(props);
+}function FaStrikethrough (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 224H293.9l-87.17-26.83A43.55 43.55 0 0 1 219.55 112h66.79A49.89 49.89 0 0 1 331 139.58a16 16 0 0 0 21.46 7.15l42.94-21.47a16 16 0 0 0 7.16-21.46l-.53-1A128 128 0 0 0 287.51 32h-68a123.68 123.68 0 0 0-123 135.64c2 20.89 10.1 39.83 21.78 56.36H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h480a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm-180.24 96A43 43 0 0 1 336 356.45 43.59 43.59 0 0 1 292.45 400h-66.79A49.89 49.89 0 0 1 181 372.42a16 16 0 0 0-21.46-7.15l-42.94 21.47a16 16 0 0 0-7.16 21.46l.53 1A128 128 0 0 0 224.49 480h68a123.68 123.68 0 0 0 123-135.64 114.25 114.25 0 0 0-5.34-24.36z"},"child":[]}]})(props);
+}function FaSubscript (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 448h-16V304a16 16 0 0 0-16-16h-48a16 16 0 0 0-14.29 8.83l-16 32A16 16 0 0 0 400 352h16v96h-16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h96a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM336 64h-67a16 16 0 0 0-13.14 6.87l-79.9 115-79.9-115A16 16 0 0 0 83 64H16A16 16 0 0 0 0 80v48a16 16 0 0 0 16 16h33.48l77.81 112-77.81 112H16a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h67a16 16 0 0 0 13.14-6.87l79.9-115 79.9 115A16 16 0 0 0 269 448h67a16 16 0 0 0 16-16v-48a16 16 0 0 0-16-16h-33.48l-77.81-112 77.81-112H336a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16z"},"child":[]}]})(props);
+}function FaSun (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M256 160c-52.9 0-96 43.1-96 96s43.1 96 96 96 96-43.1 96-96-43.1-96-96-96zm246.4 80.5l-94.7-47.3 33.5-100.4c4.5-13.6-8.4-26.5-21.9-21.9l-100.4 33.5-47.4-94.8c-6.4-12.8-24.6-12.8-31 0l-47.3 94.7L92.7 70.8c-13.6-4.5-26.5 8.4-21.9 21.9l33.5 100.4-94.7 47.4c-12.8 6.4-12.8 24.6 0 31l94.7 47.3-33.5 100.5c-4.5 13.6 8.4 26.5 21.9 21.9l100.4-33.5 47.3 94.7c6.4 12.8 24.6 12.8 31 0l47.3-94.7 100.4 33.5c13.6 4.5 26.5-8.4 21.9-21.9l-33.5-100.4 94.7-47.3c13-6.5 13-24.7.2-31.1zm-155.9 106c-49.9 49.9-131.1 49.9-181 0-49.9-49.9-49.9-131.1 0-181 49.9-49.9 131.1-49.9 181 0 49.9 49.9 49.9 131.1 0 181z"},"child":[]}]})(props);
+}function FaSuperscript (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 160h-16V16a16 16 0 0 0-16-16h-48a16 16 0 0 0-14.29 8.83l-16 32A16 16 0 0 0 400 64h16v96h-16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h96a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM336 64h-67a16 16 0 0 0-13.14 6.87l-79.9 115-79.9-115A16 16 0 0 0 83 64H16A16 16 0 0 0 0 80v48a16 16 0 0 0 16 16h33.48l77.81 112-77.81 112H16a16 16 0 0 0-16 16v48a16 16 0 0 0 16 16h67a16 16 0 0 0 13.14-6.87l79.9-115 79.9 115A16 16 0 0 0 269 448h67a16 16 0 0 0 16-16v-48a16 16 0 0 0-16-16h-33.48l-77.81-112 77.81-112H336a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16z"},"child":[]}]})(props);
+}function FaTable (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M464 32H48C21.49 32 0 53.49 0 80v352c0 26.51 21.49 48 48 48h416c26.51 0 48-21.49 48-48V80c0-26.51-21.49-48-48-48zM224 416H64v-96h160v96zm0-160H64v-96h160v96zm224 160H288v-96h160v96zm0-160H288v-96h160v96z"},"child":[]}]})(props);
+}function FaTextHeight (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 576 512"},"child":[{"tag":"path","attr":{"d":"M304 32H16A16 16 0 0 0 0 48v96a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32h56v304H80a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16h-40V112h56v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zm256 336h-48V144h48c14.31 0 21.33-17.31 11.31-27.31l-80-80a16 16 0 0 0-22.62 0l-80 80C379.36 126 384.36 144 400 144h48v224h-48c-14.31 0-21.32 17.31-11.31 27.31l80 80a16 16 0 0 0 22.62 0l80-80C580.64 386 575.64 368 560 368z"},"child":[]}]})(props);
+}function FaTextWidth (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M432 32H16A16 16 0 0 0 0 48v80a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-16h120v112h-24a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16h-24V112h120v16a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zm-68.69 260.69C354 283.36 336 288.36 336 304v48H112v-48c0-14.31-17.31-21.32-27.31-11.31l-80 80a16 16 0 0 0 0 22.62l80 80C94 484.64 112 479.64 112 464v-48h224v48c0 14.31 17.31 21.33 27.31 11.31l80-80a16 16 0 0 0 0-22.62z"},"child":[]}]})(props);
+}function FaTimes (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 352 512"},"child":[{"tag":"path","attr":{"d":"M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"},"child":[]}]})(props);
+}function FaTrash (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"},"child":[]}]})(props);
+}function FaUnderline (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M32 64h32v160c0 88.22 71.78 160 160 160s160-71.78 160-160V64h32a16 16 0 0 0 16-16V16a16 16 0 0 0-16-16H272a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32v160a80 80 0 0 1-160 0V64h32a16 16 0 0 0 16-16V16a16 16 0 0 0-16-16H32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16zm400 384H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"},"child":[]}]})(props);
+}function FaUndo (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M212.333 224.333H12c-6.627 0-12-5.373-12-12V12C0 5.373 5.373 0 12 0h48c6.627 0 12 5.373 12 12v78.112C117.773 39.279 184.26 7.47 258.175 8.007c136.906.994 246.448 111.623 246.157 248.532C504.041 393.258 393.12 504 256.333 504c-64.089 0-122.496-24.313-166.51-64.215-5.099-4.622-5.334-12.554-.467-17.42l33.967-33.967c4.474-4.474 11.662-4.717 16.401-.525C170.76 415.336 211.58 432 256.333 432c97.268 0 176-78.716 176-176 0-97.267-78.716-176-176-176-58.496 0-110.28 28.476-142.274 72.333h98.274c6.627 0 12 5.373 12 12v48c0 6.627-5.373 12-12 12z"},"child":[]}]})(props);
+}function FaUnlink (props) {
+  return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M304.083 405.907c4.686 4.686 4.686 12.284 0 16.971l-44.674 44.674c-59.263 59.262-155.693 59.266-214.961 0-59.264-59.265-59.264-155.696 0-214.96l44.675-44.675c4.686-4.686 12.284-4.686 16.971 0l39.598 39.598c4.686 4.686 4.686 12.284 0 16.971l-44.675 44.674c-28.072 28.073-28.072 73.75 0 101.823 28.072 28.072 73.75 28.073 101.824 0l44.674-44.674c4.686-4.686 12.284-4.686 16.971 0l39.597 39.598zm-56.568-260.216c4.686 4.686 12.284 4.686 16.971 0l44.674-44.674c28.072-28.075 73.75-28.073 101.824 0 28.072 28.073 28.072 73.75 0 101.823l-44.675 44.674c-4.686 4.686-4.686 12.284 0 16.971l39.598 39.598c4.686 4.686 12.284 4.686 16.971 0l44.675-44.675c59.265-59.265 59.265-155.695 0-214.96-59.266-59.264-155.695-59.264-214.961 0l-44.674 44.674c-4.686 4.686-4.686 12.284 0 16.971l39.597 39.598zm234.828 359.28l22.627-22.627c9.373-9.373 9.373-24.569 0-33.941L63.598 7.029c-9.373-9.373-24.569-9.373-33.941 0L7.029 29.657c-9.373 9.373-9.373 24.569 0 33.941l441.373 441.373c9.373 9.372 24.569 9.372 33.941 0z"},"child":[]}]})(props);
+}
 
 var Dropdown = function Dropdown(_ref) {
   var options = _ref.options,
@@ -13882,17 +22761,22 @@ var shouldShowButton = function shouldShowButton(cmd, allowedTags) {
 
 /*! @license DOMPurify 3.3.0 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.3.0/LICENSE */
 
-var entries = Object.entries,
-  setPrototypeOf = Object.setPrototypeOf,
-  isFrozen = Object.isFrozen,
-  getPrototypeOf = Object.getPrototypeOf,
-  getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var freeze = Object.freeze,
-  seal = Object.seal,
-  create = Object.create; // eslint-disable-line import/no-mutable-exports
-var _ref = typeof Reflect !== 'undefined' && Reflect,
-  apply = _ref.apply,
-  construct = _ref.construct;
+const {
+  entries,
+  setPrototypeOf,
+  isFrozen,
+  getPrototypeOf,
+  getOwnPropertyDescriptor
+} = Object;
+let {
+  freeze,
+  seal,
+  create
+} = Object; // eslint-disable-line import/no-mutable-exports
+let {
+  apply,
+  construct
+} = typeof Reflect !== 'undefined' && Reflect;
 if (!freeze) {
   freeze = function freeze(x) {
     return x;
@@ -13916,23 +22800,23 @@ if (!construct) {
     for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
       args[_key2 - 1] = arguments[_key2];
     }
-    return _construct(Func, args);
+    return new Func(...args);
   };
 }
-var arrayForEach = unapply(Array.prototype.forEach);
-var arrayLastIndexOf = unapply(Array.prototype.lastIndexOf);
-var arrayPop = unapply(Array.prototype.pop);
-var arrayPush = unapply(Array.prototype.push);
-var arraySplice = unapply(Array.prototype.splice);
-var stringToLowerCase = unapply(String.prototype.toLowerCase);
-var stringToString = unapply(String.prototype.toString);
-var stringMatch = unapply(String.prototype.match);
-var stringReplace = unapply(String.prototype.replace);
-var stringIndexOf = unapply(String.prototype.indexOf);
-var stringTrim = unapply(String.prototype.trim);
-var objectHasOwnProperty = unapply(Object.prototype.hasOwnProperty);
-var regExpTest = unapply(RegExp.prototype.test);
-var typeErrorCreate = unconstruct(TypeError);
+const arrayForEach = unapply(Array.prototype.forEach);
+const arrayLastIndexOf = unapply(Array.prototype.lastIndexOf);
+const arrayPop = unapply(Array.prototype.pop);
+const arrayPush = unapply(Array.prototype.push);
+const arraySplice = unapply(Array.prototype.splice);
+const stringToLowerCase = unapply(String.prototype.toLowerCase);
+const stringToString = unapply(String.prototype.toString);
+const stringMatch = unapply(String.prototype.match);
+const stringReplace = unapply(String.prototype.replace);
+const stringIndexOf = unapply(String.prototype.indexOf);
+const stringTrim = unapply(String.prototype.trim);
+const objectHasOwnProperty = unapply(Object.prototype.hasOwnProperty);
+const regExpTest = unapply(RegExp.prototype.test);
+const typeErrorCreate = unconstruct(TypeError);
 /**
  * Creates a new function that calls the given function with a specified thisArg and arguments.
  *
@@ -13973,18 +22857,18 @@ function unconstruct(Func) {
  * @returns The modified set with added elements.
  */
 function addToSet(set, array) {
-  var transformCaseFunc = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : stringToLowerCase;
+  let transformCaseFunc = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : stringToLowerCase;
   if (setPrototypeOf) {
     // Make 'in' and truthy checks like Boolean(set.constructor)
     // independent of any properties defined on Object.prototype.
     // Prevent prototype setters from intercepting set as a this value.
     setPrototypeOf(set, null);
   }
-  var l = array.length;
+  let l = array.length;
   while (l--) {
-    var element = array[l];
+    let element = array[l];
     if (typeof element === 'string') {
-      var lcElement = transformCaseFunc(element);
+      const lcElement = transformCaseFunc(element);
       if (lcElement !== element) {
         // Config presets (e.g. tags.js, attrs.js) are immutable.
         if (!isFrozen(array)) {
@@ -14004,8 +22888,8 @@ function addToSet(set, array) {
  * @returns The cleaned version of the array
  */
 function cleanArray(array) {
-  for (var index = 0; index < array.length; index++) {
-    var isPropertyExist = objectHasOwnProperty(array, index);
+  for (let index = 0; index < array.length; index++) {
+    const isPropertyExist = objectHasOwnProperty(array, index);
     if (!isPropertyExist) {
       array[index] = null;
     }
@@ -14019,29 +22903,18 @@ function cleanArray(array) {
  * @returns A new object that copies the original.
  */
 function clone(object) {
-  var newObject = create(null);
-  var _iterator = _createForOfIteratorHelper(entries(object)),
-    _step;
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var _step$value = _slicedToArray(_step.value, 2),
-        property = _step$value[0],
-        value = _step$value[1];
-      var isPropertyExist = objectHasOwnProperty(object, property);
-      if (isPropertyExist) {
-        if (Array.isArray(value)) {
-          newObject[property] = cleanArray(value);
-        } else if (value && _typeof(value) === 'object' && value.constructor === Object) {
-          newObject[property] = clone(value);
-        } else {
-          newObject[property] = value;
-        }
+  const newObject = create(null);
+  for (const [property, value] of entries(object)) {
+    const isPropertyExist = objectHasOwnProperty(object, property);
+    if (isPropertyExist) {
+      if (Array.isArray(value)) {
+        newObject[property] = cleanArray(value);
+      } else if (value && typeof value === 'object' && value.constructor === Object) {
+        newObject[property] = clone(value);
+      } else {
+        newObject[property] = value;
       }
     }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
   }
   return newObject;
 }
@@ -14054,7 +22927,7 @@ function clone(object) {
  */
 function lookupGetter(object, prop) {
   while (object !== null) {
-    var desc = getOwnPropertyDescriptor(object, prop);
+    const desc = getOwnPropertyDescriptor(object, prop);
     if (desc) {
       if (desc.get) {
         return unapply(desc.get);
@@ -14070,37 +22943,40 @@ function lookupGetter(object, prop) {
   }
   return fallbackValue;
 }
-var html$1 = freeze(['a', 'abbr', 'acronym', 'address', 'area', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo', 'big', 'blink', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'content', 'data', 'datalist', 'dd', 'decorator', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'element', 'em', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'main', 'map', 'mark', 'marquee', 'menu', 'menuitem', 'meter', 'nav', 'nobr', 'ol', 'optgroup', 'option', 'output', 'p', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'search', 'section', 'select', 'shadow', 'slot', 'small', 'source', 'spacer', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr']);
-var svg$1 = freeze(['svg', 'a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 'defs', 'desc', 'ellipse', 'enterkeyhint', 'exportparts', 'filter', 'font', 'g', 'glyph', 'glyphref', 'hkern', 'image', 'inputmode', 'line', 'lineargradient', 'marker', 'mask', 'metadata', 'mpath', 'part', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 'stop', 'style', 'switch', 'symbol', 'text', 'textpath', 'title', 'tref', 'tspan', 'view', 'vkern']);
-var svgFilters = freeze(['feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', 'feDistantLight', 'feDropShadow', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence']);
+
+const html$1 = freeze(['a', 'abbr', 'acronym', 'address', 'area', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo', 'big', 'blink', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'content', 'data', 'datalist', 'dd', 'decorator', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'element', 'em', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'main', 'map', 'mark', 'marquee', 'menu', 'menuitem', 'meter', 'nav', 'nobr', 'ol', 'optgroup', 'option', 'output', 'p', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'search', 'section', 'select', 'shadow', 'slot', 'small', 'source', 'spacer', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr']);
+const svg$1 = freeze(['svg', 'a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 'defs', 'desc', 'ellipse', 'enterkeyhint', 'exportparts', 'filter', 'font', 'g', 'glyph', 'glyphref', 'hkern', 'image', 'inputmode', 'line', 'lineargradient', 'marker', 'mask', 'metadata', 'mpath', 'part', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 'stop', 'style', 'switch', 'symbol', 'text', 'textpath', 'title', 'tref', 'tspan', 'view', 'vkern']);
+const svgFilters = freeze(['feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', 'feDistantLight', 'feDropShadow', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence']);
 // List of SVG elements that are disallowed by default.
 // We still need to know them so that we can do namespace
 // checks properly in case one wants to add them to
 // allow-list.
-var svgDisallowed = freeze(['animate', 'color-profile', 'cursor', 'discard', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri', 'foreignobject', 'hatch', 'hatchpath', 'mesh', 'meshgradient', 'meshpatch', 'meshrow', 'missing-glyph', 'script', 'set', 'solidcolor', 'unknown', 'use']);
-var mathMl$1 = freeze(['math', 'menclose', 'merror', 'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mspace', 'msqrt', 'mstyle', 'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder', 'munderover', 'mprescripts']);
+const svgDisallowed = freeze(['animate', 'color-profile', 'cursor', 'discard', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri', 'foreignobject', 'hatch', 'hatchpath', 'mesh', 'meshgradient', 'meshpatch', 'meshrow', 'missing-glyph', 'script', 'set', 'solidcolor', 'unknown', 'use']);
+const mathMl$1 = freeze(['math', 'menclose', 'merror', 'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mspace', 'msqrt', 'mstyle', 'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder', 'munderover', 'mprescripts']);
 // Similarly to SVG, we want to know all MathML elements,
 // even those that we disallow by default.
-var mathMlDisallowed = freeze(['maction', 'maligngroup', 'malignmark', 'mlongdiv', 'mscarries', 'mscarry', 'msgroup', 'mstack', 'msline', 'msrow', 'semantics', 'annotation', 'annotation-xml', 'mprescripts', 'none']);
-var text = freeze(['#text']);
-var html = freeze(['accept', 'action', 'align', 'alt', 'autocapitalize', 'autocomplete', 'autopictureinpicture', 'autoplay', 'background', 'bgcolor', 'border', 'capture', 'cellpadding', 'cellspacing', 'checked', 'cite', 'class', 'clear', 'color', 'cols', 'colspan', 'controls', 'controlslist', 'coords', 'crossorigin', 'datetime', 'decoding', 'default', 'dir', 'disabled', 'disablepictureinpicture', 'disableremoteplayback', 'download', 'draggable', 'enctype', 'enterkeyhint', 'exportparts', 'face', 'for', 'headers', 'height', 'hidden', 'high', 'href', 'hreflang', 'id', 'inert', 'inputmode', 'integrity', 'ismap', 'kind', 'label', 'lang', 'list', 'loading', 'loop', 'low', 'max', 'maxlength', 'media', 'method', 'min', 'minlength', 'multiple', 'muted', 'name', 'nonce', 'noshade', 'novalidate', 'nowrap', 'open', 'optimum', 'part', 'pattern', 'placeholder', 'playsinline', 'popover', 'popovertarget', 'popovertargetaction', 'poster', 'preload', 'pubdate', 'radiogroup', 'readonly', 'rel', 'required', 'rev', 'reversed', 'role', 'rows', 'rowspan', 'spellcheck', 'scope', 'selected', 'shape', 'size', 'sizes', 'slot', 'span', 'srclang', 'start', 'src', 'srcset', 'step', 'style', 'summary', 'tabindex', 'title', 'translate', 'type', 'usemap', 'valign', 'value', 'width', 'wrap', 'xmlns', 'slot']);
-var svg = freeze(['accent-height', 'accumulate', 'additive', 'alignment-baseline', 'amplitude', 'ascent', 'attributename', 'attributetype', 'azimuth', 'basefrequency', 'baseline-shift', 'begin', 'bias', 'by', 'class', 'clip', 'clippathunits', 'clip-path', 'clip-rule', 'color', 'color-interpolation', 'color-interpolation-filters', 'color-profile', 'color-rendering', 'cx', 'cy', 'd', 'dx', 'dy', 'diffuseconstant', 'direction', 'display', 'divisor', 'dur', 'edgemode', 'elevation', 'end', 'exponent', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'filterunits', 'flood-color', 'flood-opacity', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'fx', 'fy', 'g1', 'g2', 'glyph-name', 'glyphref', 'gradientunits', 'gradienttransform', 'height', 'href', 'id', 'image-rendering', 'in', 'in2', 'intercept', 'k', 'k1', 'k2', 'k3', 'k4', 'kerning', 'keypoints', 'keysplines', 'keytimes', 'lang', 'lengthadjust', 'letter-spacing', 'kernelmatrix', 'kernelunitlength', 'lighting-color', 'local', 'marker-end', 'marker-mid', 'marker-start', 'markerheight', 'markerunits', 'markerwidth', 'maskcontentunits', 'maskunits', 'max', 'mask', 'mask-type', 'media', 'method', 'mode', 'min', 'name', 'numoctaves', 'offset', 'operator', 'opacity', 'order', 'orient', 'orientation', 'origin', 'overflow', 'paint-order', 'path', 'pathlength', 'patterncontentunits', 'patterntransform', 'patternunits', 'points', 'preservealpha', 'preserveaspectratio', 'primitiveunits', 'r', 'rx', 'ry', 'radius', 'refx', 'refy', 'repeatcount', 'repeatdur', 'restart', 'result', 'rotate', 'scale', 'seed', 'shape-rendering', 'slope', 'specularconstant', 'specularexponent', 'spreadmethod', 'startoffset', 'stddeviation', 'stitchtiles', 'stop-color', 'stop-opacity', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke', 'stroke-width', 'style', 'surfacescale', 'systemlanguage', 'tabindex', 'tablevalues', 'targetx', 'targety', 'transform', 'transform-origin', 'text-anchor', 'text-decoration', 'text-rendering', 'textlength', 'type', 'u1', 'u2', 'unicode', 'values', 'viewbox', 'visibility', 'version', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'width', 'word-spacing', 'wrap', 'writing-mode', 'xchannelselector', 'ychannelselector', 'x', 'x1', 'x2', 'xmlns', 'y', 'y1', 'y2', 'z', 'zoomandpan']);
-var mathMl = freeze(['accent', 'accentunder', 'align', 'bevelled', 'close', 'columnsalign', 'columnlines', 'columnspan', 'denomalign', 'depth', 'dir', 'display', 'displaystyle', 'encoding', 'fence', 'frame', 'height', 'href', 'id', 'largeop', 'length', 'linethickness', 'lspace', 'lquote', 'mathbackground', 'mathcolor', 'mathsize', 'mathvariant', 'maxsize', 'minsize', 'movablelimits', 'notation', 'numalign', 'open', 'rowalign', 'rowlines', 'rowspacing', 'rowspan', 'rspace', 'rquote', 'scriptlevel', 'scriptminsize', 'scriptsizemultiplier', 'selection', 'separator', 'separators', 'stretchy', 'subscriptshift', 'supscriptshift', 'symmetric', 'voffset', 'width', 'xmlns']);
-var xml = freeze(['xlink:href', 'xml:id', 'xlink:title', 'xml:space', 'xmlns:xlink']);
+const mathMlDisallowed = freeze(['maction', 'maligngroup', 'malignmark', 'mlongdiv', 'mscarries', 'mscarry', 'msgroup', 'mstack', 'msline', 'msrow', 'semantics', 'annotation', 'annotation-xml', 'mprescripts', 'none']);
+const text = freeze(['#text']);
+
+const html = freeze(['accept', 'action', 'align', 'alt', 'autocapitalize', 'autocomplete', 'autopictureinpicture', 'autoplay', 'background', 'bgcolor', 'border', 'capture', 'cellpadding', 'cellspacing', 'checked', 'cite', 'class', 'clear', 'color', 'cols', 'colspan', 'controls', 'controlslist', 'coords', 'crossorigin', 'datetime', 'decoding', 'default', 'dir', 'disabled', 'disablepictureinpicture', 'disableremoteplayback', 'download', 'draggable', 'enctype', 'enterkeyhint', 'exportparts', 'face', 'for', 'headers', 'height', 'hidden', 'high', 'href', 'hreflang', 'id', 'inert', 'inputmode', 'integrity', 'ismap', 'kind', 'label', 'lang', 'list', 'loading', 'loop', 'low', 'max', 'maxlength', 'media', 'method', 'min', 'minlength', 'multiple', 'muted', 'name', 'nonce', 'noshade', 'novalidate', 'nowrap', 'open', 'optimum', 'part', 'pattern', 'placeholder', 'playsinline', 'popover', 'popovertarget', 'popovertargetaction', 'poster', 'preload', 'pubdate', 'radiogroup', 'readonly', 'rel', 'required', 'rev', 'reversed', 'role', 'rows', 'rowspan', 'spellcheck', 'scope', 'selected', 'shape', 'size', 'sizes', 'slot', 'span', 'srclang', 'start', 'src', 'srcset', 'step', 'style', 'summary', 'tabindex', 'title', 'translate', 'type', 'usemap', 'valign', 'value', 'width', 'wrap', 'xmlns', 'slot']);
+const svg = freeze(['accent-height', 'accumulate', 'additive', 'alignment-baseline', 'amplitude', 'ascent', 'attributename', 'attributetype', 'azimuth', 'basefrequency', 'baseline-shift', 'begin', 'bias', 'by', 'class', 'clip', 'clippathunits', 'clip-path', 'clip-rule', 'color', 'color-interpolation', 'color-interpolation-filters', 'color-profile', 'color-rendering', 'cx', 'cy', 'd', 'dx', 'dy', 'diffuseconstant', 'direction', 'display', 'divisor', 'dur', 'edgemode', 'elevation', 'end', 'exponent', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'filterunits', 'flood-color', 'flood-opacity', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'fx', 'fy', 'g1', 'g2', 'glyph-name', 'glyphref', 'gradientunits', 'gradienttransform', 'height', 'href', 'id', 'image-rendering', 'in', 'in2', 'intercept', 'k', 'k1', 'k2', 'k3', 'k4', 'kerning', 'keypoints', 'keysplines', 'keytimes', 'lang', 'lengthadjust', 'letter-spacing', 'kernelmatrix', 'kernelunitlength', 'lighting-color', 'local', 'marker-end', 'marker-mid', 'marker-start', 'markerheight', 'markerunits', 'markerwidth', 'maskcontentunits', 'maskunits', 'max', 'mask', 'mask-type', 'media', 'method', 'mode', 'min', 'name', 'numoctaves', 'offset', 'operator', 'opacity', 'order', 'orient', 'orientation', 'origin', 'overflow', 'paint-order', 'path', 'pathlength', 'patterncontentunits', 'patterntransform', 'patternunits', 'points', 'preservealpha', 'preserveaspectratio', 'primitiveunits', 'r', 'rx', 'ry', 'radius', 'refx', 'refy', 'repeatcount', 'repeatdur', 'restart', 'result', 'rotate', 'scale', 'seed', 'shape-rendering', 'slope', 'specularconstant', 'specularexponent', 'spreadmethod', 'startoffset', 'stddeviation', 'stitchtiles', 'stop-color', 'stop-opacity', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke', 'stroke-width', 'style', 'surfacescale', 'systemlanguage', 'tabindex', 'tablevalues', 'targetx', 'targety', 'transform', 'transform-origin', 'text-anchor', 'text-decoration', 'text-rendering', 'textlength', 'type', 'u1', 'u2', 'unicode', 'values', 'viewbox', 'visibility', 'version', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'width', 'word-spacing', 'wrap', 'writing-mode', 'xchannelselector', 'ychannelselector', 'x', 'x1', 'x2', 'xmlns', 'y', 'y1', 'y2', 'z', 'zoomandpan']);
+const mathMl = freeze(['accent', 'accentunder', 'align', 'bevelled', 'close', 'columnsalign', 'columnlines', 'columnspan', 'denomalign', 'depth', 'dir', 'display', 'displaystyle', 'encoding', 'fence', 'frame', 'height', 'href', 'id', 'largeop', 'length', 'linethickness', 'lspace', 'lquote', 'mathbackground', 'mathcolor', 'mathsize', 'mathvariant', 'maxsize', 'minsize', 'movablelimits', 'notation', 'numalign', 'open', 'rowalign', 'rowlines', 'rowspacing', 'rowspan', 'rspace', 'rquote', 'scriptlevel', 'scriptminsize', 'scriptsizemultiplier', 'selection', 'separator', 'separators', 'stretchy', 'subscriptshift', 'supscriptshift', 'symmetric', 'voffset', 'width', 'xmlns']);
+const xml = freeze(['xlink:href', 'xml:id', 'xlink:title', 'xml:space', 'xmlns:xlink']);
 
 // eslint-disable-next-line unicorn/better-regex
-var MUSTACHE_EXPR = seal(/\{\{[\w\W]*|[\w\W]*\}\}/gm); // Specify template detection regex for SAFE_FOR_TEMPLATES mode
-var ERB_EXPR = seal(/<%[\w\W]*|[\w\W]*%>/gm);
-var TMPLIT_EXPR = seal(/\$\{[\w\W]*/gm); // eslint-disable-line unicorn/better-regex
-var DATA_ATTR = seal(/^data-[\-\w.\u00B7-\uFFFF]+$/); // eslint-disable-line no-useless-escape
-var ARIA_ATTR = seal(/^aria-[\-\w]+$/); // eslint-disable-line no-useless-escape
-var IS_ALLOWED_URI = seal(/^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i // eslint-disable-line no-useless-escape
+const MUSTACHE_EXPR = seal(/\{\{[\w\W]*|[\w\W]*\}\}/gm); // Specify template detection regex for SAFE_FOR_TEMPLATES mode
+const ERB_EXPR = seal(/<%[\w\W]*|[\w\W]*%>/gm);
+const TMPLIT_EXPR = seal(/\$\{[\w\W]*/gm); // eslint-disable-line unicorn/better-regex
+const DATA_ATTR = seal(/^data-[\-\w.\u00B7-\uFFFF]+$/); // eslint-disable-line no-useless-escape
+const ARIA_ATTR = seal(/^aria-[\-\w]+$/); // eslint-disable-line no-useless-escape
+const IS_ALLOWED_URI = seal(/^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i // eslint-disable-line no-useless-escape
 );
-var IS_SCRIPT_OR_DATA = seal(/^(?:\w+script|data):/i);
-var ATTR_WHITESPACE = seal(/[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g // eslint-disable-line no-control-regex
+const IS_SCRIPT_OR_DATA = seal(/^(?:\w+script|data):/i);
+const ATTR_WHITESPACE = seal(/[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g // eslint-disable-line no-control-regex
 );
-var DOCTYPE_NAME = seal(/^html$/i);
-var CUSTOM_ELEMENT = seal(/^[a-z][.\w]*(-[.\w]+)+$/i);
+const DOCTYPE_NAME = seal(/^html$/i);
+const CUSTOM_ELEMENT = seal(/^[a-z][.\w]*(-[.\w]+)+$/i);
+
 var EXPRESSIONS = /*#__PURE__*/Object.freeze({
   __proto__: null,
   ARIA_ATTR: ARIA_ATTR,
@@ -14117,7 +22993,7 @@ var EXPRESSIONS = /*#__PURE__*/Object.freeze({
 
 /* eslint-disable @typescript-eslint/indent */
 // https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
-var NODE_TYPE = {
+const NODE_TYPE = {
   element: 1,
   attribute: 2,
   text: 3,
@@ -14133,7 +23009,7 @@ var NODE_TYPE = {
   documentFragment: 11,
   notation: 12 // Deprecated
 };
-var getGlobal = function getGlobal() {
+const getGlobal = function getGlobal() {
   return typeof window === 'undefined' ? null : window;
 };
 /**
@@ -14144,25 +23020,25 @@ var getGlobal = function getGlobal() {
  * @return The policy created (or null, if Trusted Types
  * are not supported or creating the policy failed).
  */
-var _createTrustedTypesPolicy = function _createTrustedTypesPolicy(trustedTypes, purifyHostElement) {
-  if (_typeof(trustedTypes) !== 'object' || typeof trustedTypes.createPolicy !== 'function') {
+const _createTrustedTypesPolicy = function _createTrustedTypesPolicy(trustedTypes, purifyHostElement) {
+  if (typeof trustedTypes !== 'object' || typeof trustedTypes.createPolicy !== 'function') {
     return null;
   }
   // Allow the callers to control the unique policy name
   // by adding a data-tt-policy-suffix to the script element with the DOMPurify.
   // Policy creation with duplicate names throws in Trusted Types.
-  var suffix = null;
-  var ATTR_NAME = 'data-tt-policy-suffix';
+  let suffix = null;
+  const ATTR_NAME = 'data-tt-policy-suffix';
   if (purifyHostElement && purifyHostElement.hasAttribute(ATTR_NAME)) {
     suffix = purifyHostElement.getAttribute(ATTR_NAME);
   }
-  var policyName = 'dompurify' + (suffix ? '#' + suffix : '');
+  const policyName = 'dompurify' + (suffix ? '#' + suffix : '');
   try {
     return trustedTypes.createPolicy(policyName, {
-      createHTML: function createHTML(html) {
+      createHTML(html) {
         return html;
       },
-      createScriptURL: function createScriptURL(scriptUrl) {
+      createScriptURL(scriptUrl) {
         return scriptUrl;
       }
     });
@@ -14174,7 +23050,7 @@ var _createTrustedTypesPolicy = function _createTrustedTypesPolicy(trustedTypes,
     return null;
   }
 };
-var _createHooksMap = function _createHooksMap() {
+const _createHooksMap = function _createHooksMap() {
   return {
     afterSanitizeAttributes: [],
     afterSanitizeElements: [],
@@ -14188,10 +23064,8 @@ var _createHooksMap = function _createHooksMap() {
   };
 };
 function createDOMPurify() {
-  var window = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : getGlobal();
-  var DOMPurify = function DOMPurify(root) {
-    return createDOMPurify(root);
-  };
+  let window = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : getGlobal();
+  const DOMPurify = root => createDOMPurify(root);
   DOMPurify.version = '3.3.0';
   DOMPurify.removed = [];
   if (!window || !window.document || window.document.nodeType !== NODE_TYPE.document || !window.Element) {
@@ -14200,25 +23074,28 @@ function createDOMPurify() {
     DOMPurify.isSupported = false;
     return DOMPurify;
   }
-  var document = window.document;
-  var originalDocument = document;
-  var currentScript = originalDocument.currentScript;
-  var DocumentFragment = window.DocumentFragment,
-    HTMLTemplateElement = window.HTMLTemplateElement,
-    Node = window.Node,
-    Element = window.Element,
-    NodeFilter = window.NodeFilter,
-    _window$NamedNodeMap = window.NamedNodeMap,
-    NamedNodeMap = _window$NamedNodeMap === void 0 ? window.NamedNodeMap || window.MozNamedAttrMap : _window$NamedNodeMap,
-    HTMLFormElement = window.HTMLFormElement,
-    DOMParser = window.DOMParser,
-    trustedTypes = window.trustedTypes;
-  var ElementPrototype = Element.prototype;
-  var cloneNode = lookupGetter(ElementPrototype, 'cloneNode');
-  var remove = lookupGetter(ElementPrototype, 'remove');
-  var getNextSibling = lookupGetter(ElementPrototype, 'nextSibling');
-  var getChildNodes = lookupGetter(ElementPrototype, 'childNodes');
-  var getParentNode = lookupGetter(ElementPrototype, 'parentNode');
+  let {
+    document
+  } = window;
+  const originalDocument = document;
+  const currentScript = originalDocument.currentScript;
+  const {
+    DocumentFragment,
+    HTMLTemplateElement,
+    Node,
+    Element,
+    NodeFilter,
+    NamedNodeMap = window.NamedNodeMap || window.MozNamedAttrMap,
+    HTMLFormElement,
+    DOMParser,
+    trustedTypes
+  } = window;
+  const ElementPrototype = Element.prototype;
+  const cloneNode = lookupGetter(ElementPrototype, 'cloneNode');
+  const remove = lookupGetter(ElementPrototype, 'remove');
+  const getNextSibling = lookupGetter(ElementPrototype, 'nextSibling');
+  const getChildNodes = lookupGetter(ElementPrototype, 'childNodes');
+  const getParentNode = lookupGetter(ElementPrototype, 'parentNode');
   // As per issue #47, the web-components registry is inherited by a
   // new document created via createHTMLDocument. As per the spec
   // (http://w3c.github.io/webcomponents/spec/custom/#creating-and-passing-registries)
@@ -14226,50 +23103,57 @@ function createDOMPurify() {
   // document, so we use that as our parent document to ensure nothing
   // is inherited.
   if (typeof HTMLTemplateElement === 'function') {
-    var template = document.createElement('template');
+    const template = document.createElement('template');
     if (template.content && template.content.ownerDocument) {
       document = template.content.ownerDocument;
     }
   }
-  var trustedTypesPolicy;
-  var emptyHTML = '';
-  var _document = document,
-    implementation = _document.implementation,
-    createNodeIterator = _document.createNodeIterator,
-    createDocumentFragment = _document.createDocumentFragment,
-    getElementsByTagName = _document.getElementsByTagName;
-  var importNode = originalDocument.importNode;
-  var hooks = _createHooksMap();
+  let trustedTypesPolicy;
+  let emptyHTML = '';
+  const {
+    implementation,
+    createNodeIterator,
+    createDocumentFragment,
+    getElementsByTagName
+  } = document;
+  const {
+    importNode
+  } = originalDocument;
+  let hooks = _createHooksMap();
   /**
    * Expose whether this browser supports running the full DOMPurify.
    */
   DOMPurify.isSupported = typeof entries === 'function' && typeof getParentNode === 'function' && implementation && implementation.createHTMLDocument !== undefined;
-  var MUSTACHE_EXPR = EXPRESSIONS.MUSTACHE_EXPR,
-    ERB_EXPR = EXPRESSIONS.ERB_EXPR,
-    TMPLIT_EXPR = EXPRESSIONS.TMPLIT_EXPR,
-    DATA_ATTR = EXPRESSIONS.DATA_ATTR,
-    ARIA_ATTR = EXPRESSIONS.ARIA_ATTR,
-    IS_SCRIPT_OR_DATA = EXPRESSIONS.IS_SCRIPT_OR_DATA,
-    ATTR_WHITESPACE = EXPRESSIONS.ATTR_WHITESPACE,
-    CUSTOM_ELEMENT = EXPRESSIONS.CUSTOM_ELEMENT;
-  var IS_ALLOWED_URI$1 = EXPRESSIONS.IS_ALLOWED_URI;
+  const {
+    MUSTACHE_EXPR,
+    ERB_EXPR,
+    TMPLIT_EXPR,
+    DATA_ATTR,
+    ARIA_ATTR,
+    IS_SCRIPT_OR_DATA,
+    ATTR_WHITESPACE,
+    CUSTOM_ELEMENT
+  } = EXPRESSIONS;
+  let {
+    IS_ALLOWED_URI: IS_ALLOWED_URI$1
+  } = EXPRESSIONS;
   /**
    * We consider the elements and attributes below to be safe. Ideally
    * don't add any new ones but feel free to remove unwanted ones.
    */
   /* allowed element names */
-  var ALLOWED_TAGS = null;
-  var DEFAULT_ALLOWED_TAGS = addToSet({}, [].concat(_toConsumableArray(html$1), _toConsumableArray(svg$1), _toConsumableArray(svgFilters), _toConsumableArray(mathMl$1), _toConsumableArray(text)));
+  let ALLOWED_TAGS = null;
+  const DEFAULT_ALLOWED_TAGS = addToSet({}, [...html$1, ...svg$1, ...svgFilters, ...mathMl$1, ...text]);
   /* Allowed attribute names */
-  var ALLOWED_ATTR = null;
-  var DEFAULT_ALLOWED_ATTR = addToSet({}, [].concat(_toConsumableArray(html), _toConsumableArray(svg), _toConsumableArray(mathMl), _toConsumableArray(xml)));
+  let ALLOWED_ATTR = null;
+  const DEFAULT_ALLOWED_ATTR = addToSet({}, [...html, ...svg, ...mathMl, ...xml]);
   /*
    * Configure how DOMPurify should handle custom elements and their attributes as well as customized built-in elements.
    * @property {RegExp|Function|null} tagNameCheck one of [null, regexPattern, predicate]. Default: `null` (disallow any custom elements)
    * @property {RegExp|Function|null} attributeNameCheck one of [null, regexPattern, predicate]. Default: `null` (disallow any attributes not on the allow list)
    * @property {boolean} allowCustomizedBuiltInElements allow custom elements derived from built-ins if they pass CUSTOM_ELEMENT_HANDLING.tagNameCheck. Default: `false`.
    */
-  var CUSTOM_ELEMENT_HANDLING = Object.seal(create(null, {
+  let CUSTOM_ELEMENT_HANDLING = Object.seal(create(null, {
     tagNameCheck: {
       writable: true,
       configurable: false,
@@ -14290,11 +23174,11 @@ function createDOMPurify() {
     }
   }));
   /* Explicitly forbidden tags (overrides ALLOWED_TAGS/ADD_TAGS) */
-  var FORBID_TAGS = null;
+  let FORBID_TAGS = null;
   /* Explicitly forbidden attributes (overrides ALLOWED_ATTR/ADD_ATTR) */
-  var FORBID_ATTR = null;
+  let FORBID_ATTR = null;
   /* Config object to store ADD_TAGS/ADD_ATTR functions (when used as functions) */
-  var EXTRA_ELEMENT_HANDLING = Object.seal(create(null, {
+  const EXTRA_ELEMENT_HANDLING = Object.seal(create(null, {
     tagCheck: {
       writable: true,
       configurable: false,
@@ -14309,44 +23193,44 @@ function createDOMPurify() {
     }
   }));
   /* Decide if ARIA attributes are okay */
-  var ALLOW_ARIA_ATTR = true;
+  let ALLOW_ARIA_ATTR = true;
   /* Decide if custom data attributes are okay */
-  var ALLOW_DATA_ATTR = true;
+  let ALLOW_DATA_ATTR = true;
   /* Decide if unknown protocols are okay */
-  var ALLOW_UNKNOWN_PROTOCOLS = false;
+  let ALLOW_UNKNOWN_PROTOCOLS = false;
   /* Decide if self-closing tags in attributes are allowed.
    * Usually removed due to a mXSS issue in jQuery 3.0 */
-  var ALLOW_SELF_CLOSE_IN_ATTR = true;
+  let ALLOW_SELF_CLOSE_IN_ATTR = true;
   /* Output should be safe for common template engines.
    * This means, DOMPurify removes data attributes, mustaches and ERB
    */
-  var SAFE_FOR_TEMPLATES = false;
+  let SAFE_FOR_TEMPLATES = false;
   /* Output should be safe even for XML used within HTML and alike.
    * This means, DOMPurify removes comments when containing risky content.
    */
-  var SAFE_FOR_XML = true;
+  let SAFE_FOR_XML = true;
   /* Decide if document with <html>... should be returned */
-  var WHOLE_DOCUMENT = false;
+  let WHOLE_DOCUMENT = false;
   /* Track whether config is already set on this instance of DOMPurify. */
-  var SET_CONFIG = false;
+  let SET_CONFIG = false;
   /* Decide if all elements (e.g. style, script) must be children of
    * document.body. By default, browsers might move them to document.head */
-  var FORCE_BODY = false;
+  let FORCE_BODY = false;
   /* Decide if a DOM `HTMLBodyElement` should be returned, instead of a html
    * string (or a TrustedHTML object if Trusted Types are supported).
    * If `WHOLE_DOCUMENT` is enabled a `HTMLHtmlElement` will be returned instead
    */
-  var RETURN_DOM = false;
+  let RETURN_DOM = false;
   /* Decide if a DOM `DocumentFragment` should be returned, instead of a html
    * string  (or a TrustedHTML object if Trusted Types are supported) */
-  var RETURN_DOM_FRAGMENT = false;
+  let RETURN_DOM_FRAGMENT = false;
   /* Try to return a Trusted Type object instead of a string, return a string in
    * case Trusted Types are not supported  */
-  var RETURN_TRUSTED_TYPE = false;
+  let RETURN_TRUSTED_TYPE = false;
   /* Output should be free from DOM clobbering attacks?
    * This sanitizes markups named with colliding, clobberable built-in DOM APIs.
    */
-  var SANITIZE_DOM = true;
+  let SANITIZE_DOM = true;
   /* Achieve full DOM Clobbering protection by isolating the namespace of named
    * properties and JS variables, mitigating attacks that abuse the HTML/DOM spec rules.
    *
@@ -14360,51 +23244,51 @@ function createDOMPurify() {
    * Namespace isolation is implemented by prefixing `id` and `name` attributes
    * with a constant string, i.e., `user-content-`
    */
-  var SANITIZE_NAMED_PROPS = false;
-  var SANITIZE_NAMED_PROPS_PREFIX = 'user-content-';
+  let SANITIZE_NAMED_PROPS = false;
+  const SANITIZE_NAMED_PROPS_PREFIX = 'user-content-';
   /* Keep element content when removing element? */
-  var KEEP_CONTENT = true;
+  let KEEP_CONTENT = true;
   /* If a `Node` is passed to sanitize(), then performs sanitization in-place instead
    * of importing it into a new Document and returning a sanitized copy */
-  var IN_PLACE = false;
+  let IN_PLACE = false;
   /* Allow usage of profiles like html, svg and mathMl */
-  var USE_PROFILES = {};
+  let USE_PROFILES = {};
   /* Tags to ignore content of when KEEP_CONTENT is true */
-  var FORBID_CONTENTS = null;
-  var DEFAULT_FORBID_CONTENTS = addToSet({}, ['annotation-xml', 'audio', 'colgroup', 'desc', 'foreignobject', 'head', 'iframe', 'math', 'mi', 'mn', 'mo', 'ms', 'mtext', 'noembed', 'noframes', 'noscript', 'plaintext', 'script', 'style', 'svg', 'template', 'thead', 'title', 'video', 'xmp']);
+  let FORBID_CONTENTS = null;
+  const DEFAULT_FORBID_CONTENTS = addToSet({}, ['annotation-xml', 'audio', 'colgroup', 'desc', 'foreignobject', 'head', 'iframe', 'math', 'mi', 'mn', 'mo', 'ms', 'mtext', 'noembed', 'noframes', 'noscript', 'plaintext', 'script', 'style', 'svg', 'template', 'thead', 'title', 'video', 'xmp']);
   /* Tags that are safe for data: URIs */
-  var DATA_URI_TAGS = null;
-  var DEFAULT_DATA_URI_TAGS = addToSet({}, ['audio', 'video', 'img', 'source', 'image', 'track']);
+  let DATA_URI_TAGS = null;
+  const DEFAULT_DATA_URI_TAGS = addToSet({}, ['audio', 'video', 'img', 'source', 'image', 'track']);
   /* Attributes safe for values like "javascript:" */
-  var URI_SAFE_ATTRIBUTES = null;
-  var DEFAULT_URI_SAFE_ATTRIBUTES = addToSet({}, ['alt', 'class', 'for', 'id', 'label', 'name', 'pattern', 'placeholder', 'role', 'summary', 'title', 'value', 'style', 'xmlns']);
-  var MATHML_NAMESPACE = 'http://www.w3.org/1998/Math/MathML';
-  var SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
-  var HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+  let URI_SAFE_ATTRIBUTES = null;
+  const DEFAULT_URI_SAFE_ATTRIBUTES = addToSet({}, ['alt', 'class', 'for', 'id', 'label', 'name', 'pattern', 'placeholder', 'role', 'summary', 'title', 'value', 'style', 'xmlns']);
+  const MATHML_NAMESPACE = 'http://www.w3.org/1998/Math/MathML';
+  const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+  const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
   /* Document namespace */
-  var NAMESPACE = HTML_NAMESPACE;
-  var IS_EMPTY_INPUT = false;
+  let NAMESPACE = HTML_NAMESPACE;
+  let IS_EMPTY_INPUT = false;
   /* Allowed XHTML+XML namespaces */
-  var ALLOWED_NAMESPACES = null;
-  var DEFAULT_ALLOWED_NAMESPACES = addToSet({}, [MATHML_NAMESPACE, SVG_NAMESPACE, HTML_NAMESPACE], stringToString);
-  var MATHML_TEXT_INTEGRATION_POINTS = addToSet({}, ['mi', 'mo', 'mn', 'ms', 'mtext']);
-  var HTML_INTEGRATION_POINTS = addToSet({}, ['annotation-xml']);
+  let ALLOWED_NAMESPACES = null;
+  const DEFAULT_ALLOWED_NAMESPACES = addToSet({}, [MATHML_NAMESPACE, SVG_NAMESPACE, HTML_NAMESPACE], stringToString);
+  let MATHML_TEXT_INTEGRATION_POINTS = addToSet({}, ['mi', 'mo', 'mn', 'ms', 'mtext']);
+  let HTML_INTEGRATION_POINTS = addToSet({}, ['annotation-xml']);
   // Certain elements are allowed in both SVG and HTML
   // namespace. We need to specify them explicitly
   // so that they don't get erroneously deleted from
   // HTML namespace.
-  var COMMON_SVG_AND_HTML_ELEMENTS = addToSet({}, ['title', 'style', 'font', 'a', 'script']);
+  const COMMON_SVG_AND_HTML_ELEMENTS = addToSet({}, ['title', 'style', 'font', 'a', 'script']);
   /* Parsing of strict XHTML documents */
-  var PARSER_MEDIA_TYPE = null;
-  var SUPPORTED_PARSER_MEDIA_TYPES = ['application/xhtml+xml', 'text/html'];
-  var DEFAULT_PARSER_MEDIA_TYPE = 'text/html';
-  var transformCaseFunc = null;
+  let PARSER_MEDIA_TYPE = null;
+  const SUPPORTED_PARSER_MEDIA_TYPES = ['application/xhtml+xml', 'text/html'];
+  const DEFAULT_PARSER_MEDIA_TYPE = 'text/html';
+  let transformCaseFunc = null;
   /* Keep a reference to config to pass to hooks */
-  var CONFIG = null;
+  let CONFIG = null;
   /* Ideally, do not touch anything below this line */
   /* ______________________________________________ */
-  var formElement = document.createElement('form');
-  var isRegexOrFunction = function isRegexOrFunction(testValue) {
+  const formElement = document.createElement('form');
+  const isRegexOrFunction = function isRegexOrFunction(testValue) {
     return testValue instanceof RegExp || testValue instanceof Function;
   };
   /**
@@ -14413,13 +23297,13 @@ function createDOMPurify() {
    * @param cfg optional config literal
    */
   // eslint-disable-next-line complexity
-  var _parseConfig = function _parseConfig() {
-    var cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  const _parseConfig = function _parseConfig() {
+    let cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     if (CONFIG && CONFIG === cfg) {
       return;
     }
     /* Shield configuration object from tampering */
-    if (!cfg || _typeof(cfg) !== 'object') {
+    if (!cfg || typeof cfg !== 'object') {
       cfg = {};
     }
     /* Shield configuration object from prototype pollution */
@@ -14572,16 +23456,16 @@ function createDOMPurify() {
   /* Keep track of all possible SVG and MathML tags
    * so that we can perform the namespace checks
    * correctly. */
-  var ALL_SVG_TAGS = addToSet({}, [].concat(_toConsumableArray(svg$1), _toConsumableArray(svgFilters), _toConsumableArray(svgDisallowed)));
-  var ALL_MATHML_TAGS = addToSet({}, [].concat(_toConsumableArray(mathMl$1), _toConsumableArray(mathMlDisallowed)));
+  const ALL_SVG_TAGS = addToSet({}, [...svg$1, ...svgFilters, ...svgDisallowed]);
+  const ALL_MATHML_TAGS = addToSet({}, [...mathMl$1, ...mathMlDisallowed]);
   /**
    * @param element a DOM element whose namespace is being checked
    * @returns Return false if the element has a
    *  namespace that a spec-compliant parser would never
    *  return. Return true otherwise.
    */
-  var _checkValidNamespace = function _checkValidNamespace(element) {
-    var parent = getParentNode(element);
+  const _checkValidNamespace = function _checkValidNamespace(element) {
+    let parent = getParentNode(element);
     // In JSDOM, if we're inside shadow DOM, then parentNode
     // can be null. We just simulate parent in this case.
     if (!parent || !parent.tagName) {
@@ -14590,8 +23474,8 @@ function createDOMPurify() {
         tagName: 'template'
       };
     }
-    var tagName = stringToLowerCase(element.tagName);
-    var parentTagName = stringToLowerCase(parent.tagName);
+    const tagName = stringToLowerCase(element.tagName);
+    const parentTagName = stringToLowerCase(parent.tagName);
     if (!ALLOWED_NAMESPACES[element.namespaceURI]) {
       return false;
     }
@@ -14657,7 +23541,7 @@ function createDOMPurify() {
    *
    * @param node a DOM node
    */
-  var _forceRemove = function _forceRemove(node) {
+  const _forceRemove = function _forceRemove(node) {
     arrayPush(DOMPurify.removed, {
       element: node
     });
@@ -14674,7 +23558,7 @@ function createDOMPurify() {
    * @param name an Attribute name
    * @param element a DOM node
    */
-  var _removeAttribute = function _removeAttribute(name, element) {
+  const _removeAttribute = function _removeAttribute(name, element) {
     try {
       arrayPush(DOMPurify.removed, {
         attribute: element.getAttributeNode(name),
@@ -14706,22 +23590,22 @@ function createDOMPurify() {
    * @param dirty - a string of dirty markup
    * @return a DOM, filled with the dirty markup
    */
-  var _initDocument = function _initDocument(dirty) {
+  const _initDocument = function _initDocument(dirty) {
     /* Create a HTML document */
-    var doc = null;
-    var leadingWhitespace = null;
+    let doc = null;
+    let leadingWhitespace = null;
     if (FORCE_BODY) {
       dirty = '<remove></remove>' + dirty;
     } else {
       /* If FORCE_BODY isn't used, leading whitespace needs to be preserved manually */
-      var matches = stringMatch(dirty, /^[\r\n\t ]+/);
+      const matches = stringMatch(dirty, /^[\r\n\t ]+/);
       leadingWhitespace = matches && matches[0];
     }
     if (PARSER_MEDIA_TYPE === 'application/xhtml+xml' && NAMESPACE === HTML_NAMESPACE) {
       // Root of XHTML doc must contain xmlns declaration (see https://www.w3.org/TR/xhtml1/normative.html#strict)
       dirty = '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>' + dirty + '</body></html>';
     }
-    var dirtyPayload = trustedTypesPolicy ? trustedTypesPolicy.createHTML(dirty) : dirty;
+    const dirtyPayload = trustedTypesPolicy ? trustedTypesPolicy.createHTML(dirty) : dirty;
     /*
      * Use the DOMParser API by default, fallback later if needs be
      * DOMParser not work for svg when has multiple root element.
@@ -14740,7 +23624,7 @@ function createDOMPurify() {
         // Syntax error if dirtyPayload is invalid xml
       }
     }
-    var body = doc.body || doc.documentElement;
+    const body = doc.body || doc.documentElement;
     if (dirty && leadingWhitespace) {
       body.insertBefore(document.createTextNode(leadingWhitespace), body.childNodes[0] || null);
     }
@@ -14756,7 +23640,7 @@ function createDOMPurify() {
    * @param root The root element or node to start traversing on.
    * @return The created NodeIterator
    */
-  var _createNodeIterator = function _createNodeIterator(root) {
+  const _createNodeIterator = function _createNodeIterator(root) {
     return createNodeIterator.call(root.ownerDocument || root, root,
     // eslint-disable-next-line no-bitwise
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_PROCESSING_INSTRUCTION | NodeFilter.SHOW_CDATA_SECTION, null);
@@ -14767,7 +23651,7 @@ function createDOMPurify() {
    * @param element element to check for clobbering attacks
    * @return true if clobbered, false if safe
    */
-  var _isClobbered = function _isClobbered(element) {
+  const _isClobbered = function _isClobbered(element) {
     return element instanceof HTMLFormElement && (typeof element.nodeName !== 'string' || typeof element.textContent !== 'string' || typeof element.removeChild !== 'function' || !(element.attributes instanceof NamedNodeMap) || typeof element.removeAttribute !== 'function' || typeof element.setAttribute !== 'function' || typeof element.namespaceURI !== 'string' || typeof element.insertBefore !== 'function' || typeof element.hasChildNodes !== 'function');
   };
   /**
@@ -14776,11 +23660,11 @@ function createDOMPurify() {
    * @param value object to check whether it's a DOM node
    * @return true is object is a DOM node
    */
-  var _isNode = function _isNode(value) {
+  const _isNode = function _isNode(value) {
     return typeof Node === 'function' && value instanceof Node;
   };
   function _executeHooks(hooks, currentNode, data) {
-    arrayForEach(hooks, function (hook) {
+    arrayForEach(hooks, hook => {
       hook.call(DOMPurify, currentNode, data, CONFIG);
     });
   }
@@ -14793,8 +23677,8 @@ function createDOMPurify() {
    * @param currentNode to check for permission to exist
    * @return true if node was killed, false if left alive
    */
-  var _sanitizeElements = function _sanitizeElements(currentNode) {
-    var content = null;
+  const _sanitizeElements = function _sanitizeElements(currentNode) {
+    let content = null;
     /* Execute a hook if present */
     _executeHooks(hooks.beforeSanitizeElements, currentNode, null);
     /* Check if element is clobbered or can clobber */
@@ -14803,10 +23687,10 @@ function createDOMPurify() {
       return true;
     }
     /* Now let's check the element's type and name */
-    var tagName = transformCaseFunc(currentNode.nodeName);
+    const tagName = transformCaseFunc(currentNode.nodeName);
     /* Execute a hook if present */
     _executeHooks(hooks.uponSanitizeElement, currentNode, {
-      tagName: tagName,
+      tagName,
       allowedTags: ALLOWED_TAGS
     });
     /* Detect mXSS attempts abusing namespace confusion */
@@ -14837,12 +23721,12 @@ function createDOMPurify() {
       }
       /* Keep content except for bad-listed elements */
       if (KEEP_CONTENT && !FORBID_CONTENTS[tagName]) {
-        var parentNode = getParentNode(currentNode) || currentNode.parentNode;
-        var childNodes = getChildNodes(currentNode) || currentNode.childNodes;
+        const parentNode = getParentNode(currentNode) || currentNode.parentNode;
+        const childNodes = getChildNodes(currentNode) || currentNode.childNodes;
         if (childNodes && parentNode) {
-          var childCount = childNodes.length;
-          for (var i = childCount - 1; i >= 0; --i) {
-            var childClone = cloneNode(childNodes[i], true);
+          const childCount = childNodes.length;
+          for (let i = childCount - 1; i >= 0; --i) {
+            const childClone = cloneNode(childNodes[i], true);
             childClone.__removalCount = (currentNode.__removalCount || 0) + 1;
             parentNode.insertBefore(childClone, getNextSibling(currentNode));
           }
@@ -14865,7 +23749,7 @@ function createDOMPurify() {
     if (SAFE_FOR_TEMPLATES && currentNode.nodeType === NODE_TYPE.text) {
       /* Get the element's text content */
       content = currentNode.textContent;
-      arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], function (expr) {
+      arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], expr => {
         content = stringReplace(content, expr, ' ');
       });
       if (currentNode.textContent !== content) {
@@ -14888,7 +23772,7 @@ function createDOMPurify() {
    * @return Returns true if `value` is valid, otherwise false.
    */
   // eslint-disable-next-line complexity
-  var _isValidAttribute = function _isValidAttribute(lcTag, lcName, value) {
+  const _isValidAttribute = function _isValidAttribute(lcTag, lcName, value) {
     /* Make sure attribute cannot clobber */
     if (SANITIZE_DOM && (lcName === 'id' || lcName === 'name') && (value in document || value in formElement)) {
       return false;
@@ -14897,7 +23781,7 @@ function createDOMPurify() {
         (https://html.spec.whatwg.org/multipage/dom.html#embedding-custom-non-visible-data-with-the-data-*-attributes)
         XML-compatible (https://html.spec.whatwg.org/multipage/infrastructure.html#xml-compatible and http://www.w3.org/TR/xml/#d0e804)
         We don't need to check the value; it's always URI safe. */
-    if (ALLOW_DATA_ATTR && !FORBID_ATTR[lcName] && regExpTest(DATA_ATTR, lcName)) ;else if (ALLOW_ARIA_ATTR && regExpTest(ARIA_ATTR, lcName)) ;else if (EXTRA_ELEMENT_HANDLING.attributeCheck instanceof Function && EXTRA_ELEMENT_HANDLING.attributeCheck(lcName, lcTag)) ;else if (!ALLOWED_ATTR[lcName] || FORBID_ATTR[lcName]) {
+    if (ALLOW_DATA_ATTR && !FORBID_ATTR[lcName] && regExpTest(DATA_ATTR, lcName)) ; else if (ALLOW_ARIA_ATTR && regExpTest(ARIA_ATTR, lcName)) ; else if (EXTRA_ELEMENT_HANDLING.attributeCheck instanceof Function && EXTRA_ELEMENT_HANDLING.attributeCheck(lcName, lcTag)) ; else if (!ALLOWED_ATTR[lcName] || FORBID_ATTR[lcName]) {
       if (
       // First condition does a very basic check if a) it's basically a valid custom element tagname AND
       // b) if the tagName passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.tagNameCheck
@@ -14905,11 +23789,11 @@ function createDOMPurify() {
       _isBasicCustomElement(lcTag) && (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, lcTag) || CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(lcTag)) && (CUSTOM_ELEMENT_HANDLING.attributeNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.attributeNameCheck, lcName) || CUSTOM_ELEMENT_HANDLING.attributeNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.attributeNameCheck(lcName, lcTag)) ||
       // Alternative, second condition checks if it's an `is`-attribute, AND
       // the value passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.tagNameCheck
-      lcName === 'is' && CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements && (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, value) || CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(value))) ;else {
+      lcName === 'is' && CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements && (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, value) || CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(value))) ; else {
         return false;
       }
       /* Check value is safe. First, is attr inert? If so, is safe */
-    } else if (URI_SAFE_ATTRIBUTES[lcName]) ;else if (regExpTest(IS_ALLOWED_URI$1, stringReplace(value, ATTR_WHITESPACE, ''))) ;else if ((lcName === 'src' || lcName === 'xlink:href' || lcName === 'href') && lcTag !== 'script' && stringIndexOf(value, 'data:') === 0 && DATA_URI_TAGS[lcTag]) ;else if (ALLOW_UNKNOWN_PROTOCOLS && !regExpTest(IS_SCRIPT_OR_DATA, stringReplace(value, ATTR_WHITESPACE, ''))) ;else if (value) {
+    } else if (URI_SAFE_ATTRIBUTES[lcName]) ; else if (regExpTest(IS_ALLOWED_URI$1, stringReplace(value, ATTR_WHITESPACE, ''))) ; else if ((lcName === 'src' || lcName === 'xlink:href' || lcName === 'href') && lcTag !== 'script' && stringIndexOf(value, 'data:') === 0 && DATA_URI_TAGS[lcTag]) ; else if (ALLOW_UNKNOWN_PROTOCOLS && !regExpTest(IS_SCRIPT_OR_DATA, stringReplace(value, ATTR_WHITESPACE, ''))) ; else if (value) {
       return false;
     } else ;
     return true;
@@ -14922,7 +23806,7 @@ function createDOMPurify() {
    * @param tagName name of the tag of the node to sanitize
    * @returns Returns true if the tag name meets the basic criteria for a custom element, otherwise false.
    */
-  var _isBasicCustomElement = function _isBasicCustomElement(tagName) {
+  const _isBasicCustomElement = function _isBasicCustomElement(tagName) {
     return tagName !== 'annotation-xml' && stringMatch(tagName, CUSTOM_ELEMENT);
   };
   /**
@@ -14935,123 +23819,122 @@ function createDOMPurify() {
    *
    * @param currentNode to sanitize
    */
-  var _sanitizeAttributes = function _sanitizeAttributes(currentNode) {
+  const _sanitizeAttributes = function _sanitizeAttributes(currentNode) {
     /* Execute a hook if present */
     _executeHooks(hooks.beforeSanitizeAttributes, currentNode, null);
-    var attributes = currentNode.attributes;
+    const {
+      attributes
+    } = currentNode;
     /* Check if we have attributes; if not we might have a text node */
     if (!attributes || _isClobbered(currentNode)) {
       return;
     }
-    var hookEvent = {
+    const hookEvent = {
       attrName: '',
       attrValue: '',
       keepAttr: true,
       allowedAttributes: ALLOWED_ATTR,
       forceKeepAttr: undefined
     };
-    var l = attributes.length;
+    let l = attributes.length;
     /* Go backwards over all attributes; safely remove bad ones */
-    var _loop = function _loop() {
-        var attr = attributes[l];
-        var name = attr.name,
-          namespaceURI = attr.namespaceURI,
-          attrValue = attr.value;
-        var lcName = transformCaseFunc(name);
-        var initValue = attrValue;
-        var value = name === 'value' ? initValue : stringTrim(initValue);
-        /* Execute a hook if present */
-        hookEvent.attrName = lcName;
-        hookEvent.attrValue = value;
-        hookEvent.keepAttr = true;
-        hookEvent.forceKeepAttr = undefined; // Allows developers to see this is a property they can set
-        _executeHooks(hooks.uponSanitizeAttribute, currentNode, hookEvent);
-        value = hookEvent.attrValue;
-        /* Full DOM Clobbering protection via namespace isolation,
-         * Prefix id and name attributes with `user-content-`
-         */
-        if (SANITIZE_NAMED_PROPS && (lcName === 'id' || lcName === 'name')) {
-          // Remove the attribute with this value
-          _removeAttribute(name, currentNode);
-          // Prefix the value and later re-create the attribute with the sanitized value
-          value = SANITIZE_NAMED_PROPS_PREFIX + value;
-        }
-        /* Work around a security issue with comments inside attributes */
-        if (SAFE_FOR_XML && regExpTest(/((--!?|])>)|<\/(style|title|textarea)/i, value)) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Make sure we cannot easily use animated hrefs, even if animations are allowed */
-        if (lcName === 'attributename' && stringMatch(value, 'href')) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Did the hooks approve of the attribute? */
-        if (hookEvent.forceKeepAttr) {
-          return 0; // continue
-        }
-        /* Did the hooks approve of the attribute? */
-        if (!hookEvent.keepAttr) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Work around a security issue in jQuery 3.0 */
-        if (!ALLOW_SELF_CLOSE_IN_ATTR && regExpTest(/\/>/i, value)) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Sanitize attribute content to be template-safe */
-        if (SAFE_FOR_TEMPLATES) {
-          arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], function (expr) {
-            value = stringReplace(value, expr, ' ');
-          });
-        }
-        /* Is `value` valid for this attribute? */
-        var lcTag = transformCaseFunc(currentNode.nodeName);
-        if (!_isValidAttribute(lcTag, lcName, value)) {
-          _removeAttribute(name, currentNode);
-          return 0; // continue
-        }
-        /* Handle attributes that require Trusted Types */
-        if (trustedTypesPolicy && _typeof(trustedTypes) === 'object' && typeof trustedTypes.getAttributeType === 'function') {
-          if (namespaceURI) ;else {
-            switch (trustedTypes.getAttributeType(lcTag, lcName)) {
-              case 'TrustedHTML':
-                {
-                  value = trustedTypesPolicy.createHTML(value);
-                  break;
-                }
-              case 'TrustedScriptURL':
-                {
-                  value = trustedTypesPolicy.createScriptURL(value);
-                  break;
-                }
-            }
-          }
-        }
-        /* Handle invalid data-* attribute set by try-catching it */
-        if (value !== initValue) {
-          try {
-            if (namespaceURI) {
-              currentNode.setAttributeNS(namespaceURI, name, value);
-            } else {
-              /* Fallback to setAttribute() for browser-unrecognized namespaces e.g. "x-schema". */
-              currentNode.setAttribute(name, value);
-            }
-            if (_isClobbered(currentNode)) {
-              _forceRemove(currentNode);
-            } else {
-              arrayPop(DOMPurify.removed);
-            }
-          } catch (_) {
-            _removeAttribute(name, currentNode);
-          }
-        }
-      },
-      _ret;
     while (l--) {
-      _ret = _loop();
-      if (_ret === 0) continue;
+      const attr = attributes[l];
+      const {
+        name,
+        namespaceURI,
+        value: attrValue
+      } = attr;
+      const lcName = transformCaseFunc(name);
+      const initValue = attrValue;
+      let value = name === 'value' ? initValue : stringTrim(initValue);
+      /* Execute a hook if present */
+      hookEvent.attrName = lcName;
+      hookEvent.attrValue = value;
+      hookEvent.keepAttr = true;
+      hookEvent.forceKeepAttr = undefined; // Allows developers to see this is a property they can set
+      _executeHooks(hooks.uponSanitizeAttribute, currentNode, hookEvent);
+      value = hookEvent.attrValue;
+      /* Full DOM Clobbering protection via namespace isolation,
+       * Prefix id and name attributes with `user-content-`
+       */
+      if (SANITIZE_NAMED_PROPS && (lcName === 'id' || lcName === 'name')) {
+        // Remove the attribute with this value
+        _removeAttribute(name, currentNode);
+        // Prefix the value and later re-create the attribute with the sanitized value
+        value = SANITIZE_NAMED_PROPS_PREFIX + value;
+      }
+      /* Work around a security issue with comments inside attributes */
+      if (SAFE_FOR_XML && regExpTest(/((--!?|])>)|<\/(style|title|textarea)/i, value)) {
+        _removeAttribute(name, currentNode);
+        continue;
+      }
+      /* Make sure we cannot easily use animated hrefs, even if animations are allowed */
+      if (lcName === 'attributename' && stringMatch(value, 'href')) {
+        _removeAttribute(name, currentNode);
+        continue;
+      }
+      /* Did the hooks approve of the attribute? */
+      if (hookEvent.forceKeepAttr) {
+        continue;
+      }
+      /* Did the hooks approve of the attribute? */
+      if (!hookEvent.keepAttr) {
+        _removeAttribute(name, currentNode);
+        continue;
+      }
+      /* Work around a security issue in jQuery 3.0 */
+      if (!ALLOW_SELF_CLOSE_IN_ATTR && regExpTest(/\/>/i, value)) {
+        _removeAttribute(name, currentNode);
+        continue;
+      }
+      /* Sanitize attribute content to be template-safe */
+      if (SAFE_FOR_TEMPLATES) {
+        arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], expr => {
+          value = stringReplace(value, expr, ' ');
+        });
+      }
+      /* Is `value` valid for this attribute? */
+      const lcTag = transformCaseFunc(currentNode.nodeName);
+      if (!_isValidAttribute(lcTag, lcName, value)) {
+        _removeAttribute(name, currentNode);
+        continue;
+      }
+      /* Handle attributes that require Trusted Types */
+      if (trustedTypesPolicy && typeof trustedTypes === 'object' && typeof trustedTypes.getAttributeType === 'function') {
+        if (namespaceURI) ; else {
+          switch (trustedTypes.getAttributeType(lcTag, lcName)) {
+            case 'TrustedHTML':
+              {
+                value = trustedTypesPolicy.createHTML(value);
+                break;
+              }
+            case 'TrustedScriptURL':
+              {
+                value = trustedTypesPolicy.createScriptURL(value);
+                break;
+              }
+          }
+        }
+      }
+      /* Handle invalid data-* attribute set by try-catching it */
+      if (value !== initValue) {
+        try {
+          if (namespaceURI) {
+            currentNode.setAttributeNS(namespaceURI, name, value);
+          } else {
+            /* Fallback to setAttribute() for browser-unrecognized namespaces e.g. "x-schema". */
+            currentNode.setAttribute(name, value);
+          }
+          if (_isClobbered(currentNode)) {
+            _forceRemove(currentNode);
+          } else {
+            arrayPop(DOMPurify.removed);
+          }
+        } catch (_) {
+          _removeAttribute(name, currentNode);
+        }
+      }
     }
     /* Execute a hook if present */
     _executeHooks(hooks.afterSanitizeAttributes, currentNode, null);
@@ -15061,9 +23944,9 @@ function createDOMPurify() {
    *
    * @param fragment to iterate over recursively
    */
-  var _sanitizeShadowDOM = function _sanitizeShadowDOM(fragment) {
-    var shadowNode = null;
-    var shadowIterator = _createNodeIterator(fragment);
+  const _sanitizeShadowDOM = function _sanitizeShadowDOM(fragment) {
+    let shadowNode = null;
+    const shadowIterator = _createNodeIterator(fragment);
     /* Execute a hook if present */
     _executeHooks(hooks.beforeSanitizeShadowDOM, fragment, null);
     while (shadowNode = shadowIterator.nextNode()) {
@@ -15083,11 +23966,11 @@ function createDOMPurify() {
   };
   // eslint-disable-next-line complexity
   DOMPurify.sanitize = function (dirty) {
-    var cfg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    var body = null;
-    var importedNode = null;
-    var currentNode = null;
-    var returnNode = null;
+    let cfg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    let body = null;
+    let importedNode = null;
+    let currentNode = null;
+    let returnNode = null;
     /* Make sure we have a string to sanitize.
       DO NOT return early, as this will return the wrong type if
       the user has requested a DOM object rather than a string */
@@ -15123,7 +24006,7 @@ function createDOMPurify() {
     if (IN_PLACE) {
       /* Do some early pre-sanitization to avoid unsafe root nodes */
       if (dirty.nodeName) {
-        var tagName = transformCaseFunc(dirty.nodeName);
+        const tagName = transformCaseFunc(dirty.nodeName);
         if (!ALLOWED_TAGS[tagName] || FORBID_TAGS[tagName]) {
           throw typeErrorCreate('root node is forbidden and cannot be sanitized in-place');
         }
@@ -15161,7 +24044,7 @@ function createDOMPurify() {
       _forceRemove(body.firstChild);
     }
     /* Get node iterator */
-    var nodeIterator = _createNodeIterator(IN_PLACE ? dirty : body);
+    const nodeIterator = _createNodeIterator(IN_PLACE ? dirty : body);
     /* Now start iterating over the created document */
     while (currentNode = nodeIterator.nextNode()) {
       /* Sanitize tags and elements */
@@ -15200,21 +24083,21 @@ function createDOMPurify() {
       }
       return returnNode;
     }
-    var serializedHTML = WHOLE_DOCUMENT ? body.outerHTML : body.innerHTML;
+    let serializedHTML = WHOLE_DOCUMENT ? body.outerHTML : body.innerHTML;
     /* Serialize doctype if allowed */
     if (WHOLE_DOCUMENT && ALLOWED_TAGS['!doctype'] && body.ownerDocument && body.ownerDocument.doctype && body.ownerDocument.doctype.name && regExpTest(DOCTYPE_NAME, body.ownerDocument.doctype.name)) {
       serializedHTML = '<!DOCTYPE ' + body.ownerDocument.doctype.name + '>\n' + serializedHTML;
     }
     /* Sanitize final string template-safe */
     if (SAFE_FOR_TEMPLATES) {
-      arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], function (expr) {
+      arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], expr => {
         serializedHTML = stringReplace(serializedHTML, expr, ' ');
       });
     }
     return trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML(serializedHTML) : serializedHTML;
   };
   DOMPurify.setConfig = function () {
-    var cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    let cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     _parseConfig(cfg);
     SET_CONFIG = true;
   };
@@ -15227,8 +24110,8 @@ function createDOMPurify() {
     if (!CONFIG) {
       _parseConfig({});
     }
-    var lcTag = transformCaseFunc(tag);
-    var lcName = transformCaseFunc(attr);
+    const lcTag = transformCaseFunc(tag);
+    const lcName = transformCaseFunc(attr);
     return _isValidAttribute(lcTag, lcName, value);
   };
   DOMPurify.addHook = function (entryPoint, hookFunction) {
@@ -15239,7 +24122,7 @@ function createDOMPurify() {
   };
   DOMPurify.removeHook = function (entryPoint, hookFunction) {
     if (hookFunction !== undefined) {
-      var index = arrayLastIndexOf(hooks[entryPoint], hookFunction);
+      const index = arrayLastIndexOf(hooks[entryPoint], hookFunction);
       return index === -1 ? undefined : arraySplice(hooks[entryPoint], index, 1)[0];
     }
     return arrayPop(hooks[entryPoint]);

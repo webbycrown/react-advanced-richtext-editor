@@ -15,7 +15,7 @@ A production-ready, sanitised, and highly extensible rich text editor for React 
 
 <div align="center">
 
-[![React Advanced Richtext Editor Demo](https://img.youtube.com/vi/ejRuLu6furw/maxresdefault.jpg)](https://www.youtube.com/watch?v=ejRuLu6furw)
+[![React Advanced Richtext Editor Demo](https://raw.githubusercontent.com/webbycrown/react-advanced-richtext-editor/main/assets/react-advanced-richtext-editor.png)](https://www.youtube.com/watch?v=ejRuLu6furw)
 
 **▶️ [Watch on YouTube](https://www.youtube.com/watch?v=ejRuLu6furw)**
 
