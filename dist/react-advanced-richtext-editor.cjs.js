@@ -24278,6 +24278,7 @@ function Editor(_ref) {
   var fileRef = React.useRef(null); // Reference to hidden file input for image upload
   var colorInputRef = React.useRef(null); // Reference to hidden color input for text color
   var highlightColorRef = React.useRef(null); // Reference to hidden color input for background color
+  var emojiWrapperRef = React.useRef(null); // Wrapper ref for closing emoji picker on outside click
 
   // ============================================================================
   // STATE - Component state management
@@ -24575,6 +24576,19 @@ function Editor(_ref) {
       document.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, []);
+  React.useEffect(function () {
+    var handleOutsideEmojiClick = function handleOutsideEmojiClick(event) {
+      if (!showEmojiPicker) return;
+      if (!emojiWrapperRef.current) return;
+      if (!emojiWrapperRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideEmojiClick);
+    return function () {
+      document.removeEventListener("mousedown", handleOutsideEmojiClick);
+    };
+  }, [showEmojiPicker]);
 
   // Update active formatting when editor gains focus
   React.useEffect(function () {
@@ -27225,13 +27239,25 @@ function Editor(_ref) {
       return;
     }
     if (cmd === "textColor") {
+      var _colorInputRef$curren;
       savedSelectionRef.current = savedSelection;
-      colorInputRef.current.click();
+      if ((_colorInputRef$curren = colorInputRef.current) !== null && _colorInputRef$curren !== void 0 && _colorInputRef$curren.showPicker) {
+        colorInputRef.current.showPicker();
+      } else {
+        var _colorInputRef$curren2;
+        (_colorInputRef$curren2 = colorInputRef.current) === null || _colorInputRef$curren2 === void 0 || _colorInputRef$curren2.click();
+      }
       return;
     }
     if (cmd === "highlight") {
+      var _highlightColorRef$cu;
       savedSelectionRef.current = savedSelection;
-      highlightColorRef.current.click();
+      if ((_highlightColorRef$cu = highlightColorRef.current) !== null && _highlightColorRef$cu !== void 0 && _highlightColorRef$cu.showPicker) {
+        highlightColorRef.current.showPicker();
+      } else {
+        var _highlightColorRef$cu2;
+        (_highlightColorRef$cu2 = highlightColorRef.current) === null || _highlightColorRef$cu2 === void 0 || _highlightColorRef$cu2.click();
+      }
       return;
     }
     if (cmd === "fontFamily") {
@@ -27292,13 +27318,19 @@ function Editor(_ref) {
       var _selection3 = window.getSelection();
       var range = _selection3 !== null && _selection3 !== void 0 && _selection3.rangeCount ? _selection3.getRangeAt(0) : null;
       var _selectedText2 = range === null || range === void 0 ? void 0 : range.toString();
-      if (_selectedText2) {
+      if (range && _selectedText2) {
         var transformed = cmd === "toUpperCase" ? _selectedText2.toUpperCase() : _selectedText2.toLowerCase();
+
+        // Replace selected text and keep a predictable selection/caret position.
+        // This prevents cursor jumping to the beginning of the editor.
+        var transformedNode = document.createTextNode(transformed);
         range.deleteContents();
-        range.insertNode(document.createTextNode(transformed));
-      } else if (editorRef.current) {
-        var _html = editorRef.current.innerHTML;
-        editorRef.current.innerHTML = cmd === "toUpperCase" ? _html.toUpperCase() : _html.toLowerCase();
+        range.insertNode(transformedNode);
+        var newRange = document.createRange();
+        newRange.setStart(transformedNode, transformedNode.textContent.length);
+        newRange.collapse(true);
+        _selection3.removeAllRanges();
+        _selection3.addRange(newRange);
       }
       handleChange();
       return;
@@ -27689,9 +27721,7 @@ function Editor(_ref) {
       return /*#__PURE__*/React__default["default"].createElement("div", {
         key: button.cmd,
         className: "emoji-wrapper",
-        onMouseLeave: function onMouseLeave() {
-          return setShowEmojiPicker(false);
-        }
+        ref: emojiWrapperRef
       }, /*#__PURE__*/React__default["default"].createElement("button", {
         type: "button",
         className: "rte-btn ".concat(showEmojiPicker ? 'active' : ''),
@@ -27724,6 +27754,42 @@ function Editor(_ref) {
         title: button.tooltip,
         onClick: toggleSearch
       }, Icon && /*#__PURE__*/React__default["default"].createElement(Icon, null));
+    }
+    if (button.cmd === "textColor" || button.cmd === "highlight") {
+      var pickerRef = button.cmd === "textColor" ? colorInputRef : highlightColorRef;
+      var onColorChange = function onColorChange(e) {
+        if (savedSelectionRef.current) {
+          restoreSelection(savedSelectionRef.current);
+          savedSelectionRef.current = null;
+        }
+        if (button.cmd === "textColor") {
+          applyTextColor(e.target.value);
+        } else {
+          document.execCommand("backColor", false, e.target.value);
+          handleChange();
+        }
+      };
+      return /*#__PURE__*/React__default["default"].createElement("div", {
+        key: button.cmd,
+        className: "rte-color-picker-anchor"
+      }, /*#__PURE__*/React__default["default"].createElement("button", {
+        type: "button",
+        className: "rte-btn",
+        title: button.tooltip,
+        onMouseDown: function onMouseDown(e) {
+          return e.preventDefault();
+        },
+        onClick: function onClick() {
+          return exec(button.cmd, button.arg);
+        }
+      }, Icon && /*#__PURE__*/React__default["default"].createElement(Icon, null)), /*#__PURE__*/React__default["default"].createElement("input", {
+        ref: pickerRef,
+        type: "color",
+        className: "color-picker",
+        onChange: onColorChange,
+        tabIndex: -1,
+        "aria-hidden": "true"
+      }));
     }
 
     // Determine if button should be active
@@ -27803,30 +27869,7 @@ function Editor(_ref) {
     },
     placeholder: "",
     width: "100px"
-  })), /*#__PURE__*/React__default["default"].createElement("input", {
-    ref: colorInputRef,
-    type: "color",
-    className: "color-picker",
-    onChange: function onChange(e) {
-      if (savedSelectionRef.current) {
-        restoreSelection(savedSelectionRef.current);
-        savedSelectionRef.current = null;
-      }
-      applyTextColor(e.target.value);
-    }
-  }), /*#__PURE__*/React__default["default"].createElement("input", {
-    ref: highlightColorRef,
-    type: "color",
-    className: "color-picker",
-    onChange: function onChange(e) {
-      if (savedSelectionRef.current) {
-        restoreSelection(savedSelectionRef.current);
-        savedSelectionRef.current = null;
-      }
-      document.execCommand("backColor", false, e.target.value);
-      handleChange();
-    }
-  })), /*#__PURE__*/React__default["default"].createElement("button", {
+  }))), /*#__PURE__*/React__default["default"].createElement("button", {
     type: "button",
     className: "rte-btn ".concat(isPreview ? 'active' : ''),
     onClick: function onClick(e) {

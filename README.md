@@ -650,6 +650,14 @@ This project is open source and available under the MIT License.
 
 ## 🔖 Changelog
 
+[1.0.2] - 2026-03-19
+
+- 🎨 Color/Highlight picker positioning
+- 😊 Emoji picker behavior
+- 🔠 Uppercase/Lowercase cursor fix
+
+---
+
 [1.0.1] - 2025-12-03
 
 - 🔤 **Font family control**: Choose from multiple font families directly from the toolbar
