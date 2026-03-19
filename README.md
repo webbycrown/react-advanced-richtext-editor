@@ -9,6 +9,15 @@ A production-ready, sanitised, and highly extensible rich text editor for React 
 - 🧑‍💻 Fully controlled component with localStorage persistence
 
 
+## 📘 User Guide
+
+📺 **Watch & Learn the Editor Guide:**
+
+
+### 👉 [Complete Editor Guide](https://www.webbycrown.com/guides/react-advanced-rich-text-editor/getting-started)
+
+---
+
 ## 🎥 Demo Video
 
 **Watch the React Advanced Richtext Editor in action on YouTube:**
@@ -652,8 +661,7 @@ This project is open source and available under the MIT License.
 
 [1.0.3] - 2026-03-19
 
-- 📚 Documentation
-- https://www.webbycrown.com/guides/react-advanced-rich-text-editor/getting-started/
+- 📚 Documentation 
 
 ---
 
