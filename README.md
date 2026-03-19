@@ -650,6 +650,13 @@ This project is open source and available under the MIT License.
 
 ## 🔖 Changelog
 
+[1.0.3] - 2026-03-19
+
+- 📚 Documentation
+- https://www.webbycrown.com/guides/react-advanced-rich-text-editor/getting-started/
+
+---
+
 [1.0.2] - 2026-03-19
 
 - 🎨 Color/Highlight picker positioning

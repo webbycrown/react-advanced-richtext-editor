@@ -1,6 +1,6 @@
 {
   "name": "@webbycrown/react-advanced-richtext-editor",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Create professional content with this secure, customizable React rich text editor featuring plugin extensibility and modern editing capabilities.",
   "main": "dist/react-advanced-richtext-editor.cjs.js",
   "module": "dist/react-advanced-richtext-editor.esm.js",
@@ -35,7 +35,7 @@
     "type": "git",
     "url": "https://github.com/webbycrown/react-advanced-richtext-editor"
   },
-  "homepage": "https://github.com/webbycrown/react-advanced-richtext-editor#readme",
+  "homepage": "https://www.webbycrown.com/guides/react-advanced-rich-text-editor/getting-started/",
   "bugs": {
     "url": "https://github.com/webbycrown/react-advanced-richtext-editor/issues"
   },
