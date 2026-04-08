@@ -13,7 +13,11 @@ A production-ready, sanitised, and highly extensible rich text editor for React 
 
 📺 **Watch & Learn the Editor Guide:**
 
-#### 👉 https://www.webbycrown.com/guides/react-advanced-rich-text-editor/getting-started
+
+
+[![Open User Guide](https://img.shields.io/badge/Open%20User%20Guide-Getting%20Started-2563eb?style=for-the-badge)](https://www.webbycrown.com/guides/react-advanced-rich-text-editor/getting-started)
+
+Direct link: https://www.webbycrown.com/guides/react-advanced-rich-text-editor/getting-started
 
 ---
 
